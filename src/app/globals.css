@@ -1,0 +1,249 @@
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* ── Brand colours ── */
+  --color-purple-dark:   #3B0764;
+  --color-purple:        #5B21B6;
+  --color-purple-mid:    #7C3AED;
+  --color-purple-light:  #EDE9FE;
+  --color-purple-hover:  #4C1D95;
+  --color-purple-active: #5b21b626;
+  --color-button:        #ffffffe6;
+  --color-cyan:          #06B6D4;
+  --color-cyan-light:    #CFFAFE;
+  --color-cyan-dark:     #0891B2;
+
+  /* ── Semantic ── */
+  --color-success:       #10B981;
+  --color-success-light: #D1FAE5;
+  --color-success-dark:  #065F46;
+  --color-warning:       #F59E0B;
+  --color-warning-light: #FEF3C7;
+  --color-warning-dark:  #92400E;
+  --color-danger:        #EF4444;
+  --color-danger-light:  #FEE2E2;
+  --color-danger-dark:   #DC2626;
+
+  /* ── Surfaces ── */
+  --color-bg-page:       #F5F3FF;
+  --color-bg-card:       #FFFFFF;
+  --color-bg-sidebar:    #EDE9FE;
+  --color-border:        #E5E7EB;
+
+  /* ── Text ── */
+  --color-text-primary:   #1E1B4B;
+  --color-text-secondary: #6B7280;
+  --color-text-muted:     #A1A1AA;
+
+  /* ── Fonts ── */
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-head: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  /* ── Radius ── */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  14px;
+  --radius-xl:  20px;
+  --radius-full: 9999px;
+
+  /* ── Sidebar / topbar dimensions ── */
+  --sidebar-width: 240px;
+  --topbar-height: 56px;
+}
+
+.dark {
+  /* ── Surfaces ── */
+  --color-bg-page:       #09090b; /* Zinc-950 (very dark greyscale black) */
+  --color-bg-card:       #18181b; /* Zinc-900 (neutral dark card background) */
+  --color-bg-sidebar:    #121214; /* Neutral dark sidebar background */
+  --color-border:        #27272a; /* Zinc-800 (neutral dark border) */
+
+  /* ── Text ── */
+  --color-text-primary:   #f4f4f5; /* Zinc-100 (clean off-white) */
+  --color-text-secondary: #c3c3cd; /* Zinc-400 (medium grey) */
+  --color-text-muted:     #71717a; /* Zinc-500 (muted grey) */
+
+  /* ── Brand Colors ── */
+  --color-purple-dark:    #22033c; /* Topbar background in dark mode (neutral dark) */
+  /* --color-purple:         #8b5cf6; Brighter violet accent for dark mode primary states */
+  --color-purple-mid:     #a78bfa; /* Vibrant lavender for accents */
+  --color-purple-light:   #27272a; /* Muted neutral dark for subtle backgrounds */
+  --color-purple-hover:   #7c3aed; /* Purple hover state */
+  --color-purple-active:  #8b5cf6;
+  --color-button:         #d0d0d0;
+  
+  --color-cyan:           #06b6d4; /* Clean Cyan */
+  --color-cyan-light:     #164e63; /* Dark cyan background */
+  --color-cyan-dark:      #22d3ee; /* Bright cyan text/accent */
+
+  /* ── Semantic Colors ── */
+  --color-success:        #10b981;
+  --color-success-light:  #052e16; /* Dark green background */
+  --color-success-dark:   #34d399; /* Bright green text */
+  
+  --color-warning:        #fbbf24;
+  --color-warning-light:  #451a03; /* Dark amber background */
+  --color-warning-dark:   #fbbf24; /* Bright amber text */
+  
+  --color-danger:         #ef4444;
+  --color-danger-light:   #450a0a; /* Dark red background */
+  --color-danger-dark:    #f87171; /* Bright red text */
+}
+
+/* ── Driver.js tour popover — Hammet brand theme ── */
+.hammet-tour-popover {
+  background: #1e0a3c !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(6, 182, 212, 0.15), 0 0 0 1px rgba(139, 92, 246, 0.1) !important;
+  color: #f3f0ff !important;
+  font-family: var(--font-dm-sans), sans-serif !important;
+}
+
+.hammet-tour-popover .driver-popover-title {
+  color: #ffffff !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+}
+
+.hammet-tour-popover .driver-popover-description {
+  color: #c4b5e8 !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
+}
+
+.hammet-tour-popover .driver-popover-progress-text {
+  color: #06B6D4 !important;
+  font-size: 0.75rem !important;
+}
+
+.hammet-tour-popover .driver-popover-next-btn,
+.hammet-tour-popover .driver-popover-done-btn {
+  background: #06B6D4 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+}
+
+.hammet-tour-popover .driver-popover-next-btn:hover,
+.hammet-tour-popover .driver-popover-done-btn:hover {
+  background: #0891b2 !important;
+}
+
+.hammet-tour-popover .driver-popover-prev-btn {
+  background: transparent !important;
+  color: #a78bdc !important;
+  border: 1px solid rgba(139, 92, 246, 0.4) !important;
+  border-radius: 6px !important;
+}
+
+.hammet-tour-popover .driver-popover-close-btn {
+  color: #a78bdc !important;
+}
+
+.driver-overlay {
+  background: rgba(26, 5, 51, 0.45) !important;
+}
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--color-bg-page);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
+}
+
+:root {
+  --font-head: 'Nunito', sans-serif;
+  --font-body: 'Atkinson Hyperlegible', sans-serif;
+}
+
+@keyframes blog-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes blog-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.blog-fade-up {
+  animation: blog-fade-up 700ms ease-out both;
+}
+
+.blog-card-enter {
+  animation: blog-card-enter 500ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blog-fade-up,
+  .blog-card-enter {
+    animation: none;
+  }
+}
+
+.blog-hero {
+  background:
+    radial-gradient(circle at 85% 20%, rgba(34, 211, 238, 0.12), transparent 30%),
+    radial-gradient(circle at 25% 100%, rgba(124, 58, 237, 0.2), transparent 35%),
+    #24113f;
+}
+
+.blog-hero-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.blog-hero-glow-one {
+  width: 260px;
+  height: 260px;
+  right: -80px;
+  top: -80px;
+  background: rgba(34, 211, 238, 0.1);
+}
+
+.blog-hero-glow-two {
+  width: 320px;
+  height: 320px;
+  left: 20%;
+  bottom: -220px;
+  background: rgba(124, 58, 237, 0.16);
+}
