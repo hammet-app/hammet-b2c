@@ -68,8 +68,6 @@ export default function LoginPage() {
 
         const data = toLoginResponse(response);
 
-        console.log(data.user);
-
         setSession(data.user, data.accessToken);
         redirectAfterAuth(data.user);
       } catch (err) {
