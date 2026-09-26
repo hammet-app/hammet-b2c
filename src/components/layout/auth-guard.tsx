@@ -17,11 +17,11 @@ function redirectB2BUser(scope: UserScope | null | undefined) {
     return false;
   }
 
-  if (process.env.ENV === "production") {
+  if (process.env.NEXT_PUBLIC_ENV === "production") {
     window.location.replace("https://schools.hammetedu.com");
   }
 
-  if (process.env.ENV === "development") {
+  if (process.env.NEXT_PUBLIC_ENV === "development") {
     window.location.replace("https://dev-schools.hammetedu.com");
   }
 
