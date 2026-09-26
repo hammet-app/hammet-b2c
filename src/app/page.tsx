@@ -65,14 +65,15 @@ export default function HomePage() {
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10">
           <Link
             href="/"
-            className="text-[23px] font-black tracking-[-0.05em]"
+            className="flex shrink-0 items-center gap-2"
+            aria-label="Hammet home"
           >
             <Image
               src="/icon-512x512.png"
               alt="Hammet"
-              width={130}
-              height={34}
-              className="h-8 w-auto mb-4"
+              width={32}
+              height={32}
+              className="h-8 w-8 shrink-0"
             />
             <span className="bg-gradient-to-r from-purple-700 via-violet-600 to-cyan-500 bg-clip-text text-transparent">
               Hammet
