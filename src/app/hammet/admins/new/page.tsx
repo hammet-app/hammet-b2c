@@ -55,7 +55,7 @@ export default function RegisterAdminPage() {
 
   const isPlatformAdmin = adminScope == "platform";
   const isB2CAdmin =
-    adminScope == "b2c" && access.includes("admin");
+    adminScope == "b2c" && access.includes("admins");
 
   const canRegister = isPlatformAdmin || isB2CAdmin;
 
