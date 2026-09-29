@@ -4,11 +4,8 @@ export type UserRole =
   | "hammet_admin";
 
 export type UserAccess = 
-  | "module"
   | "courses"
   | "admin"
-  | "disputes"
-  | "schools"
 
 export type UserScope = 
   | "b2b"
