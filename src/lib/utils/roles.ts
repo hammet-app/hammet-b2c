@@ -6,7 +6,7 @@ export type UserRole =
 export type UserAccess = 
   | "module"
   | "courses"
-  | "admin"
+  | "admins"
   | "disputes"
   | "schools"
 
