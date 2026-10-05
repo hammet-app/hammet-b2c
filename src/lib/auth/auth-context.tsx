@@ -125,7 +125,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const refreshToken = useCallback(async (): Promise<string | null> => {
-    if (localStorage.getItem("logged_out") === "true") return null;
+    if (localStorage.getItem("logged_out") === "true") {
+    setState({
+      user: null,
+      accessToken: null,
+      isLoading: false,
+      isResolved: true,
+      isOffline: false,
+    });
+    return null;
+  }
 
     if (refreshPromiseRef.current) {
       return refreshPromiseRef.current;

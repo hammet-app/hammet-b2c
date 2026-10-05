@@ -448,14 +448,6 @@ Conceptually:
 ```text
 Local frontend
       ↓
-Local API
-```
-
-or:
-
-```text
-Local frontend
-      ↓
 Development API
 ```
 
