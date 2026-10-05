@@ -28,6 +28,8 @@ import {
   ResendVerificationResponse,
   RegisterHammetAdminRequest,
   fromRegisterHammetAdminRequest,
+  CreateAiSchoolRequest,
+  fromCreateAiSchoolRequest,
 } from "@/lib/api/types";
 
 // ------------------------------------------------------------
@@ -171,6 +173,24 @@ export async function editModule(
   const payload = fromCurriculumModule(body)
   return await apiClient.patch<boolean>(
     `/hammet/modules/${moduleId}`,
+    payload,
+    token,
+    { onRefresh }
+  )
+}
+
+// ------------------------------------------------------------
+// AI SCHOOLS
+// ------------------------------------------------------------
+
+export async function createAiSchool(
+  body: CreateAiSchoolRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>
+): Promise<unknown> {
+  const payload = fromCreateAiSchoolRequest(body)
+  return await apiClient.post<unknown>(
+    "/hammet/create/ai_school",
     payload,
     token,
     { onRefresh }

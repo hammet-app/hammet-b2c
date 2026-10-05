@@ -34,3 +34,15 @@ export type AiSchoolCourse = {
 export type AiSchoolCoursesResponse = {
   courses: AiSchoolCourse[];
 };
+
+// ============================================================
+// CREATE AI SCHOOL
+// ============================================================
+
+// POST /api/v1/hammet/create/ai_school
+export type CreateAiSchoolRequest = {
+  name: string;
+  description: string;
+  price: number;
+  published: boolean;
+};

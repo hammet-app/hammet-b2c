@@ -3,12 +3,14 @@ import {
     AiSchoolCourse,
     AiSchoolCoursesResponse,
     AiSchoolsResponse,
+    CreateAiSchoolRequest,
 } from "@/lib/api/types/ai-schools/types";
 import {
     AiSchoolCourseDto,
     AiSchoolCoursesResponseDto,
     AiSchoolDto,
     AiSchoolsResponseDto,
+    CreateAiSchoolRequestDto,
 } from "@/lib/api/types/ai-schools/types-dto";
 import { toPagination } from "../support";
 
@@ -54,5 +56,14 @@ export function toAiSchoolCourse(dto: AiSchoolCourseDto): AiSchoolCourse {
 export function toAiSchoolCoursesResponse(dto: AiSchoolCoursesResponseDto): AiSchoolCoursesResponse {
     return {
         courses: dto.courses.map(toAiSchoolCourse),
+    };
+}
+
+export function fromCreateAiSchoolRequest(req: CreateAiSchoolRequest): CreateAiSchoolRequestDto {
+    return {
+        name: req.name,
+        description: req.description,
+        price: req.price,
+        published: req.published,
     };
 }
