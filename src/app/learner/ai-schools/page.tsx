@@ -104,11 +104,14 @@ export default function AiSchoolsPage() {
                     {school.description}
                   </p>
 
-                  <div className="flex items-center justify-between border-t border-black/[0.06] pt-4 dark:border-white/[0.06]">
-                    <span className="text-sm font-semibold text-purple-600 dark:text-cyan-400">
-                      View Courses
-                    </span>
-                    <ArrowRight className="h-4 w-4 text-purple-600 transition-transform group-hover:translate-x-1 dark:text-cyan-400" />
+                  <div className="flex items-center justify-between border-t border-black/[0.06] pt-5 mt-auto dark:border-white/[0.06]">
+                    <div className={`inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition-colors ${school.price === 0 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-purple-600 text-white group-hover:bg-purple-700"}`}>
+                      {school.price === 0 ? "Free" : `₦${school.price.toLocaleString()}`}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors group-hover:text-purple-600 dark:text-slate-400 dark:group-hover:text-cyan-400">
+                      <span>View Courses</span>
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </div>
                   </div>
                 </Link>
               </motion.div>

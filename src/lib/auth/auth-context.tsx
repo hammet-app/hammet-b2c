@@ -164,6 +164,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const response = await res.json();
         const data = toRefreshResponse(response);
 
+        if (localStorage.getItem("logged_out") === "true") {
+          return null;
+}
+
         await persistSession(data.user, data.accessToken);
 
         setState((prev) => ({
@@ -356,6 +360,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isResolved: true,
         isOffline: false,
       });
+      router.replace("/login")
     }
   }, []);
 
