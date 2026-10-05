@@ -41,7 +41,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   useEffect(() => {
     if (!isResolved) return;
 
-    if (!user && !isOffline) {
+    if (!user) {
       router.replace("/login");
       return;
     }

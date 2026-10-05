@@ -44,11 +44,11 @@ const navigation = [
     href: "/learner/passport",
     icon: FileBadge,
   },
-  // {
-  //   label: "Payments",
-  //   href: "/learner/payments",
-  //   icon: CreditCard,
-  // },
+  {
+    label: "AI Schools",
+    href: "/learner/ai-schools",
+    icon: BookOpen,
+  },
 ];
 
 const STORAGE_KEY = "hammet-learner-sidebar-collapsed";
