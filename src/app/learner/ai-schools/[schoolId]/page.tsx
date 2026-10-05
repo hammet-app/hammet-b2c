@@ -135,7 +135,7 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
                     
                     <Button 
                       variant="default"
-                      className="w-full lg:w-auto px-6 py-2 shadow-md bg-purple-600 hover:bg-purple-700 text-white"
+                      className={`w-full lg:w-auto px-6 py-2 shadow-md text-white transition-colors ${course.price === 0 ? "bg-emerald-600 hover:bg-emerald-700" : "bg-purple-600 hover:bg-purple-700"}`}
                       onClick={() => alert("Payment flow placeholder: Ready to integrate")}
                     >
                       {formatPrice(course.price)}
