@@ -25,7 +25,7 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
       try {
         setLoading(true);
         const data = await learnerApi.getAiSchoolCourses(schoolId, accessToken!, refreshToken);
-        setCourses(data.courses);
+        setCourses(data.courses.sort((a, b) => (a.position || 0) - (b.position || 0)));
         setError(null);
       } catch (err: unknown) {
         if (err instanceof Error) {

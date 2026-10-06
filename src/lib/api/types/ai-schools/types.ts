@@ -28,6 +28,7 @@ export type AiSchoolCourse = {
   slug: string;
   description: string;
   aiSchoolId: string;
+  position: number;
   price: number;
 };
 

@@ -47,6 +47,7 @@ export function toAiSchoolCourse(dto: AiSchoolCourseDto): AiSchoolCourse {
         slug: dto.slug,
         description: dto.description,
         aiSchoolId: dto.ai_school_id,
+        position: dto.position,
         price: dto.price,
     };
 }
