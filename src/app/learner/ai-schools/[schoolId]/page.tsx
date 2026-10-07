@@ -9,9 +9,11 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { learnerApi } from "@/lib/api/learner";
 import { AiSchoolCourse } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
+import { useAnalytics } from "@/hooks/use-analytics";
 
 export default function AiSchoolDetailsPage({ params }: { params: Promise<{ schoolId: string }> }) {
   const { schoolId } = use(params);
+  const { trackEvent } = useAnalytics();
   const { accessToken, refreshToken } = useAuth();
   
   const [courses, setCourses] = useState<AiSchoolCourse[]>([]);
@@ -136,7 +138,7 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
                     <Button 
                       variant="default"
                       className={`w-full lg:w-auto px-6 py-2 shadow-md text-white transition-colors ${course.price === 0 ? "bg-emerald-600 hover:bg-emerald-700" : "bg-purple-600 hover:bg-purple-700"}`}
-                      onClick={() => alert("Payment flow placeholder: Ready to integrate")}
+                      onClick={() => { trackEvent("checkout_started", { properties: { courseId: course.id, price: course.price } }); alert("Payment flow placeholder: Ready to integrate"); }}
                     >
                       {formatPrice(course.price)}
                     </Button>
