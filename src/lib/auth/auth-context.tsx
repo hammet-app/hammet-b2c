@@ -16,7 +16,6 @@ import {
   persistSession,
   getPersistedSession,
   clearPersistedSession,
-  clearModuleState,
 } from "@/lib/db";
 import { toRefreshResponse } from "../api/types";
 
@@ -338,7 +337,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     localStorage.setItem("logged_out", "true");
 
-    await clearModuleState();
     await clearPersistedSession();
 
     try {
