@@ -1,7 +1,5 @@
-export * from "@/lib/api/types/admin"
 export * from "@/lib/api/types/auth"
 export * from "@/lib/api/types/hammet"
-export * from "@/lib/api/types/module"
 export * from "@/lib/api/types/learner"
 export * from "@/lib/api/types/submissions"
 export * from "@/lib/api/types/support"
