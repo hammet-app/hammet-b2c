@@ -1,3 +1,5 @@
+import { SchoolDetails, ProfileDetails, SessionDetails } from "../api/types";
+
 export type UserRole =
   | "learner"
   | "facilitator"
@@ -23,13 +25,9 @@ export interface AuthUser {
   role: UserRole;
   scope: UserScope;
   access: UserAccess[];
-  schoolId: string;
-  cookieConsent: boolean;
-  cookiePolicyVersion: string;
-  classLevel: string | null;
-  classArm: string | null;
-  term: number | null;
-  learningMode?: "focus" | "guided";
+  schoolDetails: SchoolDetails | null;
+  profileDetails: ProfileDetails | null;
+  sessionDetails: SessionDetails | null;
 }
 
 /** Returns the user's display label for a given role. */
