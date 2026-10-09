@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
+import { OpenFeature, EvaluationContext } from "@openfeature/web-sdk";
 
 import type { AuthUser } from "@/lib/utils/roles";
 import {
@@ -93,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const getPostAuthRoute = useCallback((user: AuthUser): string | null => {
     if (user.role === "learner") {
-      return user.learningMode === null ? "/onboarding" : "/learner";
+      return user.profileDetails?.learningMode === null ? "/onboarding" : "/learner";
     }
 
     if (user.role === "hammet_admin") {
@@ -247,7 +248,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Session ─────────────────────────────────────────────────
 
   const setSession = useCallback(
-    (user: AuthUser, accessToken: string) => {
+    async(user: AuthUser, accessToken: string) => {
       persistSession(user, accessToken);
 
       localStorage.removeItem("logged_out");
@@ -261,31 +262,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       scheduleRefresh();
+
+      const context: EvaluationContext = {
+        targetingKey: user.id,
+        id: user.id,
+        country: user.sessionDetails?.country ?? "",
+        plan: user.profileDetails?.tier ?? "free",
+        email: user.email
+      }
+
+      await OpenFeature.setContext(context)
+
     },
     []
   );
 
   // ── User ────────────────────────────────────────────────────
 
-  const updateUser = useCallback((updates: Partial<AuthUser>) => {
-    setState((prev) => {
-      if (!prev.user) return prev;
+  const updateUser = useCallback(
+    async (updates: Partial<AuthUser>) => {
+      if (!state.user) return;
 
       const user = {
-        ...prev.user,
+        ...state.user,
         ...updates,
       };
 
-      if (prev.accessToken) {
-        persistSession(user, prev.accessToken);
+      if (state.accessToken) {
+        persistSession(user, state.accessToken);
       }
 
-      return {
-        ...prev,
-        user,
+      setState((prev) => {
+        if (!prev.user) return prev;
+
+        return {
+          ...prev,
+          user,
+        };
+      });
+
+      const context: EvaluationContext = {
+        targetingKey: user.id,
+        id: user.id,
+        country: user.sessionDetails?.country ?? "",
+        plan: user.profileDetails?.tier ?? "free",
+        email: user.email,
       };
-    });
-  }, []);
+
+      await OpenFeature.setContext(context);
+    },
+    [state.user, state.accessToken]
+  );
+
 
   // ── Onboarding ──────────────────────────────────────────────
 
@@ -324,7 +352,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       updateUser({
-        learningMode: learningMode,
+        profileDetails: {
+          ...state.user.profileDetails,
+          learningMode,
+          tier: state.user.profileDetails?.tier ?? "free",
+        },
       });
 
       router.replace("/learner");
@@ -358,6 +390,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isResolved: true,
         isOffline: false,
       });
+
+      await OpenFeature.clearContext()
       router.replace("/login")
     }
   }, []);
