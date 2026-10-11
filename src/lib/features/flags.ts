@@ -4,7 +4,7 @@ import { AuthUser } from "../utils/roles";
 
 const gbContext = {
   apiHost: "https://cdn.growthbook.io",
-  clientKey: process.env.FEATURE_CLIENT_KEY
+  clientKey: process.env.NEXT_PUBLIC_FEATURE_CLIENT_KEY
 }
 
 try {
