@@ -1,5 +1,3 @@
-import { BulkError } from "./types";
-
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
@@ -167,7 +165,6 @@ interface ApiErrorResponse {
 }
 
 export type ApiErrorDetails =
-    | BulkError[]
     | Record<string, unknown>
     | Record<string, unknown>[]
     | string

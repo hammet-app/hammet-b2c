@@ -1,24 +1,9 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { driver } from 'driver.js'
 import 'driver.js/dist/driver.css'
-import { studentActivityNoToolsSteps, studentActivitySteps, studentAiFormSteps, studentDashboardSteps, studentLessonSteps, studentMissionSteps, studentQuestionSteps, studentReflectionSteps, studentSubmitSteps, studentTaskSteps } from '@/lib/onboarding/tours/student'
-import { schoolDashboardSteps } from '@/lib/onboarding/tours/school-admin'
 import { hammetDashboardSteps } from '@/lib/onboarding/tours/hammet-admin'
 
 const TOURS = {
-  "student-dashboard": studentDashboardSteps,
-  "student-lesson": studentLessonSteps,
-  "student-mission": studentMissionSteps,
-
-  "student-activity": studentActivitySteps,
-  "student-activity-no-tools": studentActivityNoToolsSteps,
-  "student-reflection": studentReflectionSteps,
-  "student-question": studentQuestionSteps,
-  "student-task": studentTaskSteps,
-  "student-ai-form": studentAiFormSteps,
-  "student-submit": studentSubmitSteps,
-
-  "school-dashboard": schoolDashboardSteps,
 
   "hammet-dashboard": hammetDashboardSteps,
 }

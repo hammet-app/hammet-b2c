@@ -1,52 +1,32 @@
-export type FeatureFlag =
-  | "lesson_coach"
-  | "lesson_questions";
+import { OpenFeature, FlagEvaluationOptions, EvaluationContext } from "@openfeature/web-sdk";
+import { GrowthbookClientProvider } from "@openfeature/growthbook-client-provider"
+import { AuthUser } from "../utils/roles";
 
-type FeatureConfig = {
-  enabled: boolean;
-  schoolIds?: string[];
-};
+const gbContext = {
+  apiHost: "https://cdn.growthbook.io",
+  clientKey: process.env.NEXT_PUBLIC_FEATURE_CLIENT_KEY
+}
 
-const FEATURES: Record<FeatureFlag, FeatureConfig> = {
-  lesson_coach: {
-    enabled: true,
-    schoolIds: (
-      process.env.NEXT_PUBLIC_LESSON_COACH_SCHOOL_IDS ?? ""
-    )
-      .split(",")
-      .map((id) => id.trim())
-      .filter(Boolean),
-  },
+try {
+  await OpenFeature.setProviderAndWait(
+    new GrowthbookClientProvider(gbContext, { timeout: 2000 })
+  )
+} catch(error) {
+  console.log("Failed to initialize provider:", error)
+}
 
-  lesson_questions: {
-    enabled: true,
-    schoolIds: (
-      process.env.NEXT_PUBLIC_LESSON_QUESTIONS_SCHOOL_IDS ?? ""
-    )
-      .split(",")
-      .map((id) => id.trim())
-      .filter(Boolean),
-  },
-};
+const client = OpenFeature.getClient("hammet-api")
 
-export function isFeatureEnabled(
-  feature: FeatureFlag,
-  schoolId?: string | null
-): boolean {
-  const config = FEATURES[feature];
+export async function is_enabled(key: string, layout?: boolean) {
 
-  if (!config.enabled) {
-    return false;
+  if (layout) {
+    const details = client.getStringDetails(key, "A")
+
+    return details.value, details.variant
   }
 
-  // Empty school list means the feature is available to everyone.
-  if (!config.schoolIds?.length) {
-    return true;
-  }
+  const details = client.getBooleanDetails(key, false)
 
-  if (!schoolId) {
-    return false;
-  }
+  return details.value
 
-  return config.schoolIds.includes(schoolId);
 }
