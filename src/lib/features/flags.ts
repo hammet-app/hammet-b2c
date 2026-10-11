@@ -15,8 +15,18 @@ try {
   console.log("Failed to initialize provider:", error)
 }
 
-const client = OpenFeature.getClient("hammet-web")
+const client = OpenFeature.getClient("hammet-api")
 
-export async function is_enabled(key: string, user: AuthUser) {
-  return client.getBooleanValue(key, false)
+export async function is_enabled(key: string, layout?: boolean) {
+
+  if (layout) {
+    const details = client.getStringDetails(key, "A")
+
+    return details.value, details.variant
+  }
+
+  const details = client.getBooleanDetails(key, false)
+
+  return details.value
+
 }
