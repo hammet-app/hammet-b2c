@@ -36,7 +36,7 @@ export async function createAiSchool(
 ): Promise<unknown> {
   const payload = fromCreateAiSchoolRequest(body)
   return await apiClient.post<unknown>(
-    "/hammet/create/ai_school",
+    "/hammet/create/ai-school",
     payload,
     token,
     { onRefresh }
