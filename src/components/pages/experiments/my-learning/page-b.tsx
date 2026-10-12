@@ -147,6 +147,53 @@ export default function MyLearningPage() {
     active: boolean;
   } | null>(null);
 
+  // Interactive Streak state
+  const [streakDays, setStreakDays] = useState(0);
+  const [streakActive, setStreakActive] = useState(false);
+  const [isStreakOpen, setIsStreakOpen] = useState(false);
+  const [selectedQuizAnswer, setSelectedQuizAnswer] = useState<number | null>(null);
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+
+  useEffect(() => {
+    const savedStreak = localStorage.getItem("hammet-streak-days");
+    if (savedStreak) {
+      setStreakDays(parseInt(savedStreak, 10));
+      setStreakActive(true);
+    }
+    const sched = localStorage.getItem("hammet-learning-schedule");
+    if (sched) {
+      try {
+        setSavedSchedule(JSON.parse(sched));
+      } catch {}
+    }
+  }, []);
+
+  const handleIgniteStreak = () => {
+    if (selectedQuizAnswer === 1) {
+      const next = streakDays > 0 ? streakDays + 1 : 1;
+      setStreakDays(next);
+      setStreakActive(true);
+      localStorage.setItem("hammet-streak-days", String(next));
+      setQuizSubmitted(true);
+      setTimeout(() => {
+        setIsStreakOpen(false);
+        setQuizSubmitted(false);
+      }, 1600);
+    }
+  };
+
+  const handleSaveSchedule = () => {
+    const newSchedule = {
+      days: selectedDays,
+      time: scheduleTime,
+      duration: durationMins,
+      active: true,
+    };
+    setSavedSchedule(newSchedule);
+    localStorage.setItem("hammet-learning-schedule", JSON.stringify(newSchedule));
+    setIsScheduleOpen(false);
+  };
+
   // Lists state
   const [userLists, setUserLists] = useState(INITIAL_LISTS);
   const [isNewListOpen, setIsNewListOpen] = useState(false);
@@ -168,16 +215,6 @@ export default function MyLearningPage() {
       type: "course",
     });
     setAddedItemIds((prev) => [...prev, course.id]);
-  };
-
-  const handleSaveSchedule = () => {
-    setSavedSchedule({
-      days: selectedDays,
-      time: scheduleTime,
-      duration: durationMins,
-      active: true,
-    });
-    setIsScheduleOpen(false);
   };
 
   const handleCreateList = () => {
@@ -270,32 +307,44 @@ export default function MyLearningPage() {
                   <Flame className="h-6 w-6 animate-pulse" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Start a new streak</h3>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    {streakActive ? "Daily Streak Active! 🔥" : "Start a new streak"}
+                  </h3>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
-                      0 days active
+                      {streakActive ? `${streakDays} day${streakDays > 1 ? "s" : ""} active` : "0 days active"}
                     </span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">• Goal: 10 mins/day</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      {streakActive ? "• Momentum Ignited!" : "• Goal: 10 mins/day"}
+                    </span>
                   </div>
                 </div>
               </div>
 
               <p className="mt-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                Build a daily learning habit. Learn for 5–10 minutes today in <strong className="text-purple-700 dark:text-cyan-300">Introduction to AI</strong> to ignite your streak!
+                {streakActive ? (
+                  <span className="text-amber-800 dark:text-amber-300 font-medium">
+                    🔥 Great job! Your daily learning habit is active today. Complete tomorrow&apos;s check-in to reach your next streak milestone.
+                  </span>
+                ) : (
+                  <>
+                    Build a daily learning habit. Complete today&apos;s 1-minute AI micro-challenge in <strong className="text-purple-700 dark:text-cyan-300">Introduction to AI</strong> to ignite your streak!
+                  </>
+                )}
               </p>
             </div>
 
             <div className="mt-6 pt-4 border-t border-black/[0.04] dark:border-white/[0.04] flex items-center justify-between">
               <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                Next milestone: 3-Day Spark
+                {streakActive ? `Milestone: ${streakDays}/3-Day Spark` : "Next milestone: 3-Day Spark"}
               </span>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setActiveTab("all")}
-                className="rounded-full border-amber-300/40 text-amber-800 hover:bg-amber-500/10 dark:border-amber-400/30 dark:text-amber-300"
+                onClick={() => setIsStreakOpen(true)}
+                className="rounded-full border-amber-300/40 text-amber-800 hover:bg-amber-500/10 dark:border-amber-400/30 dark:text-amber-300 font-bold"
               >
-                Learn Now
+                {streakActive ? "View Streak 🔥" : "Ignite Streak"}
               </Button>
             </div>
           </motion.div>
@@ -817,6 +866,108 @@ export default function MyLearningPage() {
                   Save Schedule
                 </Button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* STREAK IGNITER MODAL */}
+      <AnimatePresence>
+        {isStreakOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsStreakOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-black/[0.08] bg-white p-7 shadow-2xl dark:border-white/10 dark:bg-[#161226]"
+            >
+              <div className="flex items-center justify-between pb-4 border-b border-black/[0.06] dark:border-white/[0.06]">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white shadow-md shadow-orange-500/20">
+                    <Flame className="h-5 w-5 animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">Daily Streak Igniter</h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Current: {streakDays} day{streakDays > 1 ? "s" : ""}</p>
+                  </div>
+                </div>
+                <button onClick={() => setIsStreakOpen(false)} className="rounded-full p-2 text-slate-400 hover:text-slate-600">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {quizSubmitted ? (
+                <div className="py-8 text-center space-y-3">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300">
+                    <Flame className="h-8 w-8 animate-bounce" />
+                  </div>
+                  <h4 className="text-xl font-extrabold text-slate-900 dark:text-white">
+                    🔥 Streak Ignited!
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+                    You have unlocked today&apos;s daily momentum! Current streak is now <strong>{streakDays} day{streakDays > 1 ? "s" : ""}</strong>.
+                  </p>
+                </div>
+              ) : (
+                <div className="py-4 space-y-4">
+                  <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                    Answer today&apos;s 1-minute AI micro-challenge to verify your daily learning habit and ignite your streak:
+                  </p>
+
+                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-white/[0.03] border border-black/[0.04] dark:border-white/[0.05]">
+                    <p className="text-xs font-bold text-slate-900 dark:text-white mb-3">
+                      Which architectural mechanism enabled modern Large Language Models (LLMs) to overcome RNN sequence bottlenecks?
+                    </p>
+
+                    <div className="space-y-2">
+                      {[
+                        "Recurrent Hidden Markov Chains",
+                        "Multi-Head Self-Attention (Transformers)",
+                        "Support Vector Margin Hyperplanes",
+                      ].map((opt, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setSelectedQuizAnswer(idx)}
+                          className={cn(
+                            "w-full text-left p-3 rounded-xl text-xs font-semibold transition border",
+                            selectedQuizAnswer === idx
+                              ? "bg-purple-50 text-purple-800 border-purple-400 dark:bg-purple-950/30 dark:text-cyan-300 dark:border-cyan-400"
+                              : "bg-white text-slate-700 border-slate-200/80 hover:bg-slate-100 dark:bg-white/[0.02] dark:text-slate-300 dark:border-white/10"
+                          )}
+                        >
+                          <span className="font-mono text-slate-400 mr-2">{String.fromCharCode(65 + idx)}.</span>
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsStreakOpen(false)}
+                      className="flex-1 rounded-xl"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleIgniteStreak}
+                      disabled={selectedQuizAnswer === null}
+                      className="flex-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold hover:from-amber-600 hover:to-orange-600 shadow-md shadow-orange-500/20"
+                    >
+                      Confirm & Ignite 🔥
+                    </Button>
+                  </div>
+                </div>
+              )}
             </motion.div>
           </div>
         )}

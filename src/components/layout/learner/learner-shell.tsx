@@ -84,29 +84,36 @@ export function LearnerShell({ children }: LearnerShellProps) {
   const [loopNum, setLoopNum] = useState(0);
 
   useEffect(() => {
-    const typingSpeed = 150;
-    const deletingSpeed = 100;
-    const pauseDelay = 2000;
+    const currentWord = typingWords[loopNum % typingWords.length];
+    
+    let timer: NodeJS.Timeout;
 
-    let ticker = setTimeout(() => {
-      const i = loopNum % typingWords.length;
-      const fullText = typingWords[i];
-
-      setText(
-        isDeleting
-          ? fullText.substring(0, text.length - 1)
-          : fullText.substring(0, text.length + 1)
-      );
-
-      if (!isDeleting && text === fullText) {
-        setTimeout(() => setIsDeleting(true), pauseDelay);
-      } else if (isDeleting && text === "") {
-        setIsDeleting(false);
-        setLoopNum(loopNum + 1);
+    if (!isDeleting) {
+      if (text.length < currentWord.length) {
+        // Typing characters
+        timer = setTimeout(() => {
+          setText(currentWord.substring(0, text.length + 1));
+        }, 75);
+      } else {
+        // Word complete, pause before deleting
+        timer = setTimeout(() => {
+          setIsDeleting(true);
+        }, 1300);
       }
-    }, isDeleting ? deletingSpeed : typingSpeed);
+    } else {
+      if (text.length > 0) {
+        // Deleting characters quickly
+        timer = setTimeout(() => {
+          setText(currentWord.substring(0, text.length - 1));
+        }, 40);
+      } else {
+        // Fully deleted, move to next word
+        setIsDeleting(false);
+        setLoopNum((prev) => prev + 1);
+      }
+    }
 
-    return () => clearTimeout(ticker);
+    return () => clearTimeout(timer);
   }, [text, isDeleting, loopNum]);
 
   const [collapsed, setCollapsed] = useState(() => {
@@ -194,12 +201,12 @@ export function LearnerShell({ children }: LearnerShellProps) {
           {/* Primary navigation */}
           <nav className="w-full space-y-1">
             {!collapsed && (
-              <div className="mb-3 flex px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-cyan-500 items-center">
+              <div className="mb-3 flex items-center px-3 text-[11px] font-black uppercase tracking-[0.22em] text-[#8B5CF6] dark:text-[#A78BFA] select-none">
                 <span>{text}</span>
                 <motion.span
                   animate={{ opacity: [1, 0, 1] }}
-                  transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                  className="ml-[1px] inline-block h-3 w-[2px] bg-cyan-400"
+                  transition={{ duration: 0.65, repeat: Infinity, ease: "easeInOut" }}
+                  className="ml-1 inline-block h-3.5 w-[2.5px] rounded-full bg-[#06B6D4] shadow-[0_0_8px_#06B6D4]"
                 />
               </div>
             )}
