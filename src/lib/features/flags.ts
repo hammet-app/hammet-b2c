@@ -7,25 +7,35 @@ const gbContext = {
   clientKey: process.env.NEXT_PUBLIC_FEATURE_CLIENT_KEY
 }
 
-try {
-  await OpenFeature.setProviderAndWait(
-    new GrowthbookClientProvider(gbContext, { timeout: 2000 })
-  )
-} catch(error) {
-  console.log("Failed to initialize provider:", error)
+let initPromise: Promise<void> | null = null;
+
+function ensureInitialized() {
+  if (!initPromise) {
+    initPromise = OpenFeature.setProviderAndWait(
+      new GrowthbookClientProvider(gbContext, { timeout: 2000 })
+    ).catch((error) => {
+      console.warn("Failed to initialize feature flags provider:", error);
+    });
+  }
+  return initPromise;
 }
 
-const client = OpenFeature.getClient("hammet-api")
+const client = OpenFeature.getClient("hammet-api");
 
 export async function is_enabled(key: string, layout?: boolean) {
-
-  if (layout) {
-    const details = client.getStringDetails(key, "A")
-
-    return details.value, details.variant
+  try {
+    await ensureInitialized();
+  } catch {
+    // fallback gracefully
   }
 
-  const details = client.getBooleanDetails(key, false)
+  if (layout) {
+    const details = client.getStringDetails(key, "B");
+
+    return details.variant || details.value || "B";
+  }
+
+  const details = client.getBooleanDetails(key, true)
 
   return details.value
 

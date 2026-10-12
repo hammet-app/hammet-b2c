@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -17,11 +17,18 @@ import {
   UserRound,
   X,
   FileBadge,
+  Sun,
+  Moon,
   CreditCard,
+  ShoppingCart,
+  Bell,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-context";
 import { useTheme } from "@/lib/use-theme";
+import { useCart } from "@/lib/store/use-cart";
+import { CartDropdown } from "./cart-dropdown";
+import { ProfileDropdown } from "./profile-dropdown";
 
 const navigation = [
   {
@@ -45,13 +52,14 @@ const navigation = [
     icon: FileBadge,
   },
   {
-    label: "AI Schools",
+    label: "School of AI foundation",
     href: "/learner/ai-schools",
     icon: BookOpen,
   },
 ];
 
 const STORAGE_KEY = "hammet-learner-sidebar-collapsed";
+const typingWords = ["LEARN", "BUILD", "CREATE", "GROW"];
 
 interface LearnerShellProps {
   children: React.ReactNode;
@@ -61,6 +69,45 @@ export function LearnerShell({ children }: LearnerShellProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { theme, toggle } = useTheme();
+  
+  const cartItems = useCart((state) => state.items);
+  const [mounted, setMounted] = useState(false);
+
+  // Avoid hydration mismatch for cart icon badge
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const [text, setText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [loopNum, setLoopNum] = useState(0);
+
+  useEffect(() => {
+    const typingSpeed = 150;
+    const deletingSpeed = 100;
+    const pauseDelay = 2000;
+
+    let ticker = setTimeout(() => {
+      const i = loopNum % typingWords.length;
+      const fullText = typingWords[i];
+
+      setText(
+        isDeleting
+          ? fullText.substring(0, text.length - 1)
+          : fullText.substring(0, text.length + 1)
+      );
+
+      if (!isDeleting && text === fullText) {
+        setTimeout(() => setIsDeleting(true), pauseDelay);
+      } else if (isDeleting && text === "") {
+        setIsDeleting(false);
+        setLoopNum(loopNum + 1);
+      }
+    }, isDeleting ? deletingSpeed : typingSpeed);
+
+    return () => clearTimeout(ticker);
+  }, [text, isDeleting, loopNum]);
 
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === "undefined") {
@@ -147,9 +194,14 @@ export function LearnerShell({ children }: LearnerShellProps) {
           {/* Primary navigation */}
           <nav className="w-full space-y-1">
             {!collapsed && (
-              <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-                Learn
-              </p>
+              <div className="mb-3 flex px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-cyan-500 items-center">
+                <span>{text}</span>
+                <motion.span
+                  animate={{ opacity: [1, 0, 1] }}
+                  transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                  className="ml-[1px] inline-block h-3 w-[2px] bg-cyan-400"
+                />
+              </div>
             )}
 
             {navigation.map((item) => {
@@ -361,23 +413,52 @@ export function LearnerShell({ children }: LearnerShellProps) {
             </div>
 
             <div className="flex items-center gap-2">
+              <CartDropdown />
+
+              <Link
+                href="/learner/notifications"
+                aria-label="Notifications"
+                className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white/50 text-slate-500 shadow-sm ring-1 ring-black/5 transition-all hover:bg-white/80 hover:text-slate-900 dark:bg-white/[0.03] dark:text-slate-400 dark:ring-white/10 dark:hover:bg-white/[0.08] dark:hover:text-white"
+              >
+                <Bell className="h-[18px] w-[18px]" />
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-[#0D0A17]" />
+              </Link>
+
               <button
                 type="button"
                 onClick={toggle}
                 aria-label={`Switch to ${
                   theme === "dark" ? "light" : "dark"
                 } mode`}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-white"
+                className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white/50 text-slate-500 shadow-sm ring-1 ring-black/5 transition-all hover:bg-white/80 hover:text-slate-900 dark:bg-white/[0.03] dark:text-slate-400 dark:ring-white/10 dark:hover:bg-white/[0.08] dark:hover:text-white"
               >
-                {theme === "dark" ? "☼" : "◐"}
+                <motion.div
+                  initial={false}
+                  animate={{
+                    scale: theme === "dark" ? 0 : 1,
+                    opacity: theme === "dark" ? 0 : 1,
+                    rotate: theme === "dark" ? -90 : 0,
+                  }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="absolute"
+                >
+                  <Sun className="h-[18px] w-[18px]" />
+                </motion.div>
+                <motion.div
+                  initial={false}
+                  animate={{
+                    scale: theme === "dark" ? 1 : 0,
+                    opacity: theme === "dark" ? 1 : 0,
+                    rotate: theme === "dark" ? 0 : 90,
+                  }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="absolute"
+                >
+                  <Moon className="h-[18px] w-[18px]" />
+                </motion.div>
               </button>
 
-              <Link
-                href="/learner/profile"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 text-xs font-bold text-white"
-              >
-                {user?.fullName?.charAt(0)?.toUpperCase() ?? "U"}
-              </Link>
+              <ProfileDropdown />
             </div>
           </div>
         </header>

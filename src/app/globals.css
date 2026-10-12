@@ -39,8 +39,8 @@
   --color-text-muted:     #A1A1AA;
 
   /* ── Fonts ── */
-  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-head: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-head: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
 
   /* ── Radius ── */
   --radius-sm:  6px;
@@ -93,6 +93,10 @@
   --color-danger-dark:    #f87171; /* Bright red text */
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* ── Driver.js tour popover — Hammet brand theme ── */
 .hammet-tour-popover {
   background: #1e0a3c !important;
@@ -100,7 +104,7 @@
   border-radius: 12px !important;
   box-shadow: 0 8px 32px rgba(6, 182, 212, 0.15), 0 0 0 1px rgba(139, 92, 246, 0.1) !important;
   color: #f3f0ff !important;
-  font-family: var(--font-dm-sans), sans-serif !important;
+  font-family: var(--font-poppins), sans-serif !important;
 }
 
 .hammet-tour-popover .driver-popover-title {
@@ -174,10 +178,6 @@
   ::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
 }
 
-:root {
-  --font-head: 'Nunito', sans-serif;
-  --font-body: 'Atkinson Hyperlegible', sans-serif;
-}
 
 @keyframes blog-fade-up {
   from {

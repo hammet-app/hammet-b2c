@@ -59,11 +59,17 @@ async function requestForm<T>(
     if (newToken) {
       res = await makeRequest(newToken);
     } else {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("session-expired"));
+      }
       throw new ApiError(401, null, "Session expired");
     }
   }
 
   if (!res.ok) {
+    if (res.status === 401 && !path.includes("/auth/") && typeof window !== "undefined") {
+      window.dispatchEvent(new Event("session-expired"));
+    }
     throw await buildApiError(res)
   }
 
@@ -110,6 +116,9 @@ async function request<T>(
       });
 
       if (!retryRes.ok) {
+        if (retryRes.status === 401 && typeof window !== "undefined") {
+          window.dispatchEvent(new Event("session-expired"));
+        }
         throw await buildApiError(retryRes)
       }
 
@@ -117,10 +126,16 @@ async function request<T>(
     }
 
     // Refresh failed — throw so the dashboard guard can redirect to login
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("session-expired"));
+    }
     throw new ApiError(401, null, "Session expired");
   }
 
   if (!res.ok) {
+    if (res.status === 401 && !path.includes("/auth/") && typeof window !== "undefined") {
+      window.dispatchEvent(new Event("session-expired"));
+    }
     throw await buildApiError(res);
   }
 
