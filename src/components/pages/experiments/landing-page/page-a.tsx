@@ -47,7 +47,7 @@ export default function HomePage() {
   const { theme, toggle } = useTheme();
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#F5F3FF] text-[#17131F] transition-colors duration-300 dark:bg-[#0D0A17] dark:text-white">
+    <main className="min-h-screen overflow-x-clip bg-[#F5F3FF] text-[#17131F] transition-colors duration-300 dark:bg-[#0D0A17] dark:text-white">
       {/* Ambient background */}
       <div
         aria-hidden="true"
@@ -60,8 +60,8 @@ export default function HomePage() {
         <div className="absolute bottom-[-220px] left-[30%] h-[500px] w-[500px] rounded-full bg-violet-500/10 blur-[130px] dark:bg-violet-700/10" />
       </div>
 
-      {/* Navigation */}
-      <header className="relative z-20">
+      {/* Navigation - Sticky top-0 so it follows user on scroll */}
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-[#F5F3FF]/85 dark:bg-[#0D0A17]/85 border-b border-black/[0.04] dark:border-white/[0.05] transition-all duration-200">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10">
           <Link
             href="/"

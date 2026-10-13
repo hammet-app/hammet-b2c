@@ -128,7 +128,7 @@ export function ExpandingCoursePanels() {
                   : "flex-1 border-black/[0.06] dark:border-white/[0.06] hover:border-purple-300 dark:hover:border-purple-400/40"
               )}
               style={{
-                transition: "flex 420ms cubic-bezier(0.2, 0.9, 0.3, 1), border-color 250ms ease, box-shadow 250ms ease",
+                transition: "flex 560ms cubic-bezier(0.22, 1, 0.36, 1), border-color 300ms ease, box-shadow 300ms ease",
                 contain: "layout paint",
                 transform: "translateZ(0)",
               }}
@@ -165,11 +165,13 @@ export function ExpandingCoursePanels() {
               {/* ── CONDENSED / COLLAPSED STATE (Smooth horizontal Poppins wording alignment) ── */}
               <div
                 className={cn(
-                  "absolute inset-0 z-10 h-full w-full flex flex-col justify-between p-5 text-white pointer-events-none",
-                  isExpanded ? "opacity-0 translate-y-3 pointer-events-none" : "opacity-100 translate-y-0 pointer-events-auto"
+                  "absolute inset-0 z-10 h-full w-full flex flex-col justify-between p-5 text-white transition-all",
+                  isExpanded ? "opacity-0 scale-95 pointer-events-none" : "opacity-100 scale-100 pointer-events-auto"
                 )}
                 style={{
-                  transition: "opacity 280ms cubic-bezier(0.16, 1, 0.3, 1), transform 280ms cubic-bezier(0.16, 1, 0.3, 1)",
+                  transitionDuration: "180ms",
+                  transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
+                  transitionDelay: isExpanded ? "0ms" : "220ms",
                   transform: "translateZ(0)",
                 }}
               >
@@ -212,18 +214,28 @@ export function ExpandingCoursePanels() {
                 </div>
               </div>
 
-              {/* ── EXPANDED / HOVERED FULL INFORMATION STATE (Cascading Poppins Typography) ── */}
+              {/* ── EXPANDED / HOVERED FULL INFORMATION STATE (Stable layout without text squishing + smooth glide reveal) ── */}
               <div
                 className={cn(
-                  "relative z-10 h-full w-full flex flex-col justify-between p-6 sm:p-8 text-white overflow-y-auto",
-                  isExpanded ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-3 pointer-events-none absolute inset-0"
+                  "absolute inset-0 z-10 h-full w-full overflow-hidden p-6 sm:p-8 text-white",
+                  isExpanded ? "pointer-events-auto" : "pointer-events-none"
                 )}
-                style={{
-                  transition: "opacity 320ms cubic-bezier(0.16, 1, 0.3, 1), transform 320ms cubic-bezier(0.16, 1, 0.3, 1)",
-                  transitionDelay: isExpanded ? "50ms" : "0ms",
-                  transform: "translateZ(0)",
-                }}
               >
+                {/* Fixed-layout inner content wrapper: text never squishes or re-wraps while width animates */}
+                <div
+                  className={cn(
+                    "h-full flex flex-col justify-between w-full min-w-0 lg:min-w-[480px] max-w-[620px] transition-all",
+                    isExpanded
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 translate-y-3 pointer-events-none"
+                  )}
+                  style={{
+                    transitionDuration: "360ms",
+                    transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
+                    transitionDelay: isExpanded ? "180ms" : "0ms",
+                    transform: "translateZ(0)",
+                  }}
+                >
                 {/* Top Row: Track Number, Badges & Hardware Acceleration */}
                 <div>
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/15 pb-4">
@@ -350,6 +362,7 @@ export function ExpandingCoursePanels() {
                 </div>
               </div>
             </div>
+          </div>
           );
         })}
       </div>

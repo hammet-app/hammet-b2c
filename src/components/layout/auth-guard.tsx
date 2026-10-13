@@ -86,7 +86,11 @@ export function GuestGuard({ children }: AuthGuardProps) {
   }, [isResolved, user, router]);
 
   if (isLoading || !isResolved) {
-    return <DashboardSkeleton />;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-600 border-t-transparent dark:border-cyan-400" />
+      </div>
+    );
   }
 
   if (user) {

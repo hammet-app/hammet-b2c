@@ -68,15 +68,15 @@ export function AuthShell({ children, wide, mode }: AuthShellProps) {
       </header>
 
       {/* Authentication environment */}
-      <div className="relative z-10 flex min-h-[calc(100vh-4rem)] items-center px-5 py-8 sm:px-8 lg:px-10">
-        <div className="mx-auto grid w-full max-w-[1200px] grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(390px,460px)] lg:gap-14 xl:gap-20 lg:pr-24 xl:pr-32 2xl:pr-40">
+      <div className="relative z-10 flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-8 sm:px-8">
+        <div className="mx-auto grid w-full max-w-[1120px] grid-cols-1 items-center justify-center gap-10 lg:grid-cols-2 lg:gap-12 xl:gap-16">
           {/* Editorial / visual side: 3D, solid, animated and interactive (Reference Image 1) */}
-          <div className="relative hidden min-h-[620px] items-center justify-center lg:flex">
+          <div className="relative hidden min-h-[600px] items-center justify-center lg:flex">
             <Auth3DCard />
           </div>
 
           {/* Page content */}
-          <div className="flex w-full items-center">
+          <div className="flex w-full items-center justify-center">
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -84,7 +84,7 @@ export function AuthShell({ children, wide, mode }: AuthShellProps) {
                 duration: 0.4,
                 ease: "easeOut",
               }}
-              className="w-full"
+              className="w-full flex justify-center"
             >
               {children}
             </motion.div>
