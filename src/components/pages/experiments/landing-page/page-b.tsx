@@ -366,7 +366,7 @@ export default function HomePage() {
         {/* Foreground Content: Wordings Directly ON the Background */}
         <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-8 lg:px-10 w-full pt-4 sm:pt-8">
           {/* Top Badge Row with Open Doodle Running Character */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-end justify-between gap-4">
             {/* Glowing HAMMET AI ACADEMY Badge */}
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -404,34 +404,34 @@ export default function HomePage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="hidden md:flex items-center gap-3.5 select-none"
+              className="hidden md:flex items-end gap-3 select-none"
             >
               <motion.div
-                animate={{ y: [0, -4, 0] }}
+                animate={{ y: [0, -3, 0] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="rounded-2xl border border-purple-300/70 bg-white/95 px-4 py-2 font-poppins text-xs sm:text-sm font-bold text-purple-950 shadow-md dark:border-purple-400/40 dark:bg-slate-900/95 dark:text-purple-200"
+                className="mb-1 rounded-2xl border border-purple-300/70 bg-white/95 px-4 py-2 font-poppins text-xs sm:text-sm font-bold text-purple-950 shadow-md dark:border-purple-400/40 dark:bg-slate-900/95 dark:text-purple-200"
               >
                 Sprint to Production AI! 🚀
               </motion.div>
               <motion.div
-                animate={{ y: [0, -6, 0] }}
+                animate={{ y: [0, -4, 0] }}
                 transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-                className="relative"
+                className="relative -mb-1"
               >
                 <Image
                   src="/ai-bot-runner.png"
                   alt="Hammet AI Sprint Bot"
-                  width={140}
-                  height={140}
+                  width={100}
+                  height={100}
                   priority
-                  className="w-28 h-28 sm:w-36 sm:h-36 object-contain drop-shadow-[0_10px_20px_rgba(139,92,246,0.25)] select-none pointer-events-none"
+                  className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-[0_8px_16px_rgba(139,92,246,0.2)] select-none pointer-events-none"
                 />
               </motion.div>
             </motion.div>
           </div>
 
           {/* Two-Column Title & Subcopy directly overlaid on background */}
-          <div className="mt-8 grid items-start gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
+          <div className="mt-3 sm:mt-4 grid items-start gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
             {/* Left Headline */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
