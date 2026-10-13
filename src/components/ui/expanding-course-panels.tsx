@@ -122,7 +122,7 @@ export function ExpandingCoursePanels() {
               onMouseEnter={() => setActiveId(course.id)}
               onClick={() => setActiveId(course.id)}
               className={cn(
-                "relative overflow-hidden rounded-[2rem] cursor-pointer select-none border",
+                "group relative overflow-hidden rounded-[2rem] cursor-pointer select-none border",
                 isExpanded
                   ? "flex-[3.5] lg:flex-[3.8] border-purple-400/50 dark:border-cyan-400/40 shadow-xl"
                   : "flex-1 border-black/[0.06] dark:border-white/[0.06] hover:border-purple-300 dark:hover:border-purple-400/40"
@@ -141,7 +141,10 @@ export function ExpandingCoursePanels() {
                   fill
                   unoptimized
                   sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-cover"
+                  className={cn(
+                    "object-cover transition-transform duration-700 ease-out",
+                    isExpanded ? "scale-105" : "scale-100 group-hover:scale-105"
+                  )}
                   style={{ transform: "translateZ(0)" }}
                 />
                 {/* Dynamic Gradient Scrim Overlay */}
@@ -149,68 +152,44 @@ export function ExpandingCoursePanels() {
                   className={cn(
                     "absolute inset-0 transition-opacity duration-300",
                     isExpanded
-                      ? "bg-gradient-to-t from-black/95 via-black/75 to-black/30 opacity-95"
-                      : "bg-black/60 hover:bg-black/45"
+                      ? "bg-gradient-to-t from-black/95 via-black/80 to-black/35 opacity-95"
+                      : "bg-gradient-to-t from-black/55 via-transparent to-black/15 opacity-60 group-hover:opacity-40"
                   )}
                 />
                 <div
                   className={cn(
                     "absolute inset-0 bg-gradient-to-r transition-opacity duration-300",
                     course.gradient,
-                    isExpanded ? "opacity-45" : "opacity-25"
+                    isExpanded ? "opacity-45" : "opacity-20 group-hover:opacity-30"
                   )}
                 />
               </div>
 
-              {/* ── CONDENSED / COLLAPSED STATE (Smooth horizontal Poppins wording alignment) ── */}
+              {/* ── UNOPENED / COLLAPSED STATE: Clean contextual image display with minimal floating track indicator ── */}
               <div
                 className={cn(
-                  "absolute inset-0 z-10 h-full w-full flex flex-col justify-between p-5 text-white transition-all",
+                  "absolute inset-0 z-10 h-full w-full p-4 sm:p-5 pointer-events-none transition-all",
                   isExpanded ? "opacity-0 scale-95 pointer-events-none" : "opacity-100 scale-100 pointer-events-auto"
                 )}
                 style={{
-                  transitionDuration: "180ms",
+                  transitionDuration: "200ms",
                   transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
-                  transitionDelay: isExpanded ? "0ms" : "220ms",
+                  transitionDelay: isExpanded ? "0ms" : "200ms",
                   transform: "translateZ(0)",
                 }}
               >
-                {/* Top Badge: Number + Accent Indicator */}
+                {/* Minimal Track Pill at Top - No squished cards or text */}
                 <div className="flex items-center justify-between">
                   <span
-                    className="flex h-10 w-10 items-center justify-center rounded-2xl font-poppins text-sm font-black shadow-lg"
-                    style={{ backgroundColor: `${course.accentColor}33`, color: "#FFFFFF", border: `1.5px solid ${course.accentColor}66` }}
+                    className="flex h-10 w-10 items-center justify-center rounded-2xl font-poppins text-xs font-black shadow-lg backdrop-blur-md bg-black/40 text-white"
+                    style={{ border: `1.5px solid ${course.accentColor}88` }}
                   >
                     {course.number}
                   </span>
-                  <span className="h-2.5 w-2.5 rounded-full animate-pulse shadow-sm" style={{ backgroundColor: course.accentColor }} />
-                </div>
-
-                {/* Bottom Horizontal Wording Alignment (Readable & Modern, No Vertical Rotated Text) */}
-                <div className="rounded-2xl border border-white/10 bg-black/60 p-3.5 shadow-xl">
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className="rounded-full px-2 py-0.5 font-poppins text-[10px] font-bold uppercase tracking-wider text-white"
-                      style={{ backgroundColor: `${course.accentColor}66` }}
-                    >
-                      {course.badge}
-                    </span>
-                    <span className="text-[10px] font-poppins font-medium text-slate-300">
-                      {course.level}
-                    </span>
-                  </div>
-
-                  <h4 className="mt-1.5 font-poppins text-sm sm:text-base font-extrabold text-white leading-snug line-clamp-2">
-                    {course.title}
-                  </h4>
-
-                  <div className="mt-2.5 flex items-center justify-between text-[11px] font-poppins font-medium text-slate-300 border-t border-white/10 pt-2">
-                    <span>{course.duration.split("•")[0]}</span>
-                    <span className="flex items-center gap-0.5 font-poppins text-xs font-bold text-white hover:text-cyan-300 transition-colors">
-                      <span>Explore</span>
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    </span>
-                  </div>
+                  <span
+                    className="h-2.5 w-2.5 rounded-full shadow-md animate-pulse"
+                    style={{ backgroundColor: course.accentColor }}
+                  />
                 </div>
               </div>
 
@@ -221,16 +200,16 @@ export function ExpandingCoursePanels() {
                   isExpanded ? "pointer-events-auto" : "pointer-events-none"
                 )}
               >
-                {/* Fixed-layout inner content wrapper: text never squishes or re-wraps while width animates */}
+                {/* Fixed-layout inner content wrapper: rock-solid layout prevents word re-wrapping or adjustment */}
                 <div
                   className={cn(
-                    "h-full flex flex-col justify-between w-full min-w-0 lg:min-w-[480px] max-w-[620px] transition-all",
+                    "h-full flex flex-col justify-between w-[520px] sm:w-[560px] max-w-full shrink-0 transition-all",
                     isExpanded
-                      ? "opacity-100 translate-y-0"
-                      : "opacity-0 translate-y-3 pointer-events-none"
+                      ? "opacity-100 translate-y-0 filter-none"
+                      : "opacity-0 translate-y-2 blur-[3px] pointer-events-none"
                   )}
                   style={{
-                    transitionDuration: "360ms",
+                    transitionDuration: isExpanded ? "320ms" : "120ms",
                     transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
                     transitionDelay: isExpanded ? "180ms" : "0ms",
                     transform: "translateZ(0)",
@@ -238,7 +217,7 @@ export function ExpandingCoursePanels() {
                 >
                 {/* Top Row: Track Number, Badges & Hardware Acceleration */}
                 <div>
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/15 pb-4">
+                  <div className="flex items-center justify-between gap-3 border-b border-white/15 pb-4">
                     <div className="flex items-center gap-2.5">
                       <span
                         className="flex h-10 w-10 items-center justify-center rounded-2xl font-poppins text-sm font-black shadow-lg"
@@ -337,7 +316,7 @@ export function ExpandingCoursePanels() {
                 </div>
 
                 {/* Bottom Action CTA & Learner Stats */}
-                <div className="mt-6 pt-4 border-t border-white/15 flex flex-wrap items-center justify-between gap-4">
+                <div className="mt-6 pt-4 border-t border-white/15 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="flex -space-x-2">
                       <div className="h-7 w-7 rounded-full bg-purple-600 border border-white/40 flex items-center justify-center font-poppins text-[10px] font-bold">

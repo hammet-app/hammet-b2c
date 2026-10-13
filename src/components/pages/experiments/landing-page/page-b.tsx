@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -21,6 +21,8 @@ import {
   Pause,
   Video,
   ChevronDown,
+  ChevronRight,
+  ChevronLeft,
   Laptop,
   Smartphone,
   Cpu,
@@ -204,6 +206,25 @@ const fellowshipPhases = [
   },
 ];
 
+const AI_EXPLAINER_MESSAGES = [
+  {
+    topic: "Unlocking Potential",
+    text: "Data alone has potential. AI unlocks it. We design intelligent solutions that convert information into strategy, automation into efficiency, and real-world impact.",
+  },
+  {
+    topic: "Hands-on Sandboxes",
+    text: "Learn by building. Access on-demand cloud GPU sandboxes to train, fine-tune, and deploy production-grade LLMs and vision models in seconds.",
+  },
+  {
+    topic: "Proof Over Promises",
+    text: "Proof over promises. Earn cryptographically verified Skill Passports and portfolio badges recognized by top AI engineering teams globally.",
+  },
+  {
+    topic: "Production Cohorts",
+    text: "From learner to production engineer. Collaborate with peers in live cohorts, tackle industry capstones, and accelerate your AI career.",
+  },
+];
+
 export default function HomePage() {
   const { theme, toggle } = useTheme();
   const [registeredSessions, setRegisteredSessions] = useState<Record<string, boolean>>({});
@@ -217,6 +238,20 @@ export default function HomePage() {
   const [activeFellowshipPhase, setActiveFellowshipPhase] = useState<number>(0);
   const [waitlistEmail, setWaitlistEmail] = useState<string>("");
   const [waitlistSubmitted, setWaitlistSubmitted] = useState<boolean>(false);
+
+  // Interactive AI Explainer Bot state
+  const [activeExplainerIdx, setActiveExplainerIdx] = useState(0);
+  const [isExplainerPlaying, setIsExplainerPlaying] = useState(true);
+
+  // Auto-advance messages every 8.5 seconds when not paused
+  useEffect(() => {
+    if (!isExplainerPlaying) return;
+    const autoCycle = setInterval(() => {
+      setActiveExplainerIdx((prev) => (prev + 1) % AI_EXPLAINER_MESSAGES.length);
+    }, 8500);
+
+    return () => clearInterval(autoCycle);
+  }, [isExplainerPlaying, activeExplainerIdx]);
 
   const toggleRegisterSession = (sessionId: string) => {
     setRegisteredSessions((prev) => ({
@@ -446,16 +481,133 @@ export default function HomePage() {
               </h1>
             </motion.div>
 
-            {/* Right Copy & Action Buttons in Clean Card */}
+            {/* Right Copy & Action Buttons in Clean Card - Interactive AI Bot Explainer */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
               className="rounded-3xl border border-white/60 bg-white/95 p-6 sm:p-7 shadow-xl shadow-purple-950/5 dark:border-white/10 dark:bg-slate-950/90"
             >
-              <p className="text-base sm:text-lg leading-relaxed text-slate-700 dark:text-slate-200 font-medium">
-                Data alone has potential. AI unlocks it. We design intelligent solutions that convert information into strategy, automation into efficiency, and insights into real-world transformation—driving growth, resilience, and long-term value.
-              </p>
+              {/* AI Bot Explainer Bar */}
+              <div className="flex items-center justify-between pb-3.5 mb-3.5 border-b border-black/[0.06] dark:border-white/10">
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]" />
+                  </span>
+                  <span className="font-poppins text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-cyan-300">
+                    Hammet AI Bot
+                  </span>
+                  <span className="text-slate-300 dark:text-slate-600">•</span>
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                    {AI_EXPLAINER_MESSAGES[activeExplainerIdx].topic}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1 mr-1">
+                    {AI_EXPLAINER_MESSAGES.map((_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setActiveExplainerIdx(i)}
+                        aria-label={`Jump to message ${i + 1}`}
+                        className={cn(
+                          "h-1.5 rounded-full transition-all duration-300",
+                          i === activeExplainerIdx
+                            ? "w-4 bg-purple-600 dark:bg-cyan-400"
+                            : "w-1.5 bg-slate-300 hover:bg-slate-400 dark:bg-slate-700 dark:hover:bg-slate-500"
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsExplainerPlaying(!isExplainerPlaying)}
+                    title={isExplainerPlaying ? "Pause auto-typing" : "Resume auto-typing"}
+                    aria-label={isExplainerPlaying ? "Pause auto-typing" : "Resume auto-typing"}
+                    className="flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-black/5 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/10 transition-colors"
+                  >
+                    {isExplainerPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3 ml-0.5" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveExplainerIdx((prev) => (prev + 1) % AI_EXPLAINER_MESSAGES.length)}
+                    title="Next message"
+                    aria-label="Next message"
+                    className="flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-black/5 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/10 transition-colors"
+                  >
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Fluid Cascading Words Reveal with stable height & luxury motion */}
+              <div className="min-h-[148px] sm:min-h-[128px] flex flex-col justify-start overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={activeExplainerIdx}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    variants={{
+                      hidden: { opacity: 0 },
+                      visible: {
+                        opacity: 1,
+                        transition: {
+                          staggerChildren: 0.032,
+                          delayChildren: 0.04,
+                        },
+                      },
+                      exit: {
+                        opacity: 0,
+                        y: -6,
+                        filter: "blur(4px)",
+                        transition: { duration: 0.22, ease: "easeInOut" },
+                      },
+                    }}
+                    className="text-base sm:text-lg leading-relaxed text-slate-700 dark:text-slate-200 font-medium"
+                  >
+                    {AI_EXPLAINER_MESSAGES[activeExplainerIdx].text
+                      .split(" ")
+                      .map((word, i) => (
+                        <motion.span
+                          key={`${activeExplainerIdx}-${i}`}
+                          variants={{
+                            hidden: { opacity: 0, y: 5, filter: "blur(4px)" },
+                            visible: {
+                              opacity: 1,
+                              y: 0,
+                              filter: "blur(0px)",
+                              transition: {
+                                duration: 0.32,
+                                ease: [0.16, 1, 0.3, 1],
+                              },
+                            },
+                          }}
+                          className="inline-block mr-[0.28em]"
+                        >
+                          {word}
+                        </motion.span>
+                      ))}
+                    <motion.span
+                      variants={{
+                        hidden: { opacity: 0 },
+                        visible: {
+                          opacity: 1,
+                          transition: {
+                            delay:
+                              AI_EXPLAINER_MESSAGES[activeExplainerIdx].text.split(" ").length *
+                                0.032 +
+                              0.08,
+                          },
+                        },
+                      }}
+                      className="inline-block w-1.5 h-4 ml-1 bg-gradient-to-b from-purple-600 to-cyan-500 rounded-sm animate-pulse align-middle shadow-[0_0_8px_rgba(139,92,246,0.6)]"
+                    />
+                  </motion.p>
+                </AnimatePresence>
+              </div>
 
               <div className="mt-6 flex flex-wrap items-center gap-3.5">
                 <Link
@@ -554,22 +706,6 @@ export default function HomePage() {
 
             {/* Devices & Floating Cards Container */}
             <div className="relative rounded-[2.5rem] border border-black/[0.08] bg-slate-100/50 p-4 sm:p-8 lg:p-12 dark:border-white/10 dark:bg-white/[0.02]">
-              {/* Peeking Coder Doodle resting cleanly on the top border */}
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ type: "spring", stiffness: 220, damping: 20 }}
-                className="absolute top-0 right-8 sm:right-20 -translate-y-[calc(100%-2px)] z-30 pointer-events-none flex flex-row items-end gap-3 select-none"
-              >
-                <div className="mb-4 rounded-2xl border border-purple-200/90 bg-white/95 px-3.5 py-1.5 text-xs font-bold text-slate-800 shadow-[0_6px_24px_rgba(0,0,0,0.1)] dark:border-white/10 dark:bg-slate-900/95 dark:text-cyan-300">
-                  Full GPU access in 20 seconds! ⚡
-                </div>
-                <DoodlePeekingCoder
-                  className="h-20 sm:h-24 w-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.08)] select-none pointer-events-none"
-                  accentColor="#8B5CF6"
-                />
-              </motion.div>
 
               {/* Device Arrangement Grid: Laptop (Left/Center) + Phone (Right) */}
               <div className="grid items-end gap-8 lg:grid-cols-[1fr_320px] lg:gap-10">
@@ -761,6 +897,17 @@ export default function HomePage() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="absolute -top-7 right-6 sm:right-12 hidden sm:block rounded-2xl border border-black/10 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-slate-900 max-w-[270px] z-20"
               >
+                {/* Peeking Coder Doodle resting cleanly on Widget 1 top border */}
+                <div className="absolute top-0 right-8 -translate-y-full pointer-events-none select-none z-30 flex items-end gap-2 pb-[1px]">
+                  <div className="mb-2 hidden lg:block rounded-xl border border-purple-200/90 bg-white/95 px-2.5 py-1 text-[11px] font-bold text-slate-800 shadow-md dark:border-white/10 dark:bg-slate-900/95 dark:text-cyan-300">
+                    Full GPU access! ⚡
+                  </div>
+                  <DoodlePeekingCoder
+                    className="h-16 sm:h-20 w-auto drop-shadow-sm select-none pointer-events-none"
+                    accentColor="#8B5CF6"
+                  />
+                </div>
+
                 <div className="flex items-center justify-between">
                   <span className="rounded-full bg-amber-500 px-2.5 py-0.5 text-[10px] font-black uppercase text-white tracking-wide">
                     TIMER IS ON ●
@@ -1783,13 +1930,76 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="relative z-10 border-t border-black/[0.06] dark:border-white/[0.06]">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 text-xs text-slate-400 dark:text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10">
-          <span className="font-bold tracking-[-0.03em] text-slate-500 dark:text-slate-400">
-            Hammet
-          </span>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-20px" }}
+            className="flex items-center gap-2.5"
+          >
+            <Link href="/" className="inline-flex items-center gap-2.5 group" aria-label="Hammet Home">
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, scale: 0.8, rotate: -6 },
+                  visible: {
+                    opacity: 1,
+                    scale: 1,
+                    rotate: 0,
+                    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+                  },
+                }}
+              >
+                <Image
+                  src="/icon-512x512.png"
+                  alt="Hammet Logo"
+                  width={24}
+                  height={24}
+                  className="h-6 w-6 shrink-0 rounded-lg shadow-sm transition-transform duration-300 group-hover:scale-105"
+                />
+              </motion.div>
 
-          <span>
+              <motion.span
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: {
+                    opacity: 1,
+                    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
+                  },
+                }}
+                className="inline-flex text-base font-extrabold tracking-[-0.03em] bg-gradient-to-r from-purple-700 via-violet-600 to-indigo-600 bg-clip-text text-transparent dark:from-purple-300 dark:via-violet-200 dark:to-cyan-300"
+              >
+                {"Hammet".split("").map((char, index) => (
+                  <motion.span
+                    key={index}
+                    variants={{
+                      hidden: { opacity: 0, y: 8, filter: "blur(4px)" },
+                      visible: {
+                        opacity: 1,
+                        y: 0,
+                        filter: "blur(0px)",
+                        transition: {
+                          type: "spring",
+                          damping: 14,
+                          stiffness: 160,
+                        },
+                      },
+                    }}
+                    className="inline-block"
+                  >
+                    {char}
+                  </motion.span>
+                ))}
+              </motion.span>
+            </Link>
+          </motion.div>
+
+          <motion.span
+            initial={{ opacity: 0, y: 6 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+          >
             Learn AI properly. Build something useful.
-          </span>
+          </motion.span>
         </div>
       </footer>
     </main>

@@ -530,7 +530,7 @@ export function DoodlePeekingCoder({
   return (
     <div className={`relative select-none ${className}`}>
       <svg
-        viewBox="0 0 200 120"
+        viewBox="0 0 200 110"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="w-full h-full overflow-visible"

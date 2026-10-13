@@ -466,13 +466,76 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="relative z-10 border-t border-black/[0.06] dark:border-white/[0.06]">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 text-xs text-slate-400 dark:text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10">
-          <span className="font-bold tracking-[-0.03em] text-slate-500 dark:text-slate-400">
-            Hammet
-          </span>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-20px" }}
+            className="flex items-center gap-2.5"
+          >
+            <Link href="/" className="inline-flex items-center gap-2.5 group" aria-label="Hammet Home">
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, scale: 0.8, rotate: -6 },
+                  visible: {
+                    opacity: 1,
+                    scale: 1,
+                    rotate: 0,
+                    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+                  },
+                }}
+              >
+                <Image
+                  src="/icon-512x512.png"
+                  alt="Hammet Logo"
+                  width={24}
+                  height={24}
+                  className="h-6 w-6 shrink-0 rounded-lg shadow-sm transition-transform duration-300 group-hover:scale-105"
+                />
+              </motion.div>
 
-          <span>
+              <motion.span
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: {
+                    opacity: 1,
+                    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
+                  },
+                }}
+                className="inline-flex text-base font-extrabold tracking-[-0.03em] bg-gradient-to-r from-purple-700 via-violet-600 to-indigo-600 bg-clip-text text-transparent dark:from-purple-300 dark:via-violet-200 dark:to-cyan-300"
+              >
+                {"Hammet".split("").map((char, index) => (
+                  <motion.span
+                    key={index}
+                    variants={{
+                      hidden: { opacity: 0, y: 8, filter: "blur(4px)" },
+                      visible: {
+                        opacity: 1,
+                        y: 0,
+                        filter: "blur(0px)",
+                        transition: {
+                          type: "spring",
+                          damping: 14,
+                          stiffness: 160,
+                        },
+                      },
+                    }}
+                    className="inline-block"
+                  >
+                    {char}
+                  </motion.span>
+                ))}
+              </motion.span>
+            </Link>
+          </motion.div>
+
+          <motion.span
+            initial={{ opacity: 0, y: 6 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+          >
             Learn AI properly. Build something useful.
-          </span>
+          </motion.span>
         </div>
       </footer>
     </main>
