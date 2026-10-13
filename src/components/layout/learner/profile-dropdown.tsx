@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { User, Settings, LogOut, Heart } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -9,6 +9,18 @@ import { useAuth } from "@/lib/auth/auth-context";
 export function ProfileDropdown() {
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuth();
+  const [avatar, setAvatar] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadAvatar = () => {
+      if (typeof window !== "undefined") {
+        setAvatar(localStorage.getItem("hammet_user_avatar"));
+      }
+    };
+    loadAvatar();
+    window.addEventListener("storage", loadAvatar);
+    return () => window.removeEventListener("storage", loadAvatar);
+  }, []);
 
   return (
     <div 
@@ -18,9 +30,14 @@ export function ProfileDropdown() {
     >
       <Link
         href="/learner/profile"
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 text-xs font-bold text-white transition hover:ring-2 hover:ring-purple-500/30"
+        className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 text-xs font-bold text-white transition hover:ring-2 hover:ring-purple-500/30"
       >
-        {user?.fullName?.charAt(0)?.toUpperCase() ?? "U"}
+        {avatar ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={avatar} alt="Avatar" className="h-full w-full object-cover" />
+        ) : (
+          user?.fullName?.charAt(0)?.toUpperCase() ?? "U"
+        )}
       </Link>
 
       <AnimatePresence>
@@ -34,8 +51,13 @@ export function ProfileDropdown() {
           >
             <div className="border-b border-black/[0.04] p-4 dark:border-white/[0.04]">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 text-sm font-bold text-white shadow-sm">
-                  {user?.fullName?.charAt(0)?.toUpperCase() ?? "U"}
+                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 text-sm font-bold text-white shadow-sm">
+                  {avatar ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={avatar} alt="Avatar" className="h-full w-full object-cover" />
+                  ) : (
+                    user?.fullName?.charAt(0)?.toUpperCase() ?? "U"
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">

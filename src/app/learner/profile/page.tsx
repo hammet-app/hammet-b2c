@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import {
@@ -24,15 +24,51 @@ import {
   Edit3,
   Save,
   Check,
+  Camera,
+  Upload,
+  Trash2,
+  Plus,
+  X,
+  ImageIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Button } from "@/components/ui/button";
+
+const DEFAULT_SKILLS = [
+  "PyTorch",
+  "LangGraph",
+  "DSPy",
+  "Milvus Vector DB",
+  "vLLM Serving",
+  "Model Context Protocol (MCP)",
+  "LoRA & QLoRA",
+  "CUDA",
+  "Python",
+  "FastAPI",
+];
+
+const SUGGESTED_SKILLS = [
+  "TensorRT",
+  "Ollama",
+  "Triton Inference",
+  "Hugging Face",
+  "DeepSpeed",
+  "LangChain",
+  "Vector Embeddings",
+  "Kubernetes",
+];
 
 export default function LearnerProfilePage() {
   const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState<"overview" | "edit" | "activity">("overview");
   const [isSaved, setIsSaved] = useState(false);
+
+  // Profile image states
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   // Form states
   const [fullName, setFullName] = useState(user?.fullName || "User_learner");
@@ -45,8 +81,98 @@ export default function LearnerProfilePage() {
   const [github, setGithub] = useState("https://github.com/hammet-ai-builder");
   const [linkedin, setLinkedin] = useState("https://linkedin.com/in/hammet-learner");
 
+  // Production skills stack state
+  const [skills, setSkills] = useState<string[]>(DEFAULT_SKILLS);
+  const [newSkillInput, setNewSkillInput] = useState("");
+
+  // Hydrate from localStorage
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const savedAvatar = localStorage.getItem("hammet_user_avatar");
+    if (savedAvatar) setAvatarUrl(savedAvatar);
+
+    const savedCover = localStorage.getItem("hammet_user_cover");
+    if (savedCover) setCoverUrl(savedCover);
+
+    const savedSkills = localStorage.getItem("hammet_user_skills");
+    if (savedSkills) {
+      try {
+        const parsed = JSON.parse(savedSkills);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setSkills(parsed);
+        }
+      } catch {
+        // use default
+      }
+    }
+
+    const savedName = localStorage.getItem("hammet_user_fullname");
+    if (savedName) setFullName(savedName);
+
+    const savedBio = localStorage.getItem("hammet_user_bio");
+    if (savedBio) setBio(savedBio);
+
+    const savedLocation = localStorage.getItem("hammet_user_location");
+    if (savedLocation) setLocation(savedLocation);
+  }, []);
+
+  const handleAvatarFile = (file: File) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      setAvatarUrl(result);
+      localStorage.setItem("hammet_user_avatar", result);
+      window.dispatchEvent(new Event("storage"));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCoverFile = (file: File) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      setCoverUrl(result);
+      localStorage.setItem("hammet_user_cover", result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveAvatar = () => {
+    setAvatarUrl(null);
+    localStorage.removeItem("hammet_user_avatar");
+    window.dispatchEvent(new Event("storage"));
+  };
+
+  const handleRemoveCover = () => {
+    setCoverUrl(null);
+    localStorage.removeItem("hammet_user_cover");
+  };
+
+  const handleAddSkill = (skillToAdd: string) => {
+    const trimmed = skillToAdd.trim();
+    if (!trimmed) return;
+    if (skills.some((s) => s.toLowerCase() === trimmed.toLowerCase())) return;
+    const updated = [...skills, trimmed];
+    setSkills(updated);
+    setNewSkillInput("");
+    localStorage.setItem("hammet_user_skills", JSON.stringify(updated));
+  };
+
+  const handleRemoveSkill = (skillToRemove: string) => {
+    const updated = skills.filter((s) => s !== skillToRemove);
+    setSkills(updated);
+    localStorage.setItem("hammet_user_skills", JSON.stringify(updated));
+  };
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    localStorage.setItem("hammet_user_fullname", fullName);
+    localStorage.setItem("hammet_user_bio", bio);
+    localStorage.setItem("hammet_user_location", location);
+    localStorage.setItem("hammet_user_skills", JSON.stringify(skills));
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 3000);
   };
@@ -55,6 +181,28 @@ export default function LearnerProfilePage() {
 
   return (
     <div className="min-h-screen bg-[#F5F3FF] px-4 pb-28 pt-6 transition-colors duration-300 dark:bg-[#0D0A17] sm:px-6 sm:pt-8 lg:px-10">
+      {/* Hidden file inputs for avatar & cover */}
+      <input
+        ref={avatarInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleAvatarFile(file);
+        }}
+      />
+      <input
+        ref={coverInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleCoverFile(file);
+        }}
+      />
+
       <div className="mx-auto max-w-6xl">
         {/* ── PROFILE HERO HEADER CARD ── */}
         <motion.div
@@ -63,32 +211,77 @@ export default function LearnerProfilePage() {
           transition={{ duration: 0.5 }}
           className="relative overflow-hidden rounded-[2.5rem] border border-purple-200/60 bg-white shadow-xl dark:border-white/10 dark:bg-[#140F22]"
         >
-          {/* Header Ambient Cover Graphic */}
+          {/* Header Ambient Cover Graphic with Upload Button */}
           <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-gradient-to-r from-purple-700 via-indigo-600 to-violet-800 dark:from-purple-950 dark:via-indigo-950 dark:to-slate-950">
-            <div
-              className="absolute inset-0 opacity-20"
-              style={{
-                backgroundImage:
-                  "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.8) 1px, transparent 1px), radial-gradient(circle at 80% 50%, rgba(255,255,255,0.8) 1px, transparent 1px)",
-                backgroundSize: "28px 28px",
-              }}
-            />
-            {/* Glowing Accent Ring */}
-            <div className="absolute -right-12 -top-12 h-64 w-64 rounded-full bg-cyan-400/20 blur-3xl pointer-events-none" />
-            <div className="absolute -left-12 -bottom-12 h-64 w-64 rounded-full bg-purple-500/30 blur-3xl pointer-events-none" />
+            {coverUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={coverUrl}
+                alt="Profile Cover Background"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              <>
+                <div
+                  className="absolute inset-0 opacity-20"
+                  style={{
+                    backgroundImage:
+                      "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.8) 1px, transparent 1px), radial-gradient(circle at 80% 50%, rgba(255,255,255,0.8) 1px, transparent 1px)",
+                    backgroundSize: "28px 28px",
+                  }}
+                />
+                {/* Glowing Accent Rings */}
+                <div className="absolute -right-12 -top-12 h-64 w-64 rounded-full bg-cyan-400/20 blur-3xl pointer-events-none" />
+                <div className="absolute -left-12 -bottom-12 h-64 w-64 rounded-full bg-purple-500/30 blur-3xl pointer-events-none" />
+              </>
+            )}
+
+            {/* Change Cover Button */}
+            <button
+              type="button"
+              onClick={() => coverInputRef.current?.click()}
+              className="absolute top-4 right-4 z-10 flex items-center gap-1.5 rounded-xl bg-black/45 px-3 py-1.5 font-poppins text-xs font-bold text-white backdrop-blur-md border border-white/20 transition hover:bg-black/65 shadow-lg"
+              title="Upload custom background banner"
+            >
+              <Camera className="h-3.5 w-3.5" />
+              <span>Change Cover</span>
+            </button>
           </div>
 
           {/* Profile Details Container */}
           <div className="relative px-6 pb-8 pt-0 sm:px-10">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 -mt-16 sm:-mt-20">
-              {/* User Avatar with Gradient Ring */}
-              <div className="flex items-end gap-5">
-                <div className="relative flex h-28 w-28 sm:h-32 sm:w-32 shrink-0 items-center justify-center rounded-3xl border-4 border-white bg-gradient-to-br from-purple-600 via-violet-500 to-cyan-400 font-poppins text-4xl sm:text-5xl font-black text-white shadow-2xl dark:border-[#140F22]">
-                  {initialLetter}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+              {/* User Avatar with Shifted-Down Text Block */}
+              <div className="flex flex-col sm:flex-row sm:items-end gap-5 -mt-16 sm:-mt-20">
+                {/* User Avatar Box with Click-to-Upload */}
+                <div className="group relative flex h-28 w-28 sm:h-32 sm:w-32 shrink-0 items-center justify-center rounded-3xl border-4 border-white bg-gradient-to-br from-purple-600 via-violet-500 to-cyan-400 font-poppins text-4xl sm:text-5xl font-black text-white shadow-2xl overflow-hidden dark:border-[#140F22]">
+                  {avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={avatarUrl}
+                      alt={fullName}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span>{initialLetter}</span>
+                  )}
+
+                  {/* Interactive Camera Hover Overlay */}
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white opacity-0 transition group-hover:opacity-100"
+                    title="Upload profile photo"
+                  >
+                    <Camera className="h-6 w-6" />
+                    <span className="mt-1 font-poppins text-[10px] font-bold">Change</span>
+                  </button>
+
                   <span className="absolute bottom-2 right-2 h-4 w-4 rounded-full border-2 border-white bg-emerald-500 shadow-md dark:border-[#140F22]" />
                 </div>
 
-                <div className="mb-2">
+                {/* User Meta Information - shifted comfortably down below purple banner border */}
+                <div className="pt-2 sm:pt-5 sm:pb-1">
                   <div className="flex flex-wrap items-center gap-2.5">
                     <h1 className="font-poppins text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
                       {fullName}
@@ -99,11 +292,12 @@ export default function LearnerProfilePage() {
                     </span>
                   </div>
 
-                  <p className="mt-0.5 font-poppins text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400">
+                  {/* Shifted down with mt-2 and generous breathing room from purple banner line */}
+                  <p className="mt-2 font-poppins text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300">
                     @{username} • {email}
                   </p>
 
-                  <div className="mt-2.5 flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300 font-medium">
+                  <div className="mt-2.5 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400 font-medium font-poppins">
                     <span className="inline-flex items-center gap-1">
                       <MapPin className="h-3.5 w-3.5 text-purple-600 dark:text-cyan-400" />
                       {location}
@@ -144,7 +338,7 @@ export default function LearnerProfilePage() {
                 <span className="text-cyan-600 dark:text-cyan-300 font-bold">Neural Intelligence Lab</span>
               </div>
 
-              <div className="flex items-center gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400 font-poppins">
                 <span className="flex items-center gap-1.5">
                   <Flame className="h-4 w-4 text-amber-500" />
                   <strong className="text-slate-900 dark:text-white">14-Day Streak</strong>
@@ -162,49 +356,49 @@ export default function LearnerProfilePage() {
         {/* ── METRIC STATS STRIP ── */}
         <div className="mt-6 grid grid-cols-2 gap-3.5 sm:grid-cols-4 sm:gap-4">
           <div className="rounded-2xl border border-purple-200/50 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#140F22]">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <p className="font-poppins text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Enrolled Tracks
             </p>
             <p className="mt-1 font-poppins text-2xl font-black text-slate-900 dark:text-white">
               4
             </p>
-            <p className="mt-0.5 text-[11px] font-medium text-purple-600 dark:text-cyan-400">
+            <p className="mt-0.5 font-poppins text-[11px] font-medium text-purple-600 dark:text-cyan-400">
               Active Foundations
             </p>
           </div>
 
           <div className="rounded-2xl border border-purple-200/50 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#140F22]">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <p className="font-poppins text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Modules Completed
             </p>
             <p className="mt-1 font-poppins text-2xl font-black text-slate-900 dark:text-white">
               21 / 28
             </p>
-            <p className="mt-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+            <p className="mt-0.5 font-poppins text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
               75% Curriculum Done
             </p>
           </div>
 
           <div className="rounded-2xl border border-purple-200/50 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#140F22]">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <p className="font-poppins text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Verified Badges
             </p>
             <p className="mt-1 font-poppins text-2xl font-black text-slate-900 dark:text-white">
               6
             </p>
-            <p className="mt-0.5 text-[11px] font-medium text-cyan-600 dark:text-cyan-300">
+            <p className="mt-0.5 font-poppins text-[11px] font-medium text-cyan-600 dark:text-cyan-300">
               Proof-of-Work Badges
             </p>
           </div>
 
           <div className="rounded-2xl border border-purple-200/50 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#140F22]">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <p className="font-poppins text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Compute Hours
             </p>
             <p className="mt-1 font-poppins text-2xl font-black text-slate-900 dark:text-white">
               134.5h
             </p>
-            <p className="mt-0.5 text-[11px] font-medium text-purple-600 dark:text-purple-300">
+            <p className="mt-0.5 font-poppins text-[11px] font-medium text-purple-600 dark:text-purple-300">
               45.5h Remaining
             </p>
           </div>
@@ -223,7 +417,7 @@ export default function LearnerProfilePage() {
               }`}
             >
               {tab === "overview" && "Profile Overview"}
-              {tab === "edit" && "Edit Personal Details"}
+              {tab === "edit" && "Edit Personal Details & Stack"}
               {tab === "activity" && "Recent Milestones"}
             </button>
           ))}
@@ -239,31 +433,30 @@ export default function LearnerProfilePage() {
                 <h3 className="font-poppins text-base font-bold text-slate-900 dark:text-white">
                   About Me
                 </h3>
-                <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300 font-normal">
+                <p className="mt-3 font-poppins text-sm leading-relaxed text-slate-600 dark:text-slate-300 font-normal">
                   {bio}
                 </p>
 
-                {/* Technical Stack Tags */}
+                {/* Technical Stack Tags in Poppins font */}
                 <div className="mt-5 border-t border-black/[0.06] pt-4 dark:border-white/10">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">
-                    Production Stack &amp; Skills
-                  </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="font-poppins text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                      Production Stack &amp; Skills
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("edit")}
+                      className="font-poppins text-[11px] font-semibold text-purple-600 hover:underline dark:text-cyan-400"
+                    >
+                      Edit Skills →
+                    </button>
+                  </div>
+
                   <div className="flex flex-wrap gap-2">
-                    {[
-                      "PyTorch",
-                      "LangGraph",
-                      "DSPy",
-                      "Milvus Vector DB",
-                      "vLLM Serving",
-                      "Model Context Protocol (MCP)",
-                      "LoRA & QLoRA",
-                      "CUDA",
-                      "Python",
-                      "FastAPI",
-                    ].map((skill) => (
+                    {skills.map((skill) => (
                       <span
                         key={skill}
-                        className="rounded-lg border border-purple-200/60 bg-purple-50/70 px-2.5 py-1 font-mono text-xs font-semibold text-purple-700 dark:border-purple-500/20 dark:bg-purple-950/40 dark:text-cyan-300"
+                        className="rounded-full border border-purple-200/80 bg-purple-50/80 px-3.5 py-1 font-poppins text-xs font-semibold text-purple-700 shadow-sm transition hover:scale-105 dark:border-purple-500/25 dark:bg-purple-950/40 dark:text-cyan-300"
                       >
                         {skill}
                       </span>
@@ -275,13 +468,13 @@ export default function LearnerProfilePage() {
               {/* Active Capstone Highlight */}
               <div className="rounded-3xl border border-purple-200/60 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22]">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs font-bold text-purple-600 dark:text-cyan-400">
+                  <div className="flex items-center gap-2 font-poppins text-xs font-bold text-purple-600 dark:text-cyan-400">
                     <FolderKanban className="h-4 w-4" />
                     <span>Featured Capstone Project</span>
                   </div>
                   <Link
                     href="/learner/projects"
-                    className="text-xs font-bold text-purple-600 hover:underline dark:text-cyan-300"
+                    className="font-poppins text-xs font-bold text-purple-600 hover:underline dark:text-cyan-300"
                   >
                     View All Projects →
                   </Link>
@@ -289,14 +482,14 @@ export default function LearnerProfilePage() {
                 <h4 className="mt-2 font-poppins text-lg font-bold text-slate-900 dark:text-white">
                   Autonomous Multi-Agent Customer Support Swarm
                 </h4>
-                <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                <p className="mt-1 font-poppins text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                   Built using LangGraph and Model Context Protocol (MCP) with live state checkpointing, automated red-teaming eval suites, and Milvus vector search.
                 </p>
                 <div className="mt-4 flex items-center gap-3">
-                  <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                  <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 font-poppins text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
                     ✓ Evaluated &amp; Verified
                   </span>
-                  <span className="text-[11px] font-mono text-slate-400">
+                  <span className="font-poppins text-[11px] font-medium text-slate-400">
                     99.4% Latency SLA (&lt;48ms)
                   </span>
                 </div>
@@ -311,16 +504,16 @@ export default function LearnerProfilePage() {
                   <span className="rounded-full bg-purple-500/30 px-3 py-1 font-poppins text-[10px] font-bold tracking-wider text-purple-200 border border-purple-400/30">
                     PROOF-OF-WORK
                   </span>
-                  <span className="font-mono text-xs text-cyan-300">#HMT-9942-8810</span>
+                  <span className="font-poppins text-xs font-semibold text-cyan-300">#HMT-9942-8810</span>
                 </div>
                 <h4 className="mt-3 font-poppins text-lg font-black text-white">
                   Verified Skill Passport
                 </h4>
-                <p className="mt-1 text-xs text-slate-300 leading-relaxed">
+                <p className="mt-1 font-poppins text-xs text-slate-300 leading-relaxed">
                   Cryptographically verified certificates of competency endorsed by top AI engineering partners.
                 </p>
                 <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-4">
-                  <span className="text-xs font-semibold text-slate-300">6 Verified Badges</span>
+                  <span className="font-poppins text-xs font-semibold text-slate-300">6 Verified Badges</span>
                   <Link
                     href="/learner/passport"
                     className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 font-poppins text-xs font-bold text-slate-900 shadow-md transition hover:bg-cyan-100"
@@ -340,7 +533,7 @@ export default function LearnerProfilePage() {
                     href={github}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center justify-between rounded-xl border border-slate-200/80 p-3 text-xs font-semibold text-slate-700 transition hover:border-purple-400 dark:border-white/10 dark:text-slate-300"
+                    className="flex items-center justify-between rounded-xl border border-slate-200/80 p-3 font-poppins text-xs font-semibold text-slate-700 transition hover:border-purple-400 dark:border-white/10 dark:text-slate-300"
                   >
                     <span className="flex items-center gap-2">
                       <Code2 className="h-4 w-4 text-purple-600 dark:text-cyan-400" />
@@ -353,7 +546,7 @@ export default function LearnerProfilePage() {
                     href={linkedin}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center justify-between rounded-xl border border-slate-200/80 p-3 text-xs font-semibold text-slate-700 transition hover:border-purple-400 dark:border-white/10 dark:text-slate-300"
+                    className="flex items-center justify-between rounded-xl border border-slate-200/80 p-3 font-poppins text-xs font-semibold text-slate-700 transition hover:border-purple-400 dark:border-white/10 dark:text-slate-300"
                   >
                     <span className="flex items-center gap-2">
                       <Globe className="h-4 w-4 text-blue-500" />
@@ -367,7 +560,7 @@ export default function LearnerProfilePage() {
           </div>
         )}
 
-        {/* ── TAB 2: EDIT PROFILE FORM ── */}
+        {/* ── TAB 2: EDIT PROFILE FORM & SKILLS STACK ── */}
         {activeTab === "edit" && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -377,10 +570,10 @@ export default function LearnerProfilePage() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="font-poppins text-lg font-bold text-slate-900 dark:text-white">
-                  Edit Personal Details
+                  Edit Personal Details &amp; Skills
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Update your public student profile and contact details.
+                <p className="font-poppins text-xs text-slate-500 dark:text-slate-400">
+                  Update your public student profile, images, and technical skills stack.
                 </p>
               </div>
 
@@ -392,10 +585,180 @@ export default function LearnerProfilePage() {
               )}
             </div>
 
+            {/* ── MEDIA ASSETS: PROFILE PICTURE & COVER IMAGE UPLOADERS ── */}
+            <div className="mb-8 rounded-2xl border border-purple-200/60 bg-purple-50/40 p-4 sm:p-5 dark:border-white/10 dark:bg-white/[0.03]">
+              <h4 className="font-poppins text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-cyan-300 mb-4">
+                Profile Images &amp; Branding
+              </h4>
+
+              <div className="grid gap-6 sm:grid-cols-2">
+                {/* 1. Profile Avatar Uploader */}
+                <div className="flex items-center gap-4">
+                  <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-2 border-purple-300 bg-gradient-to-br from-purple-600 to-cyan-400 font-poppins text-2xl font-black text-white overflow-hidden shadow-md">
+                    {avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={avatarUrl} alt="Avatar Preview" className="h-full w-full object-cover" />
+                    ) : (
+                      initialLetter
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <p className="font-poppins text-xs font-bold text-slate-900 dark:text-white">
+                      Profile Picture
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => avatarInputRef.current?.click()}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-1.5 font-poppins text-xs font-bold text-white transition hover:bg-purple-700"
+                      >
+                        <Upload className="h-3 w-3" />
+                        <span>Upload Photo</span>
+                      </button>
+                      {avatarUrl && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveAvatar}
+                          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 font-poppins text-xs font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 dark:border-white/10 dark:text-slate-300 dark:hover:bg-red-500/10"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          <span>Remove</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Cover Banner Uploader */}
+                <div className="flex items-center gap-4">
+                  <div className="relative h-16 w-24 shrink-0 rounded-xl border-2 border-purple-300 bg-gradient-to-r from-purple-700 to-indigo-600 overflow-hidden shadow-md">
+                    {coverUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={coverUrl} alt="Cover Preview" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-white/70">
+                        <ImageIcon className="h-6 w-6" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <p className="font-poppins text-xs font-bold text-slate-900 dark:text-white">
+                      Cover Banner
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => coverInputRef.current?.click()}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-1.5 font-poppins text-xs font-bold text-white transition hover:bg-purple-700"
+                      >
+                        <Upload className="h-3 w-3" />
+                        <span>Upload Cover</span>
+                      </button>
+                      {coverUrl && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveCover}
+                          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 font-poppins text-xs font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 dark:border-white/10 dark:text-slate-300 dark:hover:bg-red-500/10"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          <span>Reset</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── PRODUCTION SKILLS STACK INTERACTIVE EDITOR ── */}
+            <div className="mb-8 rounded-2xl border border-purple-200/60 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.02]">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h4 className="font-poppins text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-cyan-300">
+                    Production Stack &amp; Skills Editor
+                  </h4>
+                  <p className="font-poppins text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Add or remove the tools and frameworks visible on your public learner profile.
+                  </p>
+                </div>
+                <span className="font-poppins text-xs font-semibold text-slate-400">
+                  {skills.length} skills listed
+                </span>
+              </div>
+
+              {/* Active Skills Tag List with Remove Buttons */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-purple-300 bg-purple-50 px-3 py-1 font-poppins text-xs font-bold text-purple-700 shadow-sm dark:border-purple-500/40 dark:bg-purple-950/60 dark:text-cyan-300"
+                  >
+                    <span>{skill}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSkill(skill)}
+                      className="rounded-full p-0.5 hover:bg-purple-200/80 dark:hover:bg-purple-800"
+                      title={`Remove ${skill}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+
+              {/* Add New Skill Input Row */}
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="text"
+                  placeholder="Type new skill (e.g. TensorRT, Triton, Ollama)..."
+                  value={newSkillInput}
+                  onChange={(e) => setNewSkillInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddSkill(newSkillInput);
+                    }
+                  }}
+                  className="flex-1 rounded-xl border border-slate-300 bg-transparent px-3.5 py-2 font-poppins text-xs text-slate-900 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:text-white"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleAddSkill(newSkillInput)}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 font-poppins text-xs font-bold text-white transition hover:bg-purple-700"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>Add Skill</span>
+                </button>
+              </div>
+
+              {/* Suggested Skills Pill Shortcuts */}
+              <div>
+                <p className="font-poppins text-[11px] font-semibold text-slate-400 mb-2">
+                  Suggested AI Frameworks &amp; Tools:
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {SUGGESTED_SKILLS.filter((s) => !skills.includes(s)).map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      onClick={() => handleAddSkill(suggestion)}
+                      className="inline-flex items-center gap-1 rounded-lg border border-dashed border-slate-300 px-2.5 py-1 font-poppins text-[11px] font-medium text-slate-600 transition hover:border-purple-400 hover:text-purple-700 dark:border-white/20 dark:text-slate-300 dark:hover:border-cyan-400 dark:hover:text-cyan-300"
+                    >
+                      <Plus className="h-2.5 w-2.5" />
+                      <span>{suggestion}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Standard Form Inputs */}
             <form onSubmit={handleSave} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  <label className="block font-poppins text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
                     Full Name
                   </label>
                   <input
@@ -403,12 +766,12 @@ export default function LearnerProfilePage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
-                    className="w-full rounded-xl border border-slate-300 bg-transparent px-3.5 py-2.5 text-sm text-slate-900 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:text-white"
+                    className="w-full rounded-xl border border-slate-300 bg-transparent px-3.5 py-2.5 font-poppins text-sm text-slate-900 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  <label className="block font-poppins text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
                     Username
                   </label>
                   <input
@@ -416,14 +779,14 @@ export default function LearnerProfilePage() {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
-                    className="w-full rounded-xl border border-slate-300 bg-transparent px-3.5 py-2.5 text-sm text-slate-900 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:text-white"
+                    className="w-full rounded-xl border border-slate-300 bg-transparent px-3.5 py-2.5 font-poppins text-sm text-slate-900 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:text-white"
                   />
                 </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  <label className="block font-poppins text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
                     Email Address
                   </label>
                   <input
@@ -431,57 +794,57 @@ export default function LearnerProfilePage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full rounded-xl border border-slate-300 bg-transparent px-3.5 py-2.5 text-sm text-slate-900 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:text-white"
+                    className="w-full rounded-xl border border-slate-300 bg-transparent px-3.5 py-2.5 font-poppins text-sm text-slate-900 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  <label className="block font-poppins text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
                     Location
                   </label>
                   <input
                     type="text"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 bg-transparent px-3.5 py-2.5 text-sm text-slate-900 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:text-white"
+                    className="w-full rounded-xl border border-slate-300 bg-transparent px-3.5 py-2.5 font-poppins text-sm text-slate-900 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:text-white"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                <label className="block font-poppins text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
                   Bio / Engineering Focus
                 </label>
                 <textarea
                   rows={3}
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 bg-transparent px-3.5 py-2.5 text-sm text-slate-900 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:text-white"
+                  className="w-full rounded-xl border border-slate-300 bg-transparent px-3.5 py-2.5 font-poppins text-sm text-slate-900 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:text-white"
                 />
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  <label className="block font-poppins text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
                     GitHub URL
                   </label>
                   <input
                     type="url"
                     value={github}
                     onChange={(e) => setGithub(e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 bg-transparent px-3.5 py-2.5 text-sm text-slate-900 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:text-white"
+                    className="w-full rounded-xl border border-slate-300 bg-transparent px-3.5 py-2.5 font-poppins text-sm text-slate-900 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  <label className="block font-poppins text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
                     LinkedIn URL
                   </label>
                   <input
                     type="url"
                     value={linkedin}
                     onChange={(e) => setLinkedin(e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 bg-transparent px-3.5 py-2.5 text-sm text-slate-900 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:text-white"
+                    className="w-full rounded-xl border border-slate-300 bg-transparent px-3.5 py-2.5 font-poppins text-sm text-slate-900 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:text-white"
                   />
                 </div>
               </div>
@@ -498,9 +861,9 @@ export default function LearnerProfilePage() {
                   type="button"
                   variant="outline"
                   onClick={() => setActiveTab("overview")}
-                  className="rounded-xl border-slate-300 dark:border-white/10"
+                  className="rounded-xl border-slate-300 dark:border-white/10 font-poppins"
                 >
-                  Cancel
+                  View Profile
                 </Button>
               </div>
             </form>
@@ -548,15 +911,17 @@ export default function LearnerProfilePage() {
                 <div key={idx} className="relative">
                   <span className="absolute -left-[31px] top-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-purple-600 shadow-sm dark:border-[#140F22]" />
                   <div className="flex items-center gap-2">
-                    <span className="rounded-md bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">
+                    <span className="font-poppins text-xs font-semibold text-purple-600 dark:text-cyan-400">
+                      {item.date}
+                    </span>
+                    <span className="rounded-full bg-purple-100 px-2 py-0.5 font-poppins text-[10px] font-bold text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">
                       {item.badge}
                     </span>
-                    <span className="text-[11px] text-slate-400">{item.date}</span>
                   </div>
                   <h4 className="mt-1 font-poppins text-sm font-bold text-slate-900 dark:text-white">
                     {item.title}
                   </h4>
-                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                  <p className="mt-0.5 font-poppins text-xs text-slate-500 dark:text-slate-400">
                     {item.desc}
                   </p>
                 </div>
