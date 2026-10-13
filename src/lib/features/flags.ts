@@ -1,20 +1,30 @@
-import { OpenFeature, FlagEvaluationOptions, EvaluationContext } from "@openfeature/web-sdk";
-import { GrowthbookClientProvider } from "@openfeature/growthbook-client-provider"
-import { AuthUser } from "../utils/roles";
+import { OpenFeature, InMemoryProvider } from "@openfeature/web-sdk";
+import { GrowthbookClientProvider } from "@openfeature/growthbook-client-provider";
+
+const clientKey = process.env.NEXT_PUBLIC_FEATURE_CLIENT_KEY;
 
 const gbContext = {
-  apiHost: "https://cdn.growthbook.io",
-  clientKey: process.env.NEXT_PUBLIC_FEATURE_CLIENT_KEY
-}
+  apiHost: process.env.NEXT_PUBLIC_GROWTHBOOK_API_HOST || "https://cdn.growthbook.io",
+  clientKey: clientKey || "",
+};
 
 let initPromise: Promise<void> | null = null;
 
 function ensureInitialized() {
   if (!initPromise) {
+    if (!clientKey) {
+      // In environments without a GrowthBook client key configured (e.g. local dev / testing),
+      // register an InMemoryProvider so OpenFeature is initialized and evaluates default values cleanly without error logs.
+      OpenFeature.setProvider(new InMemoryProvider());
+      initPromise = Promise.resolve();
+      return initPromise;
+    }
+
     initPromise = OpenFeature.setProviderAndWait(
       new GrowthbookClientProvider(gbContext, { timeout: 2000 })
     ).catch((error) => {
       console.warn("Failed to initialize feature flags provider:", error);
+      OpenFeature.setProvider(new InMemoryProvider());
     });
   }
   return initPromise;
@@ -35,8 +45,7 @@ export async function is_enabled(key: string, layout?: boolean) {
     return details.variant || details.value || "B";
   }
 
-  const details = client.getBooleanDetails(key, true)
+  const details = client.getBooleanDetails(key, true);
 
-  return details.value
-
+  return details.value;
 }
