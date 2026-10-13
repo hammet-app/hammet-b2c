@@ -15,28 +15,6 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { getDeviceId } from "@/lib/auth/device-id";
 import { LoginResponseDto, toLoginResponse } from "@/lib/api/types";
 
-declare global {
-  interface Window {
-    google: {
-      accounts: {
-        id: {
-          initialize: (config: {
-            client_id: string | undefined;
-            callback: (response: { credential: string }) => void;
-          }) => void;
-          renderButton: (
-            element: HTMLElement | null,
-            options: {
-              theme: string;
-              size: string;
-              width: number;
-            }
-          ) => void;
-        };
-      };
-    };
-  }
-}
 
 export default function LoginPage() {
   const { setSession, redirectAfterAuth } = useAuth();
@@ -56,6 +34,7 @@ export default function LoginPage() {
   const handleGoogleCredentialResponse = useCallback(
     async (googleResponse: { credential: string }) => {
       setErrors({});
+      setIsLoading(true);
 
       try {
         const response = await apiClient.post<LoginResponseDto>(
@@ -67,37 +46,59 @@ export default function LoginPage() {
         );
 
         const data = toLoginResponse(response);
-
         setSession(data.user, data.accessToken);
         redirectAfterAuth(data.user);
       } catch (err) {
-        setErrors({
-          form:
-            err instanceof Error
-              ? err.message
-              : "Something went wrong with Google authentication.",
-        });
+        if (err instanceof ApiError) {
+          setErrors({
+            form: err.message,
+          });
+        } else if (err instanceof Error) {
+          setErrors({
+            form: err.message,
+          });
+        } else {
+          setErrors({
+            form: "Something went wrong with Google authentication.",
+          });
+        }
+      } finally {
+        setIsLoading(false);
       }
     },
     [setSession, redirectAfterAuth]
   );
 
   useEffect(() => {
+    let isMounted = true;
+
     const initializeGoogle = () => {
-      if (!window.google) return;
+      if (!window.google || !isMounted) return;
+
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      if (!clientId) {
+        console.warn("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not configured");
+        return;
+      }
 
       window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        client_id: clientId,
         callback: handleGoogleCredentialResponse,
       });
 
-      const btnEl = document.getElementById("google-hidden-button");
+      const btnEl = document.getElementById("google-button");
       if (btnEl) {
         window.google.accounts.id.renderButton(btnEl, {
           theme: "outline",
           size: "large",
-          width: 280,
+          width: 200,
         });
+      }
+
+      try {
+        (window.google.accounts.id as unknown as { prompt?: () => void }).prompt?.();
+      } catch {
+        // Ignored if prompt is not permitted
       }
     };
 
@@ -106,14 +107,26 @@ export default function LoginPage() {
       return;
     }
 
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      'script[src="https://accounts.google.com/gsi/client"]'
+    );
+
+    if (existingScript) {
+      existingScript.addEventListener("load", initializeGoogle);
+      return () => {
+        existingScript.removeEventListener("load", initializeGoogle);
+      };
+    }
+
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
+    script.defer = true;
     script.onload = initializeGoogle;
     document.body.appendChild(script);
 
     return () => {
-      script.remove();
+      isMounted = false;
     };
   }, [handleGoogleCredentialResponse]);
 
@@ -173,14 +186,6 @@ export default function LoginPage() {
     }
   }
 
-  const triggerGoogleLogin = () => {
-    const hiddenBtn = document.querySelector<HTMLElement>("#google-hidden-button div[role='button']");
-    if (hiddenBtn) {
-      hiddenBtn.click();
-    } else {
-      setErrors({ form: "Google Sign-in is initializing. Please wait a moment." });
-    }
-  };
 
   return (
     <AuthShell mode="login">
@@ -243,7 +248,7 @@ export default function LoginPage() {
                 htmlFor="password"
                 className="text-[12px] font-semibold text-slate-700 dark:text-slate-300"
               >
-                Password
+                Password <span className="text-danger ml-0.5">*</span>
               </label>
               <Link
                 href="/forgot-password"
@@ -296,11 +301,17 @@ export default function LoginPage() {
         {/* 3 Social Buttons Row (Google, Microsoft, ChatGPT) */}
         <div className="grid grid-cols-3 gap-2.5">
           {/* 1. Google Button */}
-          <button
-            type="button"
-            onClick={triggerGoogleLogin}
-            className="flex h-11 items-center justify-center gap-1.5 rounded-xl border border-black/[0.08] bg-white px-2 text-xs font-semibold text-slate-800 shadow-sm transition-all hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08]"
+          <div
+            onClick={() => {
+              try {
+                (window.google?.accounts?.id as unknown as { prompt?: () => void })?.prompt?.();
+              } catch {
+                // Handled
+              }
+            }}
+            className="group relative flex h-11 items-center justify-center gap-1.5 overflow-hidden rounded-xl border border-black/[0.08] bg-white px-2 text-xs font-semibold text-slate-800 shadow-sm transition-all hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08] cursor-pointer"
           >
+            {/* Custom Google Visual matching other buttons */}
             <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
               <path
                 fill="#4285F4"
@@ -320,7 +331,14 @@ export default function LoginPage() {
               />
             </svg>
             <span className="truncate">Google</span>
-          </button>
+
+            {/* Invisible Google Sign-In iframe overlay */}
+            <div
+              id="google-button"
+              className="absolute inset-0 z-10 flex items-center justify-center opacity-[0.001] overflow-hidden cursor-pointer scale-125"
+              title="Sign in with Google"
+            />
+          </div>
 
           {/* 2. Microsoft Button */}
           <button
@@ -349,9 +367,6 @@ export default function LoginPage() {
             <span className="truncate">ChatGPT</span>
           </button>
         </div>
-
-        {/* Hidden container for standard Google button iframe */}
-        <div id="google-hidden-button" className="hidden" />
 
         {/* Notion-style Terms Acknowledgment */}
         <p className="mt-6 text-center text-xs leading-relaxed text-slate-500 dark:text-slate-400">

@@ -17,7 +17,7 @@ import { LoginResponseDto, toLoginResponse } from "@/lib/api/types";
 
 declare global {
   interface Window {
-    google: {
+    google?: {
       accounts: {
         id: {
           initialize: (config: {

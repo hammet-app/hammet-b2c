@@ -89,6 +89,7 @@ export default function RegisterPage() {
   const handleGoogleCredentialResponse = useCallback(
     async (googleResponse: { credential: string }) => {
       setErrors({});
+      setIsLoading(true);
 
       try {
         const response = await apiClient.post<LoginResponseDto>(
@@ -104,33 +105,52 @@ export default function RegisterPage() {
         setSession(data.user, data.accessToken);
         redirectAfterAuth(data.user);
       } catch (err) {
-        setErrors({
-          form:
-            err instanceof Error
-              ? err.message
-              : "Something went wrong with Google authentication.",
-        });
+        if (err instanceof ApiError) {
+          setErrors({ form: err.message });
+        } else if (err instanceof Error) {
+          setErrors({ form: err.message });
+        } else {
+          setErrors({
+            form: "Something went wrong with Google authentication.",
+          });
+        }
+      } finally {
+        setIsLoading(false);
       }
     },
     [setSession, redirectAfterAuth]
   );
   
   useEffect(() => {
+    let isMounted = true;
+
     const initializeGoogle = () => {
-      if (!window.google) return;
+      if (!window.google || !isMounted) return;
+
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      if (!clientId) {
+        console.warn("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not configured");
+        return;
+      }
 
       window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        client_id: clientId,
         callback: handleGoogleCredentialResponse,
       });
 
-      const btnEl = document.getElementById("google-hidden-button");
+      const btnEl = document.getElementById("google-button");
       if (btnEl) {
         window.google.accounts.id.renderButton(btnEl, {
           theme: "outline",
           size: "large",
-          width: 280,
+          width: 200,
         });
+      }
+
+      try {
+        (window.google.accounts.id as unknown as { prompt?: () => void }).prompt?.();
+      } catch {
+        // Ignored
       }
     };
 
@@ -139,14 +159,26 @@ export default function RegisterPage() {
       return;
     }
 
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      'script[src="https://accounts.google.com/gsi/client"]'
+    );
+
+    if (existingScript) {
+      existingScript.addEventListener("load", initializeGoogle);
+      return () => {
+        existingScript.removeEventListener("load", initializeGoogle);
+      };
+    }
+
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
+    script.defer = true;
     script.onload = initializeGoogle;
     document.body.appendChild(script);
 
     return () => {
-      script.remove();
+      isMounted = false;
     };
   }, [handleGoogleCredentialResponse]);
 
@@ -248,14 +280,6 @@ export default function RegisterPage() {
     }
   }
 
-  const triggerGoogleLogin = () => {
-    const hiddenBtn = document.querySelector<HTMLElement>("#google-hidden-button div[role='button']");
-    if (hiddenBtn) {
-      hiddenBtn.click();
-    } else {
-      setErrors({ form: "Google Sign-in is initializing. Please wait a moment." });
-    }
-  };
 
   if (registeredEmail) {
     return (
@@ -655,20 +679,47 @@ export default function RegisterPage() {
 
         {/* 3 Social Buttons Row (Google, Microsoft, ChatGPT) */}
         <div className="grid grid-cols-3 gap-2.5">
-          <button
-            type="button"
-            onClick={triggerGoogleLogin}
-            className="flex h-11 items-center justify-center gap-1.5 rounded-xl border border-black/[0.08] bg-white px-2 text-xs font-semibold text-slate-800 shadow-sm transition-all hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08]"
+          {/* 1. Google Button */}
+          <div
+            onClick={() => {
+              try {
+                (window.google?.accounts?.id as unknown as { prompt?: () => void })?.prompt?.();
+              } catch {
+                // Handled
+              }
+            }}
+            className="group relative flex h-11 items-center justify-center gap-1.5 overflow-hidden rounded-xl border border-black/[0.08] bg-white px-2 text-xs font-semibold text-slate-800 shadow-sm transition-all hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08] cursor-pointer"
           >
+            {/* Custom Google Visual matching other buttons */}
             <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+              <path
+                fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+              />
             </svg>
             <span className="truncate">Google</span>
-          </button>
 
+            {/* Invisible Google Sign-In iframe overlay */}
+            <div
+              id="google-button"
+              className="absolute inset-0 z-10 flex items-center justify-center opacity-[0.001] overflow-hidden cursor-pointer scale-125"
+              title="Sign up with Google"
+            />
+          </div>
+
+          {/* 2. Microsoft Button */}
           <button
             type="button"
             onClick={() => setErrors({ form: "Microsoft signup is connected in production." })}
@@ -683,6 +734,7 @@ export default function RegisterPage() {
             <span className="truncate">Microsoft</span>
           </button>
 
+          {/* 3. ChatGPT Button */}
           <button
             type="button"
             onClick={() => setErrors({ form: "ChatGPT signup is connected in production." })}
@@ -694,8 +746,6 @@ export default function RegisterPage() {
             <span className="truncate">ChatGPT</span>
           </button>
         </div>
-
-        <div id="google-hidden-button" className="hidden" />
 
         <p className="mt-5 text-center text-xs leading-relaxed text-slate-500 dark:text-slate-400">
           By continuing, you acknowledge that you understand and agree to the{" "}
