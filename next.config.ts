@@ -30,7 +30,7 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://accounts.google.com/gsi/client",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
       "img-src 'self' data: blob: https://images.unsplash.com https://*.unsplash.com https://accounts.google.com https://*.googleusercontent.com",
       "font-src 'self' data: https://fonts.gstatic.com",
       "connect-src 'self' https://dev-api.hammetedu.com https://api.hammetedu.com https://accounts.google.com https://*.googleusercontent.com",

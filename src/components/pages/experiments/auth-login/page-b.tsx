@@ -84,6 +84,8 @@ export default function LoginPage() {
       window.google.accounts.id.initialize({
         client_id: clientId,
         callback: handleGoogleCredentialResponse,
+        use_fedcm_for_prompt: false,
+        auto_select: false,
       });
 
       const btnEl = document.getElementById("google-button");
@@ -94,17 +96,17 @@ export default function LoginPage() {
           width: 200,
         });
       }
-
-      try {
-        (window.google.accounts.id as unknown as { prompt?: () => void }).prompt?.();
-      } catch {
-        // Ignored if prompt is not permitted
-      }
     };
 
     if (window.google) {
       initializeGoogle();
-      return;
+      return () => {
+        try {
+          window.google?.accounts?.id?.cancel?.();
+        } catch {
+          // Ignored
+        }
+      };
     }
 
     const existingScript = document.querySelector<HTMLScriptElement>(
@@ -115,6 +117,11 @@ export default function LoginPage() {
       existingScript.addEventListener("load", initializeGoogle);
       return () => {
         existingScript.removeEventListener("load", initializeGoogle);
+        try {
+          window.google?.accounts?.id?.cancel?.();
+        } catch {
+          // Ignored
+        }
       };
     }
 
@@ -127,6 +134,11 @@ export default function LoginPage() {
 
     return () => {
       isMounted = false;
+      try {
+        window.google?.accounts?.id?.cancel?.();
+      } catch {
+        // Ignored
+      }
     };
   }, [handleGoogleCredentialResponse]);
 
@@ -302,13 +314,6 @@ export default function LoginPage() {
         <div className="grid grid-cols-3 gap-2.5">
           {/* 1. Google Button */}
           <div
-            onClick={() => {
-              try {
-                (window.google?.accounts?.id as unknown as { prompt?: () => void })?.prompt?.();
-              } catch {
-                // Handled
-              }
-            }}
             className="group relative flex h-11 items-center justify-center gap-1.5 overflow-hidden rounded-xl border border-black/[0.08] bg-white px-2 text-xs font-semibold text-slate-800 shadow-sm transition-all hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08] cursor-pointer"
           >
             {/* Custom Google Visual matching other buttons */}

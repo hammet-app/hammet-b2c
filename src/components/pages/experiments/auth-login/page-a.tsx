@@ -23,6 +23,9 @@ declare global {
           initialize: (config: {
             client_id: string | undefined;
             callback: (response: { credential: string }) => void;
+            use_fedcm_for_prompt?: boolean;
+            auto_select?: boolean;
+            cancel_on_tap_outside?: boolean;
           }) => void;
           renderButton: (
             element: HTMLElement | null,
@@ -32,6 +35,8 @@ declare global {
               width: number;
             }
           ) => void;
+          prompt?: (notification?: unknown) => void;
+          cancel?: () => void;
         };
       };
     };
@@ -89,6 +94,8 @@ export default function LoginPage() {
       window.google.accounts.id.initialize({
         client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
         callback: handleGoogleCredentialResponse,
+        use_fedcm_for_prompt: false,
+        auto_select: false,
       });
 
       window.google.accounts.id.renderButton(
@@ -103,7 +110,13 @@ export default function LoginPage() {
 
     if (window.google) {
       initializeGoogle();
-      return;
+      return () => {
+        try {
+          window.google?.accounts?.id?.cancel?.();
+        } catch {
+          // Ignored
+        }
+      };
     }
 
     const script = document.createElement("script");
@@ -113,6 +126,11 @@ export default function LoginPage() {
     document.body.appendChild(script);
 
     return () => {
+      try {
+        window.google?.accounts?.id?.cancel?.();
+      } catch {
+        // Ignored
+      }
       script.remove();
     };
   }, [handleGoogleCredentialResponse]);
