@@ -22,11 +22,16 @@ import {
   CreditCard,
   ShoppingCart,
   Bell,
+  Briefcase,
+  Crown,
+  Award,
+  GraduationCap,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-context";
 import { useTheme } from "@/lib/use-theme";
 import { useCart } from "@/lib/store/use-cart";
+import { useLearnerStore } from "@/lib/store/use-learner-store";
 import { CartDropdown } from "./cart-dropdown";
 import { ProfileDropdown } from "./profile-dropdown";
 
@@ -42,6 +47,11 @@ const navigation = [
     icon: BookOpen,
   },
   {
+    label: "School of AI foundation",
+    href: "/learner/ai-schools",
+    icon: GraduationCap,
+  },
+  {
     label: "Projects",
     href: "/learner/projects",
     icon: FolderKanban,
@@ -52,9 +62,14 @@ const navigation = [
     icon: FileBadge,
   },
   {
-    label: "School of AI foundation",
-    href: "/learner/ai-schools",
-    icon: BookOpen,
+    label: "Portfolio",
+    href: "/learner/portfolio",
+    icon: Briefcase,
+  },
+  {
+    label: "Hammet Pro",
+    href: "/learner/pro",
+    icon: Crown,
   },
 ];
 
@@ -71,7 +86,14 @@ export function LearnerShell({ children }: LearnerShellProps) {
   const { theme, toggle } = useTheme();
   
   const cartItems = useCart((state) => state.items);
+  const syncAccountState = useLearnerStore((state) => state.syncAccountState);
+  const isPro = useLearnerStore((state) => state.isPro);
   const [mounted, setMounted] = useState(false);
+
+  // Sync test account vs real user accounts
+  useEffect(() => {
+    syncAccountState(user?.id);
+  }, [user?.id, syncAccountState]);
 
   // Avoid hydration mismatch for cart icon badge
   useEffect(() => {
@@ -298,12 +320,20 @@ export function LearnerShell({ children }: LearnerShellProps) {
             </div>
 
             {!collapsed && (
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">
-                  {user?.fullName ?? "Learner"}
-                </p>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <p className="truncate text-sm font-semibold">
+                    {user?.fullName ?? "Learner"}
+                  </p>
+                  {isPro && (
+                    <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white shadow-sm ring-1 ring-amber-400/30">
+                      <Crown className="h-2.5 w-2.5 fill-white" />
+                      PRO
+                    </span>
+                  )}
+                </div>
                 <p className="truncate text-xs text-slate-400">
-                  Learner
+                  {isPro ? "Pro Member" : "Learner"}
                 </p>
               </div>
             )}
@@ -370,6 +400,29 @@ export function LearnerShell({ children }: LearnerShellProps) {
         </nav>
 
         <div className="mt-auto border-t border-black/[0.06] p-4 dark:border-white/[0.06]">
+          {/* User profile */}
+          <div className="mb-3 flex items-center gap-3 px-2">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 text-xs font-bold text-white">
+              {user?.fullName?.charAt(0)?.toUpperCase() ?? "U"}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
+                  {user?.fullName ?? "Learner"}
+                </p>
+                {isPro && (
+                  <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white shadow-sm ring-1 ring-amber-400/30">
+                    <Crown className="h-2.5 w-2.5 fill-white" />
+                    PRO
+                  </span>
+                )}
+              </div>
+              <p className="truncate text-xs text-slate-400">
+                {isPro ? "Pro Member" : "Learner"}
+              </p>
+            </div>
+          </div>
+
           <Link
             href="/learner/settings"
             onClick={() => setMobileOpen(false)}

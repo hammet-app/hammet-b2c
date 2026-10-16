@@ -23,9 +23,9 @@ const sections = [
 
 export default function PrivacyPolicyPage() {
   return (
-    <main className="min-h-screen bg-[#FAF9F6] text-slate-800 antialiased transition-colors dark:bg-[#0A0713] dark:text-slate-200">
+    <main className="min-h-screen bg-slate-50 text-slate-800 antialiased transition-colors dark:bg-[#0B0813] dark:text-slate-200">
       {/* Top Glassmorphic Navigation Bar */}
-      <header className="sticky top-0 z-50 border-b border-black/[0.06] bg-white/80 backdrop-blur-md dark:border-white/10 dark:bg-[#0A0713]/80">
+      <header className="sticky top-0 z-50 border-b border-black/[0.08] bg-white/80 backdrop-blur-md dark:border-white/10 dark:bg-[#0B0813]/85">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3.5 sm:px-8">
           <Link
             href="/"
@@ -39,14 +39,14 @@ export default function PrivacyPolicyPage() {
               className="rounded-lg object-contain shadow-sm"
             />
             <span className="font-poppins text-lg font-black tracking-tight text-slate-900 dark:text-white">
-              Hammet <span className="text-purple-600 dark:text-cyan-400">Academy</span>
+              Hammet <span className="text-purple-600 dark:text-purple-400">Academy</span>
             </span>
           </Link>
 
           <div className="flex items-center gap-3">
             <Link
               href="/terms"
-              className="text-xs font-semibold text-slate-600 transition hover:text-purple-600 dark:text-slate-400 dark:hover:text-cyan-400 sm:text-sm"
+              className="text-xs font-semibold text-slate-600 transition hover:text-purple-600 dark:text-slate-400 dark:hover:text-purple-300 sm:text-sm"
             >
               Terms &amp; Conditions
             </Link>
@@ -63,9 +63,10 @@ export default function PrivacyPolicyPage() {
 
       <div className="mx-auto max-w-5xl px-5 py-10 sm:px-8 lg:py-14">
         {/* Header Hero Card */}
-        <div className="rounded-3xl border border-black/[0.06] bg-white p-7 shadow-sm dark:border-white/10 dark:bg-white/[0.02] sm:p-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-            <Shield className="h-3.5 w-3.5" />
+        <div className="relative overflow-hidden rounded-3xl border border-black/[0.08] bg-white p-7 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-10">
+          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-purple-500/5 blur-3xl" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-purple-200/60 bg-purple-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-purple-700 dark:border-purple-500/30 dark:bg-purple-950/40 dark:text-purple-300">
+            <Shield className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
             <span>Privacy &amp; Data Protection</span>
           </div>
 
@@ -91,7 +92,7 @@ export default function PrivacyPolicyPage() {
         <div className="mt-10 grid gap-10 lg:grid-cols-[260px_1fr]">
           {/* Table of Contents */}
           <aside className="hidden lg:block">
-            <div className="sticky top-24 rounded-2xl border border-black/[0.06] bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.02]">
+            <div className="sticky top-24 rounded-2xl border border-black/[0.08] bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#140F22]">
               <h3 className="mb-3 font-poppins text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 Contents
               </h3>
@@ -100,7 +101,7 @@ export default function PrivacyPolicyPage() {
                   <a
                     key={sec.id}
                     href={`#${sec.id}`}
-                    className="block rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-purple-50 hover:text-purple-700 dark:text-slate-400 dark:hover:bg-purple-950/40 dark:hover:text-cyan-300"
+                    className="block rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-purple-50 hover:text-purple-700 dark:text-slate-400 dark:hover:bg-purple-950/40 dark:hover:text-purple-300"
                   >
                     <span className="text-slate-400 dark:text-slate-600 mr-1.5">{idx + 1}.</span>
                     {sec.label}
@@ -113,7 +114,7 @@ export default function PrivacyPolicyPage() {
           {/* Privacy Articles */}
           <article className="space-y-10 text-sm leading-relaxed text-slate-700 dark:text-slate-300 sm:text-base">
             {/* 1 */}
-            <section id="intro" className="scroll-mt-28 rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.02] sm:p-8">
+            <section id="intro" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
               <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
                 1. Introduction &amp; Scope
               </h2>
@@ -130,7 +131,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             {/* 2 */}
-            <section id="collect" className="scroll-mt-28 rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.02] sm:p-8">
+            <section id="collect" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
               <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
                 2. Information We Collect
               </h2>
@@ -167,7 +168,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             {/* 3 */}
-            <section id="use" className="scroll-mt-28 rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.02] sm:p-8">
+            <section id="use" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
               <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
                 3. How We Use Your Information
               </h2>
@@ -181,7 +182,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             {/* 4 */}
-            <section id="basis" className="scroll-mt-28 rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.02] sm:p-8">
+            <section id="basis" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
               <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
                 4. Legal Basis for Processing
               </h2>
@@ -201,7 +202,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             {/* 5 */}
-            <section id="cookies" className="scroll-mt-28 rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.02] sm:p-8">
+            <section id="cookies" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
               <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
                 5. Cookies &amp; Local Storage
               </h2>
@@ -213,7 +214,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             {/* 6 */}
-            <section id="share" className="scroll-mt-28 rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.02] sm:p-8">
+            <section id="share" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
               <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
                 6. Data Sharing &amp; Third Parties
               </h2>
@@ -230,7 +231,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             {/* 7 */}
-            <section id="retention" className="scroll-mt-28 rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.02] sm:p-8">
+            <section id="retention" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
               <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
                 7. Data Retention
               </h2>
@@ -242,7 +243,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             {/* 8 */}
-            <section id="security" className="scroll-mt-28 rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.02] sm:p-8">
+            <section id="security" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
               <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
                 8. Security &amp; Data Safeguards
               </h2>
@@ -254,7 +255,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             {/* 9 */}
-            <section id="rights" className="scroll-mt-28 rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.02] sm:p-8">
+            <section id="rights" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
               <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
                 9. Your Privacy Rights
               </h2>
@@ -272,7 +273,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             {/* 10 */}
-            <section id="children" className="scroll-mt-28 rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.02] sm:p-8">
+            <section id="children" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
               <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
                 10. Children&apos;s Privacy
               </h2>
@@ -284,7 +285,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             {/* 11 */}
-            <section id="transfers" className="scroll-mt-28 rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.02] sm:p-8">
+            <section id="transfers" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
               <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
                 11. Cross-Border Data Transfers
               </h2>
@@ -296,7 +297,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             {/* 12 */}
-            <section id="ai" className="scroll-mt-28 rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.02] sm:p-8">
+            <section id="ai" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
               <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
                 12. AI Features &amp; Data Governance
               </h2>
@@ -307,7 +308,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             {/* 13 */}
-            <section id="changes" className="scroll-mt-28 rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.02] sm:p-8">
+            <section id="changes" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
               <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
                 13. Changes to this Policy
               </h2>
@@ -318,7 +319,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             {/* 14 */}
-            <section id="contact" className="scroll-mt-28 rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.02] sm:p-8">
+            <section id="contact" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
               <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
                 14. Contact &amp; Data Protection Officer
               </h2>

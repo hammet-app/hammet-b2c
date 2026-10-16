@@ -26,6 +26,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth/auth-context";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/store/use-cart";
 import { cn } from "@/lib/utils/utils";
@@ -204,8 +205,14 @@ export default function MyLearningPage() {
   const [wishlist, setWishlist] = useState(INITIAL_WISHLIST);
 
   // Cart store integration
-  const { addItem, hasItem } = useCart();
+  const { user } = useAuth();
+  const { addItem, hasItem, hasPaidItem, paidItems } = useCart();
   const [addedItemIds, setAddedItemIds] = useState<string[]>([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleAddToCart = (course: (typeof INITIAL_WISHLIST)[0]) => {
     addItem({
@@ -234,7 +241,19 @@ export default function MyLearningPage() {
     setIsNewListOpen(false);
   };
 
-  const filteredAiCourses = MOCK_AI_LEARNING_COURSES.filter(
+  const isDemoAccount = !user || user?.id === "user_learner" || user?.email === "user_learner@gmail.com";
+
+  // Accessible courses:
+  // - Demo account gets all courses
+  // - Real user accounts only get courses they paid for (hasPaidItem) or acquired for free (price === 0)
+  const accessibleCourses = MOCK_AI_LEARNING_COURSES.filter((c) => {
+    if (isDemoAccount) return true;
+    const isFree = (c as unknown as { price?: number }).price === 0;
+    const isPaid = hasPaidItem(c.id) || hasPaidItem("school-ai-foundation-1") || hasPaidItem("school-01") || hasPaidItem("school-1") || paidItems.includes(c.id);
+    return isFree || isPaid;
+  });
+
+  const filteredAiCourses = accessibleCourses.filter(
     (c) =>
       c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.author.toLowerCase().includes(searchQuery.toLowerCase())
@@ -401,7 +420,7 @@ export default function MyLearningPage() {
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-black/[0.06] pb-3 dark:border-white/[0.06]">
           <div className="flex flex-wrap items-center gap-2 sm:gap-6 text-sm font-semibold">
             {[
-              { id: "all", label: "All courses", count: MOCK_AI_LEARNING_COURSES.length },
+              { id: "all", label: "All courses", count: accessibleCourses.length },
               { id: "lists", label: "My Lists", count: userLists.length },
               { id: "wishlist", label: "Wishlist", count: wishlist.length },
               { id: "archived", label: "Archived", count: ARCHIVED_COURSES.length },
@@ -458,13 +477,38 @@ export default function MyLearningPage() {
 
         {/* TAB 1: ALL AI COURSES */}
         {activeTab === "all" && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35 }}
-            className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
-          >
-            {filteredAiCourses.map((course, i) => (
+          filteredAiCourses.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35 }}
+              className="flex flex-col items-center justify-center rounded-3xl border border-black/[0.06] bg-white p-12 text-center shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02]"
+            >
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 dark:bg-cyan-500/10 dark:text-cyan-400 mb-4">
+                <BookOpen className="h-8 w-8" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                No accessible courses yet
+              </h3>
+              <p className="mt-2 max-w-md text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                You haven&apos;t enrolled in or purchased any AI courses yet. Browse the School of AI Foundation to enroll in courses or unlock full school curriculums.
+              </p>
+              <div className="mt-6">
+                <Link href="/learner/ai-schools">
+                  <Button className="rounded-xl bg-purple-600 px-6 py-2.5 font-bold text-white shadow-md hover:bg-purple-700 dark:bg-cyan-500 dark:text-black dark:hover:bg-cyan-400">
+                    Explore School of AI Foundation
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35 }}
+              className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
+            >
+              {filteredAiCourses.map((course, i) => (
               <motion.div
                 key={course.id}
                 initial={{ opacity: 0, y: 15 }}
@@ -540,7 +584,7 @@ export default function MyLearningPage() {
               </motion.div>
             ))}
           </motion.div>
-        )}
+        ))}
 
         {/* TAB 2: MY LISTS */}
         {activeTab === "lists" && (

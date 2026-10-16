@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User, Settings, LogOut, Heart } from "lucide-react";
+import { User, Settings, LogOut, Heart, Crown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { useLearnerStore } from "@/lib/store/use-learner-store";
 
 export function ProfileDropdown() {
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuth();
+  const isPro = useLearnerStore((state) => state.isPro);
   const [avatar, setAvatar] = useState<string | null>(null);
 
   useEffect(() => {
@@ -60,9 +62,17 @@ export function ProfileDropdown() {
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
-                    {user?.fullName ?? "Learner"}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
+                      {user?.fullName ?? "Learner"}
+                    </p>
+                    {isPro && (
+                      <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white shadow-sm ring-1 ring-amber-400/30">
+                        <Crown className="h-2.5 w-2.5 fill-white" />
+                        PRO
+                      </span>
+                    )}
+                  </div>
                   <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                     {user?.email ?? "learner@example.com"}
                   </p>

@@ -32,9 +32,46 @@ export function CourseCard({ course, schoolId, index, mounted }: { course: AiSch
         }}
         className="group relative overflow-hidden rounded-2xl border border-black/[0.06] bg-white transition-colors dark:border-white/[0.06] dark:bg-white/[0.03]"
       >
-        <div className="grid lg:grid-cols-[1fr_auto]">
+        <div className="relative grid lg:grid-cols-[1fr_auto]">
+          {/* Subtle Background Watermark & Ambient Accents */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden select-none">
+            {/* Subtle radial ambient glow */}
+            <div className="absolute -top-12 -right-12 h-44 w-44 rounded-full bg-purple-500/[0.06] blur-2xl dark:bg-purple-500/[0.10]" />
+            <div className="absolute -bottom-10 left-1/3 h-32 w-32 rounded-full bg-cyan-500/[0.04] blur-2xl dark:bg-cyan-500/[0.08]" />
+
+            {/* Subtle Tech Academic Dotted Grid Wash */}
+            <div className="absolute inset-0 bg-[radial-gradient(#8B5CF6_1.2px,transparent_1.2px)] [background-size:18px_18px] opacity-[0.04] dark:opacity-[0.07]" />
+
+            {/* Stylized Open Book & Knowledge Watermark Graphic */}
+            <svg
+              className="absolute right-4 sm:right-28 lg:right-64 top-1/2 -translate-y-1/2 h-32 w-32 text-purple-700/[0.07] dark:text-purple-300/[0.10] transition-transform duration-500 group-hover:scale-110 group-hover:rotate-1"
+              viewBox="0 0 120 120"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              {/* Book Spine & Pages */}
+              <path d="M60 98 C60 98 42 88 18 88 C14 88 10 90 10 94 L10 32 C10 28 14 26 18 26 C42 26 60 36 60 36 C60 36 78 26 102 26 C106 26 110 28 110 32 L110 94 C110 90 106 88 102 88 C78 88 60 98 60 98 Z" />
+              <path d="M60 36 L60 98" />
+              
+              {/* Page Line Accents */}
+              <path d="M22 42 C34 42 46 47 52 50" strokeWidth="1.8" strokeDasharray="3 3" />
+              <path d="M22 56 C34 56 46 61 52 64" strokeWidth="1.8" strokeDasharray="3 3" />
+              <path d="M22 70 C34 70 46 75 52 78" strokeWidth="1.8" strokeDasharray="3 3" />
+              
+              <path d="M98 42 C86 42 74 47 68 50" strokeWidth="1.8" strokeDasharray="3 3" />
+              <path d="M98 56 C86 56 74 61 68 64" strokeWidth="1.8" strokeDasharray="3 3" />
+              <path d="M98 70 C86 70 74 75 68 78" strokeWidth="1.8" strokeDasharray="3 3" />
+
+              {/* Sparkle/Star Above Book */}
+              <path d="M60 14 L62 20 L68 22 L62 24 L60 30 L58 24 L52 22 L58 20 Z" fill="currentColor" stroke="none" />
+            </svg>
+          </div>
+
           {/* Course content */}
-          <Link href={`/learner/courses/${course.id}`} className="p-6 sm:p-7 block hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+          <Link href={`/learner/courses/${course.id}`} className="relative z-10 p-6 sm:p-7 block hover:bg-slate-50/70 dark:hover:bg-white/[0.02] transition-colors">
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <span className="text-xs font-semibold uppercase tracking-[0.13em] text-purple-600 dark:text-cyan-400">
                 Course

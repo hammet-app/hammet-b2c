@@ -36,7 +36,19 @@ type PaymentMethod = "card" | "transfer";
 export default function CheckoutPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const { items, removeItem, getTotal, clearCart, markAsPaid } = useCart();
+  const {
+    items,
+    removeItem,
+    getTotal,
+    clearCart,
+    markAsPaid,
+    couponCode,
+    discountPercentage,
+    applyCoupon,
+    removeCoupon,
+    getDiscountAmount,
+    getFinalTotal,
+  } = useCart();
 
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<CheckoutStep>("review");
@@ -44,14 +56,13 @@ export default function CheckoutPage() {
 
   // Keep track of what was purchased so the success page has full details even after cart is cleared
   const [purchasedItems, setPurchasedItems] = useState<CartItem[]>([]);
+  const [paidTotal, setPaidTotal] = useState(0);
   const [transactionRef, setTransactionRef] = useState("");
   const [paymentDate, setPaymentDate] = useState("");
 
   // Coupon code logic
-  const [couponInput, setCouponInput] = useState("");
-  const [couponApplied, setCouponApplied] = useState(false);
-  const [couponError, setCouponError] = useState("");
-  const discountPercent = couponApplied ? 0.2 : 0; // 20% discount
+  const [couponInput, setCouponInput] = useState(couponCode || "");
+  const [couponFeedback, setCouponFeedback] = useState<{ success: boolean; message: string } | null>(null);
 
   // Card Form State
   const [cardNumber, setCardNumber] = useState("");
@@ -88,8 +99,9 @@ export default function CheckoutPage() {
   }, [step, paymentMethod]);
 
   const rawTotal = getTotal();
-  const discountAmount = Math.round(rawTotal * discountPercent);
-  const finalTotal = Math.max(0, rawTotal - discountAmount);
+  const discountAmount = getDiscountAmount();
+  const finalTotal = getFinalTotal();
+  const couponApplied = !!couponCode;
 
   // Card brand detection
   const cardBrand = useMemo(() => {
@@ -102,14 +114,15 @@ export default function CheckoutPage() {
 
   const handleApplyCoupon = (e: React.FormEvent) => {
     e.preventDefault();
-    setCouponError("");
-    const clean = couponInput.trim().toUpperCase();
-    if (clean === "HAMMETAI" || clean === "FOUNDER" || clean === "LEARN20") {
-      setCouponApplied(true);
-      setCouponError("");
-    } else {
-      setCouponError("Invalid coupon code. Try 'HAMMETAI' for 20% off.");
-    }
+    if (!couponInput.trim()) return;
+    const res = applyCoupon(couponInput);
+    setCouponFeedback({ success: res.success, message: res.message });
+  };
+
+  const handleRemoveCoupon = () => {
+    removeCoupon();
+    setCouponInput("");
+    setCouponFeedback(null);
   };
 
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -153,6 +166,7 @@ export default function CheckoutPage() {
   // Execute payment simulation
   const handleExecutePayment = () => {
     setPurchasedItems([...items]);
+    setPaidTotal(finalTotal);
     setStep("processing");
     setProcessingStage(0);
 
@@ -322,10 +336,10 @@ export default function CheckoutPage() {
                       <div className="flex items-center justify-between rounded-xl bg-emerald-50 p-3 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
                         <div className="flex items-center gap-2">
                           <Check className="h-4 w-4" />
-                          <span>Coupon <strong>HAMMETAI</strong> applied (20% OFF discount)</span>
+                          <span>Coupon <strong>{couponCode}</strong> applied ({discountPercentage}% OFF discount)</span>
                         </div>
                         <button
-                          onClick={() => setCouponApplied(false)}
+                          onClick={handleRemoveCoupon}
                           className="text-xs text-red-500 underline hover:no-underline"
                         >
                           Remove
@@ -337,7 +351,7 @@ export default function CheckoutPage() {
                           type="text"
                           value={couponInput}
                           onChange={(e) => setCouponInput(e.target.value)}
-                          placeholder="e.g. HAMMETAI or FOUNDER"
+                          placeholder="e.g. HAMMET20, HAMMET50, or EARLYBIRD"
                           className="flex-1 rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-sm uppercase text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                         />
                         <Button
@@ -349,8 +363,11 @@ export default function CheckoutPage() {
                         </Button>
                       </form>
                     )}
-                    {couponError && (
-                      <p className="mt-2 text-xs text-red-500">{couponError}</p>
+                    {couponFeedback && !couponFeedback.success && (
+                      <p className="mt-2 text-xs text-red-500">{couponFeedback.message}</p>
+                    )}
+                    {couponFeedback && couponFeedback.success && (
+                      <p className="mt-2 text-xs text-emerald-600 dark:text-emerald-400">{couponFeedback.message}</p>
                     )}
                   </div>
 
@@ -380,7 +397,7 @@ export default function CheckoutPage() {
 
                       {couponApplied && (
                         <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-medium">
-                          <span>Discount (20%)</span>
+                          <span>Discount ({couponCode} - {discountPercentage}%)</span>
                           <span>-₦{discountAmount.toLocaleString()}</span>
                         </div>
                       )}
@@ -907,7 +924,7 @@ export default function CheckoutPage() {
               <div className="flex items-center justify-between border-b border-slate-200 py-3 dark:border-white/5 text-xs">
                 <span className="text-slate-500 dark:text-slate-400">Total Amount Paid</span>
                 <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
-                  ₦{finalTotal.toLocaleString()}
+                  ₦{paidTotal.toLocaleString()}
                 </span>
               </div>
 

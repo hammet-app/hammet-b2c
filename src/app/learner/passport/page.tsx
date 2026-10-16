@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import {
   ShieldCheck,
@@ -22,113 +23,161 @@ import {
   FileCheck,
   Key,
   BadgeCheck,
+  RotateCw,
+  Timer,
+  GraduationCap,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils/utils";
 import { useAuth } from "@/lib/auth/auth-context";
-import {
-  NeuroBotIcon,
-  TensorCubieIcon,
-  MilestoneSignIcon,
-  KnowledgeAppleIcon,
-  QuantumBulbIcon,
-  TerminalDoodleIcon,
-} from "@/components/ui/character-icons";
+import { useLearnerStore } from "@/lib/store/use-learner-store";
+import { SkillBadgeComponent } from "@/components/ui/skill-badge";
+import { BadgeCelebrationModal } from "@/components/ui/badge-celebration-modal";
 
 // ── GUILLOCHE SECURITY BACKGROUND PATTERN (Official Passport Paper) ──────────
 function GuillocheSecurityPattern({ className = "" }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 600 400"
+      viewBox="0 0 650 440"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={cn("pointer-events-none absolute inset-0 h-full w-full opacity-20", className)}
+      className={cn("pointer-events-none absolute inset-0 h-full w-full select-none", className)}
     >
       <defs>
         <linearGradient id="guillocheGold" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#F5D77F" stopOpacity="0.8" />
-          <stop offset="50%" stopColor="#D4AF37" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#06B6D4" stopOpacity="0.6" />
+          <stop offset="40%" stopColor="#D4AF37" stopOpacity="0.4" />
+          <stop offset="80%" stopColor="#8B5CF6" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#06B6D4" stopOpacity="0.7" />
+        </linearGradient>
+
+        <linearGradient id="waveCyan" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#06B6D4" stopOpacity="0.3" />
+          <stop offset="50%" stopColor="#A855F7" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#F59E0B" stopOpacity="0.3" />
         </linearGradient>
       </defs>
 
-      {/* Intricate concentric mathematical guilloche rosette curves */}
-      <g stroke="url(#guillocheGold)" strokeWidth="0.75">
-        {[20, 40, 60, 80, 100, 120, 140, 160, 180, 200].map((radius, i) => (
+      {/* Intricate concentric mathematical guilloche rosette curves radiating from Hammet Star */}
+      <g stroke="url(#guillocheGold)" strokeWidth="0.8">
+        {[25, 45, 65, 85, 105, 125, 145, 165, 185, 205, 225, 245].map((radius, i) => (
           <ellipse
             key={i}
-            cx="300"
-            cy="200"
-            rx={radius * 1.5}
-            ry={radius * 0.9}
+            cx="440"
+            cy="180"
+            rx={radius * 1.4}
+            ry={radius * 0.85}
             strokeDasharray={i % 2 === 0 ? "4 3" : "2 2"}
-            transform={`rotate(${i * 18} 300 200)`}
+            transform={`rotate(${i * 15} 440 180)`}
+            opacity="0.6"
           />
         ))}
 
-        {/* Sinusoidal security waves */}
-        <path d="M 0 50 Q 150 20 300 50 T 600 50" strokeOpacity="0.5" />
-        <path d="M 0 100 Q 150 70 300 100 T 600 100" strokeOpacity="0.4" />
-        <path d="M 0 150 Q 150 120 300 150 T 600 150" strokeOpacity="0.5" />
-        <path d="M 0 200 Q 150 170 300 200 T 600 200" strokeOpacity="0.6" />
-        <path d="M 0 250 Q 150 220 300 250 T 600 250" strokeOpacity="0.5" />
-        <path d="M 0 300 Q 150 270 300 300 T 600 300" strokeOpacity="0.4" />
-        <path d="M 0 350 Q 150 320 300 350 T 600 350" strokeOpacity="0.5" />
+        {/* Sinusoidal security waves across the passport body */}
+        <path d="M 0 50 Q 160 15 320 50 T 650 50" stroke="url(#waveCyan)" strokeWidth="1" />
+        <path d="M 0 95 Q 160 65 320 95 T 650 95" stroke="url(#waveCyan)" strokeWidth="0.8" />
+        <path d="M 0 140 Q 160 110 320 140 T 650 140" stroke="url(#waveCyan)" strokeWidth="1" />
+        <path d="M 0 185 Q 160 155 320 185 T 650 185" stroke="url(#waveCyan)" strokeWidth="0.8" />
+        <path d="M 0 230 Q 160 200 320 230 T 650 230" stroke="url(#waveCyan)" strokeWidth="1" />
+        <path d="M 0 275 Q 160 245 320 275 T 650 275" stroke="url(#waveCyan)" strokeWidth="0.8" />
+        <path d="M 0 320 Q 160 290 320 320 T 650 320" stroke="url(#waveCyan)" strokeWidth="1" />
+        <path d="M 0 365 Q 160 335 320 365 T 650 365" stroke="url(#waveCyan)" strokeWidth="0.8" />
 
-        {/* Fine crosshatch micro-grid */}
-        <line x1="100" y1="0" x2="500" y2="400" strokeOpacity="0.25" strokeDasharray="3 3" />
-        <line x1="500" y1="0" x2="100" y2="400" strokeOpacity="0.25" strokeDasharray="3 3" />
+        {/* Fine crosshatch micro-grid security lines */}
+        <line x1="80" y1="0" x2="570" y2="440" strokeOpacity="0.2" strokeDasharray="3 3" />
+        <line x1="570" y1="0" x2="80" y2="440" strokeOpacity="0.2" strokeDasharray="3 3" />
       </g>
     </svg>
   );
 }
 
-// ── GOLD EMBOSSED ACADEMY COAT OF ARMS ─────────────────────────────────────────
-function GoldCrestSeal({ className = "" }: { className?: string }) {
+// ── OFFICIAL HAMMET EMBOSSED GOLD COAT OF ARMS ─────────────────────────────────
+function HammetCrestSeal({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-      <defs>
-        <linearGradient id="crestGold" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#FFF3B0" />
-          <stop offset="45%" stopColor="#D4AF37" />
-          <stop offset="85%" stopColor="#AA771C" />
-          <stop offset="100%" stopColor="#85580C" />
-        </linearGradient>
-      </defs>
-      {/* Outer Star Ring */}
-      <circle cx="50" cy="50" r="46" stroke="url(#crestGold)" strokeWidth="1.5" strokeDasharray="2 2" />
-      <circle cx="50" cy="50" r="41" stroke="url(#crestGold)" strokeWidth="2" />
-      {/* Laurel Wreath */}
-      <path
-        d="M 22 55 C 20 40 28 26 40 22 M 78 55 C 80 40 72 26 60 22"
-        stroke="url(#crestGold)"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
-      {/* Central Neural Shield */}
-      <path
-        d="M 50 25 L 72 35 V 58 C 72 73 50 83 50 83 C 50 83 28 73 28 58 V 35 Z"
-        stroke="url(#crestGold)"
-        strokeWidth="2"
-        fill="#140A26"
-      />
-      {/* Neural Core Star inside shield */}
-      <circle cx="50" cy="52" r="5" fill="url(#crestGold)" />
-      <line x1="50" y1="36" x2="50" y2="68" stroke="url(#crestGold)" strokeWidth="1.5" />
-      <line x1="36" y1="52" x2="64" y2="52" stroke="url(#crestGold)" strokeWidth="1.5" />
-      <circle cx="50" cy="36" r="2.5" fill="url(#crestGold)" />
-      <circle cx="50" cy="68" r="2.5" fill="url(#crestGold)" />
-      <circle cx="36" cy="52" r="2.5" fill="url(#crestGold)" />
-      <circle cx="64" cy="52" r="2.5" fill="url(#crestGold)" />
-    </svg>
+    <div className={cn("relative flex items-center justify-center select-none", className)}>
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        <defs>
+          <linearGradient id="crestGold" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FFF3B0" />
+            <stop offset="35%" stopColor="#F5D77F" />
+            <stop offset="70%" stopColor="#D4AF37" />
+            <stop offset="100%" stopColor="#AA771C" />
+          </linearGradient>
+        </defs>
+
+        {/* Outer Beaded Security Ring */}
+        <circle cx="50" cy="50" r="46" stroke="url(#crestGold)" strokeWidth="1.5" strokeDasharray="2.5 2.5" />
+        <circle cx="50" cy="50" r="42" stroke="url(#crestGold)" strokeWidth="2" />
+
+        {/* Classical Laurel Wreaths */}
+        <path
+          d="M 20 54 C 18 38 26 24 38 20 M 80 54 C 82 38 74 24 62 20"
+          stroke="url(#crestGold)"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+
+        {/* Heraldic Shield Body */}
+        <path
+          d="M 50 24 L 74 34 V 58 C 74 74 50 84 50 84 C 50 84 26 74 26 58 V 34 Z"
+          stroke="url(#crestGold)"
+          strokeWidth="2.2"
+          fill="#130826"
+        />
+
+        {/* Micro Stars on Shield Rim */}
+        <circle cx="50" cy="30" r="1.8" fill="url(#crestGold)" />
+        <circle cx="36" cy="40" r="1.5" fill="url(#crestGold)" />
+        <circle cx="64" cy="40" r="1.5" fill="url(#crestGold)" />
+      </svg>
+
+      {/* Embedded Hammet Logo Glyph in Center of Gold Shield */}
+      <div className="absolute inset-0 flex items-center justify-center pt-2 pointer-events-none">
+        <div className="relative h-7 w-7 filter drop-shadow-[0_1px_3px_rgba(255,215,0,0.6)]">
+          <Image
+            src="/icon-512x512.png"
+            alt="Hammet Emblem"
+            width={32}
+            height={32}
+            className="h-full w-full object-contain filter brightness-125"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── REALISTIC BIOMETRIC OVI SMART CHIP (Optical Variable Ink) ──────────────────
+function BiometricSmartChip() {
+  return (
+    <div className="relative flex flex-col items-end select-none">
+      {/* 3D Gold Contact Pad */}
+      <div className="relative flex h-8 w-11 items-center justify-center rounded-lg border border-[#F5D77F]/80 bg-gradient-to-br from-[#996515] via-[#D4AF37] to-[#F5D77F] p-1 shadow-lg shadow-black/40">
+        {/* Silicon Die Contacts */}
+        <div className="relative h-full w-full rounded border border-black/70 bg-[#B8860B]/90 flex items-center justify-center overflow-hidden">
+          {/* Micro-Circuit Etched Traces */}
+          <div className="absolute inset-0 grid grid-cols-3 gap-0.5 opacity-60">
+            <div className="border-r border-black/50" />
+            <div className="border-r border-black/50" />
+            <div />
+          </div>
+          <div className="absolute inset-x-0 h-0.5 bg-black/60 top-1/2 -translate-y-1/2" />
+          {/* Center Smart Dot */}
+          <div className="relative z-10 h-2 w-2 rounded-full border border-black/80 bg-gradient-to-tr from-amber-200 to-amber-500 shadow-sm" />
+        </div>
+      </div>
+      <span className="text-[8px] font-mono tracking-widest text-[#F5D77F] font-bold mt-1 shadow-sm">
+        E-PASSPORT // CHIP
+      </span>
+    </div>
   );
 }
 
 // ── OFFICIAL RUBBER VISA INK STAMPS (Physical Passport Entry Marks) ────────────
 function VisaStampFoundations() {
   return (
-    <div className="relative inline-block select-none rotate-[-6deg] transition-transform duration-300 hover:rotate-0 hover:scale-105">
-      <div className="rounded-2xl border-2 border-purple-500/80 bg-purple-500/10 p-3.5 text-purple-700 shadow-sm backdrop-blur-sm dark:border-purple-400/80 dark:text-purple-300">
+    <div className="relative inline-block select-none rotate-[-5deg] transition-transform duration-300 hover:rotate-0 hover:scale-105">
+      <div className="rounded-2xl border-2 border-purple-500/80 bg-purple-500/10 p-3.5 text-purple-700 shadow-md backdrop-blur-sm dark:border-purple-400/80 dark:text-purple-300">
         <div className="flex items-center justify-between border-b border-purple-500/40 pb-1.5 text-[9px] font-mono font-black tracking-widest uppercase">
           <span>HAMMET ACADEMY</span>
           <span>ENTRY STAMP</span>
@@ -154,7 +203,7 @@ function VisaStampFoundations() {
 function VisaStampAgents() {
   return (
     <div className="relative inline-block select-none rotate-[4deg] transition-transform duration-300 hover:rotate-0 hover:scale-105">
-      <div className="rounded-2xl border-2 border-cyan-500/80 bg-cyan-500/10 p-3.5 text-cyan-700 shadow-sm backdrop-blur-sm dark:border-cyan-400/80 dark:text-cyan-300">
+      <div className="rounded-2xl border-2 border-cyan-500/80 bg-cyan-500/10 p-3.5 text-cyan-700 shadow-md backdrop-blur-sm dark:border-cyan-400/80 dark:text-cyan-300">
         <div className="flex items-center justify-between border-b border-cyan-500/40 pb-1.5 text-[9px] font-mono font-black tracking-widest uppercase">
           <span>AUTONOMOUS SWARMS</span>
           <span>PORT: LANGGRAPH</span>
@@ -180,7 +229,7 @@ function VisaStampAgents() {
 function VisaStampRag() {
   return (
     <div className="relative inline-block select-none rotate-[-3deg] transition-transform duration-300 hover:rotate-0 hover:scale-105">
-      <div className="rounded-2xl border-2 border-emerald-500/80 bg-emerald-500/10 p-3.5 text-emerald-700 shadow-sm backdrop-blur-sm dark:border-emerald-400/80 dark:text-emerald-300">
+      <div className="rounded-2xl border-2 border-emerald-500/80 bg-emerald-500/10 p-3.5 text-emerald-700 shadow-md backdrop-blur-sm dark:border-emerald-400/80 dark:text-emerald-300">
         <div className="flex items-center justify-between border-b border-emerald-500/40 pb-1.5 text-[9px] font-mono font-black tracking-widest uppercase">
           <span>CONTEXTUAL RETRIEVAL</span>
           <span>MILVUS DB</span>
@@ -205,7 +254,7 @@ function VisaStampRag() {
 function VisaStampSecurity() {
   return (
     <div className="relative inline-block select-none rotate-[5deg] transition-transform duration-300 hover:rotate-0 hover:scale-105">
-      <div className="rounded-2xl border-2 border-amber-500/80 bg-amber-500/10 p-3.5 text-amber-700 shadow-sm backdrop-blur-sm dark:border-amber-400/80 dark:text-amber-300">
+      <div className="rounded-2xl border-2 border-amber-500/80 bg-amber-500/10 p-3.5 text-amber-700 shadow-md backdrop-blur-sm dark:border-amber-400/80 dark:text-amber-300">
         <div className="flex items-center justify-between border-b border-amber-500/40 pb-1.5 text-[9px] font-mono font-black tracking-widest uppercase">
           <span>DEFENSE IN DEPTH</span>
           <span>RED-TEAM AUDIT</span>
@@ -242,16 +291,17 @@ export default function PassportPage() {
   // 3D tilt tracking state for tactile physical passport feel
   const cardRef = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0, glareX: 50, glareY: 50 });
+  const [isAutoTilting, setIsAutoTilting] = useState(false);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
+    if (!cardRef.current || isAutoTilting) return;
     const rect = cardRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    const tiltX = ((y - centerY) / centerY) * -5.5;
-    const tiltY = ((x - centerX) / centerX) * 5.5;
+    const tiltX = ((y - centerY) / centerY) * -8;
+    const tiltY = ((x - centerX) / centerX) * 8;
     setTilt({
       x: tiltX,
       y: tiltY,
@@ -261,13 +311,34 @@ export default function PassportPage() {
   };
 
   const handleMouseLeave = () => {
-    setTilt({ x: 0, y: 0, glareX: 50, glareY: 50 });
+    if (!isAutoTilting) {
+      setTilt({ x: 0, y: 0, glareX: 50, glareY: 50 });
+    }
+  };
+
+  const triggerInspect3D = () => {
+    setIsAutoTilting(true);
+    let step = 0;
+    const interval = setInterval(() => {
+      step += 1;
+      const angle = (step * Math.PI) / 18;
+      setTilt({
+        x: Math.sin(angle) * 7,
+        y: Math.cos(angle) * 9,
+        glareX: 50 + Math.cos(angle) * 35,
+        glareY: 50 + Math.sin(angle) * 35,
+      });
+
+      if (step >= 36) {
+        clearInterval(interval);
+        setIsAutoTilting(false);
+        setTilt({ x: 0, y: 0, glareX: 50, glareY: 50 });
+      }
+    }, 45);
   };
 
   const passportNumber = "HMT-8849206-X";
   const passportId = "did:hammet:ai-8f4b-2026";
-  const verificationHash = "0x7F2A...4B9E";
-  const signatureProof = "ed25519:3q9j9e...f4k21a";
 
   const handleCopyVerification = () => {
     navigator.clipboard.writeText(`https://hammet.ai/verify/${passportId}`);
@@ -279,48 +350,11 @@ export default function PassportPage() {
     setDownloadingCert(true);
     setTimeout(() => {
       setDownloadingCert(false);
-      alert(`Diploma PDF Certificate ${passportNumber} generated and downloaded.`);
-    }, 1400);
+      window.print();
+    }, 1200);
   };
 
-  const badges = [
-    {
-      id: "badge-1",
-      title: "Neural Architect",
-      desc: "4-bit LoRA adapter training, quantization & benchmark evaluation",
-      icon: <TensorCubieIcon size="lg" />,
-      issued: "Oct 2026",
-      status: "Verified",
-      grade: "Grade A+",
-    },
-    {
-      id: "badge-2",
-      title: "Agentic Swarm Engineer",
-      desc: "Built multi-agent orchestrator with LangGraph, MCP tools & checkpoints",
-      icon: <NeuroBotIcon size="lg" />,
-      issued: "Oct 2026",
-      status: "Verified",
-      grade: "Grade A",
-    },
-    {
-      id: "badge-3",
-      title: "Hybrid RAG Specialist",
-      desc: "Deployed Milvus contextual vector retrieval pipeline with 98% recall",
-      icon: <QuantumBulbIcon size="lg" />,
-      issued: "Oct 2026",
-      status: "Verified",
-      grade: "Grade A+",
-    },
-    {
-      id: "badge-4",
-      title: "AI Safety & Guardrails",
-      desc: "Implemented defense-in-depth against prompt injections & data exfiltration",
-      icon: <MilestoneSignIcon size="lg" />,
-      issued: "Oct 2026",
-      status: "Verified",
-      grade: "Grade A",
-    },
-  ];
+  const badges = useLearnerStore((state) => state.badges);
 
   const competencies = [
     { name: "Model Fine-Tuning & LoRA Quantization", level: 96, percentile: "Top 3%" },
@@ -340,18 +374,30 @@ export default function PassportPage() {
           transition={{ duration: 0.45 }}
           className="mb-8"
         >
-          <div className="inline-flex items-center gap-2.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-3.5 py-1 text-xs font-semibold text-purple-700 dark:border-cyan-400/30 dark:bg-cyan-400/10 dark:text-cyan-300">
-            <Fingerprint className="h-3.5 w-3.5 text-purple-600 dark:text-cyan-400" />
-            <span>OFFICIAL BIOMETRIC LEARNER PASSPORT // RECOGNISED CREDENTIAL</span>
+          <div className="inline-flex items-center gap-2 rounded-full border border-purple-200/60 bg-purple-50 px-3.5 py-1 text-xs font-semibold text-purple-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-purple-300">
+            <Fingerprint className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+            <span>OFFICIAL BIOMETRIC LEARNER PASSPORT &amp; CREDENTIALS</span>
           </div>
 
-          <h1 className="mt-3 text-3xl font-extrabold tracking-[-0.04em] text-slate-950 sm:text-4xl lg:text-5xl dark:text-white">
-            AI Skill Passport &amp; Credentials
-          </h1>
+          <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-extrabold tracking-[-0.04em] text-slate-950 sm:text-4xl lg:text-5xl dark:text-white">
+                AI Skill Passport &amp; Credentials
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400 sm:text-base">
+                Your verifiable proof-of-work passport. Every course completion, benchmark evaluation, and code review is recorded into your verified decentralized credentials.
+              </p>
+            </div>
 
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400 sm:text-base">
-            Your verifiable proof-of-work passport. Every course completion, benchmark evaluation, and code review is recorded into your verified decentralized credentials.
-          </p>
+            {/* 3D Interactive Inspection Button */}
+            <button
+              onClick={triggerInspect3D}
+              className="inline-flex items-center gap-2 rounded-xl border border-black/[0.08] bg-white px-4 py-2 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] transition"
+            >
+              <RotateCw className={cn("h-3.5 w-3.5", isAutoTilting && "animate-spin")} />
+              <span>Inspect 3D Card</span>
+            </button>
+          </div>
         </motion.section>
 
         {/* ── PASSPORT BOOKLET METAPHOR: TAB SWITCHER ── */}
@@ -396,235 +442,301 @@ export default function PassportPage() {
           </button>
         </div>
 
-        {/* ── TOP STAGE: THE PHYSICAL-DIGITAL HYBRID BIOMETRIC PASSPORT ── */}
+        {/* ── TOP STAGE: THE PHYSICAL-DIGITAL HYBRID 3D PASSPORT BOOKLET ── */}
         <div className="mb-14 grid gap-8 lg:grid-cols-[1.3fr_0.9fr] lg:items-start">
-          {/* 1. TACTILE 3D BIOMETRIC PASSPORT BOOKLET */}
-          <div
-            ref={cardRef}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            style={{
-              transform: `perspective(1200px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
-              transition: "transform 0.15s ease-out",
-            }}
-            className="group relative mx-auto w-full max-w-[620px] overflow-hidden rounded-[32px] border-2 border-[#D4AF37]/50 bg-gradient-to-br from-[#120824] via-[#0E061D] to-[#080312] p-7 text-white shadow-[0_32px_80px_rgba(76,29,149,0.38)]"
-          >
-            {/* Guilloche Fine-Line Security Paper Pattern */}
-            <GuillocheSecurityPattern />
+          {/* 1. REALISTIC 3D BOUND BOOKLET WITH UNDERLYING STACKED PAGES */}
+          <div className="relative mx-auto w-full max-w-[650px] py-4" style={{ perspective: "1500px" }}>
+            {/* UNDERLYING PAGE LAYER 2 (Backing Page Shadow & Gilded Gold Edge) */}
+            <div className="pointer-events-none absolute inset-x-3 -bottom-2 top-6 rounded-[36px] bg-[#090414] border border-[#D4AF37]/25 shadow-[0_35px_80px_rgba(0,0,0,0.85)]" />
 
-            {/* Dynamic Holographic Specular Rainbow Sheen */}
+            {/* UNDERLYING PAGE LAYER 1 (Middle Page Thickness Layer) */}
+            <div className="pointer-events-none absolute inset-x-1.5 -bottom-0.5 top-5 rounded-[34px] bg-[#0E071F] border border-[#D4AF37]/35 shadow-lg" />
+
+            {/* ── MAIN 3D TACTILE BIOMETRIC POLYCARBONATE DATA PAGE ── */}
             <div
-              className="pointer-events-none absolute inset-0 opacity-40 mix-blend-color-dodge transition-opacity duration-300 group-hover:opacity-75"
+              ref={cardRef}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
               style={{
-                background: `radial-gradient(circle at ${tilt.glareX}% ${tilt.glareY}%, rgba(255,255,255,0.4) 0%, rgba(6,182,212,0.3) 25%, rgba(236,72,153,0.2) 50%, rgba(245,215,127,0.2) 75%, transparent 100%)`,
+                transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+                transformStyle: "preserve-3d",
+                transition: isAutoTilting ? "transform 0.08s ease-out" : "transform 0.15s ease-out",
               }}
-            />
-
-            {/* Micro-printed Security Border */}
-            <div className="pointer-events-none absolute inset-2.5 rounded-[26px] border border-[#D4AF37]/30" />
-
-            {/* ── TAB CONTENT: BIOMETRIC ID PAGE ── */}
-            {activeTab === "id" && (
-              <motion.div
-                key="id"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="relative z-10 flex flex-col justify-between min-h-[380px]"
-              >
-                {/* Header: Republic / Academy Coat of Arms */}
-                <div className="flex items-start justify-between border-b border-[#D4AF37]/30 pb-4">
-                  <div className="flex items-center gap-3">
-                    <GoldCrestSeal className="h-12 w-12 shrink-0 filter drop-shadow-[0_2px_8px_rgba(212,175,55,0.4)]" />
-                    <div>
-                      <p className="text-[10px] font-mono font-bold tracking-[0.25em] text-[#F5D77F] uppercase">
-                        HAMMET ACADEMY OF ADVANCED INTELLIGENCE
-                      </p>
-                      <h2 className="text-sm font-black tracking-widest text-white uppercase mt-0.5">
-                        PASSEPORT DE COMPÉTENCE // AI SKILL PASSPORT
-                      </h2>
-                    </div>
+              className="group relative w-full overflow-hidden rounded-[32px] border-2 border-[#D4AF37]/70 bg-gradient-to-br from-[#150A2E] via-[#0E061E] to-[#070213] p-6 sm:p-8 text-white shadow-[0_30px_70px_rgba(30,10,60,0.6),_inset_0_1px_1px_rgba(255,255,255,0.35),_inset_0_-1px_1px_rgba(0,0,0,0.8)]"
+            >
+              {/* ── REALISTIC LEFT BOOKLET SPINE & BINDING SEAM ── */}
+              <div className="pointer-events-none absolute left-0 inset-y-0 w-6 border-r border-[#D4AF37]/30 bg-gradient-to-r from-black/60 to-transparent flex flex-col justify-around py-6 z-20">
+                {/* 6 Realistic Thread Stitch Marks along the binding spine */}
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-1 pl-1">
+                    <div className="h-2.5 w-1 rounded-full bg-[#F5D77F] shadow-[0_0_4px_#F5D77F]" />
+                    <div className="h-1 w-1 rounded-full bg-black/80" />
                   </div>
+                ))}
+              </div>
 
-                  {/* Golden Biometric Smart Chip Icon */}
-                  <div className="flex flex-col items-end">
-                    <div className="flex h-7 w-9 items-center justify-center rounded-md border border-[#D4AF37] bg-gradient-to-tr from-[#996515] via-[#D4AF37] to-[#F5D77F] p-1 shadow-md">
-                      <div className="h-3 w-5 rounded-sm border border-black/60 bg-[#D4AF37]/90 flex items-center justify-center">
-                        <div className="h-1.5 w-1.5 rounded-full bg-black/80" />
+              {/* ── HAMMET LOGO WATERMARK IN THE BACKGROUND ── */}
+              <div className="pointer-events-none absolute right-2 sm:right-6 top-8 h-64 w-64 sm:h-80 sm:w-80 select-none opacity-[0.14] dark:opacity-[0.18] mix-blend-screen filter drop-shadow-[0_0_35px_rgba(139,92,246,0.6)] z-0">
+                <Image
+                  src="/icon-512x512.png"
+                  alt="Hammet Watermark"
+                  width={320}
+                  height={320}
+                  className="h-full w-full object-contain filter brightness-125"
+                  priority
+                />
+              </div>
+
+              {/* Guilloche Fine-Line Security Paper Pattern */}
+              <GuillocheSecurityPattern className="z-0" />
+
+              {/* Dynamic Holographic Specular Rainbow Sheen */}
+              <div
+                className="pointer-events-none absolute inset-0 opacity-45 mix-blend-color-dodge transition-opacity duration-300 group-hover:opacity-85 z-10"
+                style={{
+                  background: `radial-gradient(circle at ${tilt.glareX}% ${tilt.glareY}%, rgba(255,255,255,0.5) 0%, rgba(6,182,212,0.35) 25%, rgba(236,72,153,0.3) 50%, rgba(245,215,127,0.3) 75%, transparent 100%)`,
+                }}
+              />
+
+              {/* Micro-printed Security Border */}
+              <div className="pointer-events-none absolute inset-2.5 rounded-[26px] border border-[#D4AF37]/35 z-10" />
+
+              {/* ── ELEGANT FROSTED GLASS COMING SOON OVERLAY (PERMANENT BLUR) ── */}
+              <div className="absolute inset-0 z-30 flex flex-col items-center justify-center rounded-[30px] bg-slate-950/80 p-6 sm:p-8 text-center backdrop-blur-md border border-white/10 shadow-2xl">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-500/10 border border-purple-400/20 text-purple-400 mb-3 shadow-inner">
+                  <Timer className="h-7 w-7 text-purple-300 animate-pulse" />
+                </div>
+                <span className="rounded-full bg-purple-500/20 border border-purple-400/30 px-3.5 py-1 text-[11px] font-mono font-bold tracking-widest text-purple-200 uppercase mb-2.5">
+                  Accreditation In Progress
+                </span>
+                <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white max-w-sm">
+                  Official Passport &amp; Certification Coming Soon
+                </h3>
+                <p className="mt-2.5 max-w-md text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  The official biometric Hammet Passport &amp; Certification document design is currently being finalized. Your credentials, project milestones, and earned skill badges are verified and safely tracked in your account below.
+                </p>
+                <div className="mt-5 flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/10 px-3.5 py-1.5 text-xs text-slate-300 font-mono">
+                  <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                  <span>Verified Completion Records Safe</span>
+                </div>
+              </div>
+
+              {/* ── TAB CONTENT: BIOMETRIC ID PAGE ── */}
+              {activeTab === "id" && (
+                <motion.div
+                  key="id"
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="relative z-10 flex flex-col justify-between min-h-[400px] pl-3"
+                  style={{ transform: "translateZ(20px)" }}
+                >
+                  {/* Header: Hammet Coat of Arms & Biometric Smart Chip */}
+                  <div className="flex items-start justify-between border-b border-[#D4AF37]/30 pb-4">
+                    <div className="flex items-center gap-3">
+                      {/* Official Hammet Crest Seal with Embedded Logo */}
+                      <HammetCrestSeal className="h-13 w-13 shrink-0 filter drop-shadow-[0_2px_10px_rgba(212,175,55,0.5)]" />
+                      <div>
+                        <p className="text-[10px] font-mono font-bold tracking-[0.25em] text-[#F5D77F] uppercase flex items-center gap-1.5">
+                          <span>HAMMET ACADEMY OF ADVANCED INTELLIGENCE</span>
+                        </p>
+                        <h2 className="text-xs sm:text-sm font-black tracking-widest text-white uppercase mt-0.5">
+                          PASSEPORT DE COMPÉTENCE // AI SKILL PASSPORT
+                        </h2>
                       </div>
                     </div>
-                    <span className="text-[8px] font-mono tracking-widest text-[#F5D77F] mt-1">E-PASSPORT</span>
-                  </div>
-                </div>
 
-                {/* Center: Learner Identity Grid */}
-                <div className="my-5 grid grid-cols-[110px_1fr] gap-5 items-center">
-                  {/* Holographic UV Biometric Learner Photo */}
-                  <div className="relative">
-                    <div className="relative h-32 w-28 overflow-hidden rounded-2xl border-2 border-[#D4AF37]/60 bg-gradient-to-b from-purple-900/60 to-slate-950 p-1 shadow-inner">
-                      {/* Learner Portrait Simulation with UV Watermark */}
-                      <div className="flex h-full w-full flex-col items-center justify-center rounded-xl bg-gradient-to-tr from-purple-950 via-slate-900 to-indigo-950 text-center">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-purple-600 to-cyan-400 text-white text-base font-black shadow-md">
-                          {firstName[0]}
-                          {lastName[0]}
+                    {/* 3D Realistic Biometric Smart Chip (OVI) */}
+                    <BiometricSmartChip />
+                  </div>
+
+                  {/* Center: Learner Identity Grid */}
+                  <div className="my-5 grid grid-cols-[115px_1fr] gap-5 items-center">
+                    {/* Holographic UV Biometric Learner Photo with Kinegram Logo */}
+                    <div className="relative">
+                      <div className="relative h-34 w-28 overflow-hidden rounded-2xl border-2 border-[#D4AF37]/70 bg-gradient-to-b from-purple-900/70 to-slate-950 p-1 shadow-inner shadow-black">
+                        {/* Learner Portrait Simulation */}
+                        <div className="flex h-full w-full flex-col items-center justify-center rounded-xl bg-gradient-to-tr from-purple-950 via-slate-900 to-indigo-950 text-center relative overflow-hidden">
+                          {/* Ghost Portrait Watermark */}
+                          <div className="absolute inset-0 opacity-15 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent" />
+
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-purple-600 to-cyan-400 text-white text-base font-black shadow-lg">
+                            {firstName[0]}
+                            {lastName[0]}
+                          </div>
+                          <p className="mt-2 text-[9px] font-mono font-bold text-cyan-300">FELLOW #849</p>
+
+                          {/* Optical Variable Kinegram Seal with Hammet Logo */}
+                          <div className="absolute -bottom-2 -right-2 flex h-9 w-9 items-center justify-center rounded-full border border-[#D4AF37] bg-[#120824]/90 shadow-md backdrop-blur p-1">
+                            <Image
+                              src="/icon-512x512.png"
+                              alt="Kinegram"
+                              width={24}
+                              height={24}
+                              className="h-full w-full object-contain filter brightness-125"
+                            />
+                          </div>
                         </div>
-                        <p className="mt-2 text-[9px] font-mono font-bold text-cyan-300">FELLOW #849</p>
+                      </div>
+                    </div>
+
+                    {/* Formal Biometric Fields with 3D Laser-Engraved Shadow */}
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs">
+                      <div>
+                        <span className="text-[9px] uppercase font-mono text-[#F5D77F]/75">Type / Type</span>
+                        <p className="font-mono font-bold text-white">P</p>
                       </div>
 
-                      {/* Official Gold Seal Stamped Across Photo Corner */}
-                      <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full border border-[#D4AF37] bg-[#120824]/90 text-[8px] font-bold text-[#F5D77F] shadow-md backdrop-blur">
-                        HMT
+                      <div>
+                        <span className="text-[9px] uppercase font-mono text-[#F5D77F]/75">Code / Code</span>
+                        <p className="font-mono font-bold text-white">HMT</p>
+                      </div>
+
+                      <div className="col-span-2">
+                        <span className="text-[9px] uppercase font-mono text-[#F5D77F]/75">
+                          Passport No. / No. du Passeport
+                        </span>
+                        <p
+                          className="font-mono font-extrabold text-cyan-300 tracking-wider text-sm sm:text-base"
+                          style={{ textShadow: "0 1px 2px rgba(0,0,0,0.8), 0 0 10px rgba(6,182,212,0.4)" }}
+                        >
+                          {passportNumber}
+                        </p>
+                      </div>
+
+                      <div>
+                        <span className="text-[9px] uppercase font-mono text-[#F5D77F]/75">Surname / Nom</span>
+                        <p className="font-bold text-white tracking-wide text-sm">{lastName}</p>
+                      </div>
+
+                      <div>
+                        <span className="text-[9px] uppercase font-mono text-[#F5D77F]/75">Given Names / Prénoms</span>
+                        <p className="font-bold text-white tracking-wide text-sm">{firstName}</p>
+                      </div>
+
+                      <div>
+                        <span className="text-[9px] uppercase font-mono text-[#F5D77F]/75">Accredited Track</span>
+                        <p className="font-bold text-purple-200">AI Foundations</p>
+                      </div>
+
+                      <div>
+                        <span className="text-[9px] uppercase font-mono text-[#F5D77F]/75">Cohort &amp; Status</span>
+                        <p className="font-bold text-emerald-300 flex items-center gap-1.5">
+                          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                          2026 // Active
+                        </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Formal Biometric Fields */}
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                    <div>
-                      <span className="text-[9px] uppercase font-mono text-[#F5D77F]/70">Type / Type</span>
-                      <p className="font-mono font-bold text-white">P</p>
-                    </div>
-
-                    <div>
-                      <span className="text-[9px] uppercase font-mono text-[#F5D77F]/70">Code / Code</span>
-                      <p className="font-mono font-bold text-white">HMT</p>
-                    </div>
-
-                    <div className="col-span-2">
-                      <span className="text-[9px] uppercase font-mono text-[#F5D77F]/70">Passport No. / No. du Passeport</span>
-                      <p className="font-mono font-extrabold text-cyan-300 tracking-wider text-sm">{passportNumber}</p>
-                    </div>
-
-                    <div>
-                      <span className="text-[9px] uppercase font-mono text-[#F5D77F]/70">Surname / Nom</span>
-                      <p className="font-bold text-white tracking-wide">{lastName}</p>
-                    </div>
-
-                    <div>
-                      <span className="text-[9px] uppercase font-mono text-[#F5D77F]/70">Given Names / Prénoms</span>
-                      <p className="font-bold text-white tracking-wide">{firstName}</p>
-                    </div>
-
-                    <div>
-                      <span className="text-[9px] uppercase font-mono text-[#F5D77F]/70">Accredited Track</span>
-                      <p className="font-bold text-purple-200">AI Foundations</p>
-                    </div>
-
-                    <div>
-                      <span className="text-[9px] uppercase font-mono text-[#F5D77F]/70">Cohort &amp; Status</span>
-                      <p className="font-bold text-emerald-300 flex items-center gap-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        2026 // Active
+                  {/* Card Footer: Machine Readable Zone (MRZ) - ICAO Doc 9303 Standard */}
+                  <div className="border-t border-[#D4AF37]/30 pt-3">
+                    <div className="rounded-xl bg-black/75 p-2.5 font-mono text-[11px] sm:text-[12.5px] leading-tight tracking-[0.22em] text-[#F5D77F] select-all shadow-inner overflow-x-auto border border-black/40">
+                      <p className="whitespace-nowrap font-bold">
+                        P&lt;HMT{lastName}&lt;&lt;{firstName}&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+                      </p>
+                      <p className="whitespace-nowrap font-bold mt-1 text-cyan-200">
+                        HMT88492067HMT0409249M2610121&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;06
                       </p>
                     </div>
                   </div>
-                </div>
+                </motion.div>
+              )}
 
-                {/* Card Footer: Machine Readable Zone (MRZ) - OCR-B Standard */}
-                <div className="border-t border-[#D4AF37]/30 pt-3">
-                  <div className="rounded-xl bg-black/60 p-2.5 font-mono text-[11px] sm:text-[12px] leading-tight tracking-[0.22em] text-[#F5D77F] select-all shadow-inner overflow-x-auto">
-                    <p className="whitespace-nowrap font-bold">
-                      P&lt;HMT{lastName}&lt;&lt;{firstName}&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
-                    </p>
-                    <p className="whitespace-nowrap font-bold mt-1 text-cyan-200">
-                      HMT88492067HMT0409249M2610121&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;06
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ── TAB CONTENT: VISA ENDORSEMENT STAMPS ── */}
-            {activeTab === "stamps" && (
-              <motion.div
-                key="stamps"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="relative z-10 flex flex-col justify-between min-h-[380px]"
-              >
-                <div className="flex items-center justify-between border-b border-[#D4AF37]/30 pb-3">
-                  <div className="flex items-center gap-2">
-                    <Stamp className="h-5 w-5 text-[#F5D77F]" />
-                    <span className="text-xs font-mono font-bold tracking-widest text-[#F5D77F] uppercase">
-                      VISAS // ENDORSEMENTS &amp; CAPSTONE STAMPS
-                    </span>
-                  </div>
-                  <span className="text-[10px] font-mono text-white/60">PAGES 03–04</span>
-                </div>
-
-                {/* 4 Physical Ink Visa Stamps Laid Out Naturally */}
-                <div className="my-6 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center justify-items-center">
-                  <VisaStampFoundations />
-                  <VisaStampAgents />
-                  <VisaStampRag />
-                  <VisaStampSecurity />
-                </div>
-
-                <div className="border-t border-[#D4AF37]/30 pt-3 text-center">
-                  <p className="text-[10px] font-mono text-[#F5D77F]/80">
-                    ★ ALL STAMPS ELECTRONICALLY VERIFIED AGAINST DISTRIBUTED MERKLE ROOT ★
-                  </p>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ── TAB CONTENT: CRYPTOGRAPHIC PROOFS & LEDGER ── */}
-            {activeTab === "ledger" && (
-              <motion.div
-                key="ledger"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="relative z-10 flex flex-col justify-between min-h-[380px]"
-              >
-                <div className="flex items-center justify-between border-b border-[#D4AF37]/30 pb-3">
-                  <div className="flex items-center gap-2">
-                    <Key className="h-5 w-5 text-cyan-400" />
-                    <span className="text-xs font-mono font-bold tracking-widest text-cyan-300 uppercase">
-                      CRYPTOGRAPHIC MERKLE RECORD // DECENTRALIZED PROOF
-                    </span>
-                  </div>
-                  <span className="rounded-full bg-emerald-500/20 border border-emerald-400/30 px-2 py-0.5 text-[10px] font-mono text-emerald-300">
-                    STATUS: IMMUTABLE
-                  </span>
-                </div>
-
-                {/* Proof Attributes */}
-                <div className="my-5 space-y-3 font-mono text-xs">
-                  <div className="rounded-xl border border-white/10 bg-black/40 p-3">
-                    <span className="text-[10px] text-white/50 block">DECENTRALIZED IDENTIFIER (DID)</span>
-                    <span className="text-cyan-300 font-bold select-all break-all">{passportId}</span>
-                  </div>
-
-                  <div className="rounded-xl border border-white/10 bg-black/40 p-3">
-                    <span className="text-[10px] text-white/50 block">MERKLE TREE ROOT HASH</span>
-                    <span className="text-[#F5D77F] font-bold select-all break-all">
-                      0x7F2A9C114B9ED5672AEB9904128FCD8849206A1B
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-xl border border-white/10 bg-black/40 p-3">
-                      <span className="text-[10px] text-white/50 block">SIGNATURE SCHEME</span>
-                      <span className="text-white font-bold">Ed25519 Curve</span>
+              {/* ── TAB CONTENT: VISA ENDORSEMENT STAMPS ── */}
+              {activeTab === "stamps" && (
+                <motion.div
+                  key="stamps"
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="relative z-10 flex flex-col justify-between min-h-[400px] pl-3"
+                  style={{ transform: "translateZ(20px)" }}
+                >
+                  <div className="flex items-center justify-between border-b border-[#D4AF37]/30 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Stamp className="h-5 w-5 text-[#F5D77F]" />
+                      <span className="text-xs font-mono font-bold tracking-widest text-[#F5D77F] uppercase">
+                        VISAS // ENDORSEMENTS &amp; CAPSTONE STAMPS
+                      </span>
                     </div>
-                    <div className="rounded-xl border border-white/10 bg-black/40 p-3">
-                      <span className="text-[10px] text-white/50 block">CONSENSUS ANCHOR</span>
-                      <span className="text-emerald-300 font-bold">Arbitrum Block #263,941</span>
+                    <span className="text-[10px] font-mono text-white/60">PAGES 03–04</span>
+                  </div>
+
+                  {/* 4 Physical Ink Visa Stamps Laid Out Naturally */}
+                  <div className="my-6 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center justify-items-center">
+                    <VisaStampFoundations />
+                    <VisaStampAgents />
+                    <VisaStampRag />
+                    <VisaStampSecurity />
+                  </div>
+
+                  <div className="border-t border-[#D4AF37]/30 pt-3 text-center">
+                    <p className="text-[10px] font-mono text-[#F5D77F]/80">
+                      ★ ALL STAMPS ELECTRONICALLY VERIFIED AGAINST DISTRIBUTED MERKLE ROOT ★
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ── TAB CONTENT: CRYPTOGRAPHIC PROOFS & LEDGER ── */}
+              {activeTab === "ledger" && (
+                <motion.div
+                  key="ledger"
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="relative z-10 flex flex-col justify-between min-h-[400px] pl-3"
+                  style={{ transform: "translateZ(20px)" }}
+                >
+                  <div className="flex items-center justify-between border-b border-[#D4AF37]/30 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Key className="h-5 w-5 text-cyan-400" />
+                      <span className="text-xs font-mono font-bold tracking-widest text-cyan-300 uppercase">
+                        CRYPTOGRAPHIC MERKLE RECORD // DECENTRALIZED PROOF
+                      </span>
+                    </div>
+                    <span className="rounded-full bg-emerald-500/20 border border-emerald-400/30 px-2 py-0.5 text-[10px] font-mono text-emerald-300">
+                      STATUS: IMMUTABLE
+                    </span>
+                  </div>
+
+                  {/* Proof Attributes */}
+                  <div className="my-5 space-y-3 font-mono text-xs">
+                    <div className="rounded-xl border border-white/10 bg-black/50 p-3">
+                      <span className="text-[10px] text-white/50 block">DECENTRALIZED IDENTIFIER (DID)</span>
+                      <span className="text-cyan-300 font-bold select-all break-all">{passportId}</span>
+                    </div>
+
+                    <div className="rounded-xl border border-white/10 bg-black/50 p-3">
+                      <span className="text-[10px] text-white/50 block">MERKLE TREE ROOT HASH</span>
+                      <span className="text-[#F5D77F] font-bold select-all break-all">
+                        0x7F2A9C114B9ED5672AEB9904128FCD8849206A1B
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-xl border border-white/10 bg-black/50 p-3">
+                        <span className="text-[10px] text-white/50 block">SIGNATURE SCHEME</span>
+                        <span className="text-white font-bold">Ed25519 Curve</span>
+                      </div>
+                      <div className="rounded-xl border border-white/10 bg-black/50 p-3">
+                        <span className="text-[10px] text-white/50 block">CONSENSUS ANCHOR</span>
+                        <span className="text-emerald-300 font-bold">Arbitrum Block #263,941</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="border-t border-[#D4AF37]/30 pt-3 flex items-center justify-between text-[10px] font-mono text-white/60">
-                  <span>SHA-256 INTEGRITY VALID</span>
-                  <span className="text-cyan-300">AUDITED BY ZERO-KNOWLEDGE PROOF</span>
-                </div>
-              </motion.div>
-            )}
+                  <div className="border-t border-[#D4AF37]/30 pt-3 flex items-center justify-between text-[10px] font-mono text-white/60">
+                    <span>SHA-256 INTEGRITY VALID</span>
+                    <span className="text-cyan-300">AUDITED BY ZERO-KNOWLEDGE PROOF</span>
+                  </div>
+                </motion.div>
+              )}
+            </div>
           </div>
 
           {/* 2. OFFICIAL VERIFICATION & CERTIFICATE ACTIONS */}
@@ -762,46 +874,189 @@ export default function PassportPage() {
           </div>
         </div>
 
-        {/* ── MINTED SKILL BADGES (Micro-Credentials) ── */}
-        <div>
-          <div className="mb-6">
-            <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Minted Skill Badges
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Cryptographically verified micro-credentials issued upon passing capstone projects.
-            </p>
+        {/* ── HOW CREDENTIALS & BADGES ARE EARNED ARCHITECTURE ── */}
+        <div className="mb-14 rounded-3xl border border-black/[0.08] bg-white p-7 sm:p-9 shadow-sm dark:border-white/[0.08] dark:bg-white/[0.02]">
+          <div className="mb-8 border-b border-black/[0.06] pb-6 dark:border-white/[0.06]">
+            <div>
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/10 px-3 py-1 text-xs font-mono font-bold text-purple-700 dark:text-cyan-300">
+                <Award className="h-3.5 w-3.5" />
+                <span>CREDENTIAL ACCREDITATION ARCHITECTURE</span>
+              </div>
+              <h3 className="mt-2 text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                How Badges &amp; Certificates Are Earned
+              </h3>
+              <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
+                Hammet AI Academy utilizes a verifiable proof-of-work framework. Every micro-credential and the unified Passport Certificate require real architectural and theoretical proof.
+              </p>
+            </div>
+          </div>
+
+          {/* Two-Column Explainer Grid: 1. Skill Badges, 2. School Certificate / Passport */}
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Box 1: How Skill Badges Are Earned */}
+            <div className="rounded-2xl border border-purple-500/20 bg-purple-50/40 p-6 dark:border-purple-500/15 dark:bg-purple-950/10 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-600 text-white shadow-md">
+                    <BadgeCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-poppins text-base font-bold text-slate-900 dark:text-white">
+                      1. How Skill Badges Are Earned
+                    </h4>
+                    <p className="text-[11px] font-mono text-purple-700 dark:text-cyan-400 font-semibold">
+                      EARNED PER COURSE MODULE &amp; CAPSTONE
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3.5 text-xs text-slate-600 dark:text-slate-300">
+                  <div className="flex items-start gap-2.5">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-purple-200/70 font-mono text-[10px] font-bold text-purple-800 dark:bg-purple-900/60 dark:text-purple-300">
+                      A
+                    </span>
+                    <div>
+                      <strong className="text-slate-900 dark:text-white">Module Knowledge Tests:</strong> Each course module concludes with an automated test benchmark. Scoring <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">≥ 80%</span> satisfies the theoretical benchmark.
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-purple-200/70 font-mono text-[10px] font-bold text-purple-800 dark:bg-purple-900/60 dark:text-purple-300">
+                      B
+                    </span>
+                    <div>
+                      <strong className="text-slate-900 dark:text-white">Attached Real-World Projects:</strong> Every course includes 5+ attached hands-on capstone projects. When you start a project, it automatically links to your Project Workspace.
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-purple-200/70 font-mono text-[10px] font-bold text-purple-800 dark:bg-purple-900/60 dark:text-purple-300">
+                      C
+                    </span>
+                    <div>
+                      <strong className="text-slate-900 dark:text-white">Automated Code Rubric Approval:</strong> Submitting your repository URL and live sandbox demo validates architecture against automated test suites and rubric metrics.
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-purple-200/70 font-mono text-[10px] font-bold text-purple-800 dark:bg-purple-900/60 dark:text-purple-300">
+                      D
+                    </span>
+                    <div>
+                      <strong className="text-slate-900 dark:text-white">Minting &amp; Social Sharing:</strong> Your heraldic certifier medallion is stamped with a unique hash (<code className="font-mono text-[11px] text-amber-500">0x...</code>), launching a celebratory claim modal with one-click export to LinkedIn &amp; socials.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Micro-credential status note */}
+              <div className="mt-5 pt-4 border-t border-purple-200/60 dark:border-white/10 flex items-center gap-2 text-[11px] font-mono text-purple-700 dark:text-cyan-400 font-semibold">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                <span>Earned upon completing module test benchmarks (≥80%) and capstone projects</span>
+              </div>
+            </div>
+
+            {/* Box 2: How School Certificate / Passport Is Earned */}
+            <div className="rounded-2xl border border-amber-500/25 bg-amber-50/40 p-6 dark:border-amber-500/20 dark:bg-amber-950/10 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2.5 mb-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500 text-slate-950 shadow-md">
+                    <GraduationCap className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-poppins text-base font-bold text-slate-900 dark:text-white">
+                      2. How the Certificate &amp; Passport Are Earned
+                    </h4>
+                    <p className="text-[11px] font-mono text-amber-700 dark:text-amber-400 font-semibold">
+                      UNIFIED ACCREDITATION DIPLOMA
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3.5 text-xs text-slate-600 dark:text-slate-300">
+                  <div className="flex items-start gap-2.5">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-200/80 font-mono text-[10px] font-bold text-amber-900 dark:bg-amber-900/60 dark:text-amber-200">
+                      1
+                    </span>
+                    <div>
+                      <strong className="text-slate-900 dark:text-white">Unified Credential Concept:</strong> The Biometric Skill Passport acts as your official institution graduation certification — one unified verifiable proof document.
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-200/80 font-mono text-[10px] font-bold text-amber-900 dark:bg-amber-900/60 dark:text-amber-200">
+                      2
+                    </span>
+                    <div>
+                      <strong className="text-slate-900 dark:text-white">Complete Full School Curriculum:</strong> Finish all 4 foundational tracks (Neural Networks, Autonomous Agents, Hybrid RAG, AI Safety).
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-200/80 font-mono text-[10px] font-bold text-amber-900 dark:bg-amber-900/60 dark:text-amber-200">
+                      3
+                    </span>
+                    <div>
+                      <strong className="text-slate-900 dark:text-white">Clear All Module Tests &amp; Projects:</strong> Complete all test questions across modules and ship required capstone repositories.
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-200/80 font-mono text-[10px] font-bold text-amber-900 dark:bg-amber-900/60 dark:text-amber-200">
+                      4
+                    </span>
+                    <div>
+                      <strong className="text-slate-900 dark:text-white">Accreditation Document Protected:</strong> The official biometric certificate design is being completed. Once your school requirements are verified and released, your diploma and Merkle anchor become downloadable.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status footer without mock toggle buttons */}
+              <div className="mt-5 pt-4 border-t border-amber-200/60 dark:border-white/10 flex items-center justify-between">
+                <span className="text-[11px] font-mono font-bold text-amber-800 dark:text-amber-300">
+                  Status: Accreditation in Progress ⏳
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-3 py-1 font-mono text-[10px] font-bold text-amber-800 dark:text-amber-300 border border-amber-400/30">
+                  <Timer className="h-3 w-3" /> Blurred Until Release
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── MINTED SKILL BADGES (Certifier Ribbon Medallions) ── */}
+        <div className="mb-14">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/10 px-3 py-0.5 text-xs font-mono font-bold text-purple-700 dark:text-cyan-300">
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>CRYPTOGRAPHIC SKILL MEDALLIONS</span>
+              </div>
+              <h3 className="mt-1 text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                Minted Skill Badges
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Cryptographically verified micro-credentials issued upon passing capstone projects &amp; benchmark tests.
+              </p>
+            </div>
+
+            <div className="inline-flex items-center gap-2 rounded-xl border border-black/[0.08] bg-white px-3.5 py-2 text-xs font-mono font-bold text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+              <BadgeCheck className="h-4 w-4 text-purple-600 dark:text-cyan-400" />
+              <span>{badges.length} Badges Minted &amp; Anchored</span>
+            </div>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {badges.map((badge) => (
-              <div
-                key={badge.id}
-                className="group flex flex-col justify-between rounded-3xl border border-black/[0.06] bg-white p-6 shadow-sm transition-all hover:-translate-y-1.5 hover:shadow-lg dark:border-white/[0.06] dark:bg-white/[0.02]"
-              >
-                <div>
-                  <div className="mb-4">{badge.icon}</div>
-                  <h4 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-cyan-400 transition-colors">
-                    {badge.title}
-                  </h4>
-                  <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    {badge.desc}
-                  </p>
-                </div>
-
-                <div className="mt-5 flex items-center justify-between pt-3 border-t border-black/[0.05] dark:border-white/[0.05] text-[11px]">
-                  <span className="text-slate-400 font-mono">{badge.issued}</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-mono text-purple-600 dark:text-cyan-400 font-bold">{badge.grade}</span>
-                    <span className="font-bold rounded px-1.5 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
-                      {badge.status}
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <SkillBadgeComponent key={badge.id} badge={badge} />
             ))}
           </div>
         </div>
+
+
+        {/* Badge Claiming Celebration Modal */}
+        <BadgeCelebrationModal />
       </div>
     </div>
   );

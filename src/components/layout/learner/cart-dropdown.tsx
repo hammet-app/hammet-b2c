@@ -12,6 +12,10 @@ export function CartDropdown() {
   const cartItems = useCart((state) => state.items);
   const removeItem = useCart((state) => state.removeItem);
   const getTotal = useCart((state) => state.getTotal);
+  const couponCode = useCart((state) => state.couponCode);
+  const discountPercentage = useCart((state) => state.discountPercentage);
+  const getDiscountAmount = useCart((state) => state.getDiscountAmount);
+  const getFinalTotal = useCart((state) => state.getFinalTotal);
 
   return (
     <div 
@@ -74,9 +78,15 @@ export function CartDropdown() {
                     ))}
                   </div>
                   <div className="mt-4 border-t border-black/[0.06] pt-4 dark:border-white/[0.06]">
+                    {couponCode && (
+                      <div className="mb-2 flex items-center justify-between text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        <span>Coupon ({couponCode}):</span>
+                        <span>-₦{getDiscountAmount().toLocaleString()} ({discountPercentage}%)</span>
+                      </div>
+                    )}
                     <div className="mb-4 flex items-center justify-between font-semibold">
                       <span>Total:</span>
-                      <span className="text-lg">₦{getTotal().toLocaleString()}</span>
+                      <span className="text-lg">₦{getFinalTotal().toLocaleString()}</span>
                     </div>
                     <Link href="/learner/checkout" className="block w-full">
                       <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white shadow-md">

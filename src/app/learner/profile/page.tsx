@@ -30,8 +30,10 @@ import {
   Plus,
   X,
   ImageIcon,
+  Crown,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { useLearnerStore } from "@/lib/store/use-learner-store";
 import { Button } from "@/components/ui/button";
 
 const DEFAULT_SKILLS = [
@@ -60,6 +62,7 @@ const SUGGESTED_SKILLS = [
 
 export default function LearnerProfilePage() {
   const { user } = useAuth();
+  const isPro = useLearnerStore((state) => state.isPro);
 
   const [activeTab, setActiveTab] = useState<"overview" | "edit" | "activity">("overview");
   const [isSaved, setIsSaved] = useState(false);
@@ -180,7 +183,7 @@ export default function LearnerProfilePage() {
   const initialLetter = fullName.charAt(0).toUpperCase() || "U";
 
   return (
-    <div className="min-h-screen bg-[#F5F3FF] px-4 pb-28 pt-6 transition-colors duration-300 dark:bg-[#0D0A17] sm:px-6 sm:pt-8 lg:px-10">
+    <div className="min-h-screen bg-slate-50 px-4 pb-28 pt-6 transition-colors duration-300 dark:bg-[#0B0813] sm:px-6 sm:pt-8 lg:px-10">
       {/* Hidden file inputs for avatar & cover */}
       <input
         ref={avatarInputRef}
@@ -209,10 +212,10 @@ export default function LearnerProfilePage() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="relative overflow-hidden rounded-[2.5rem] border border-purple-200/60 bg-white shadow-xl dark:border-white/10 dark:bg-[#140F22]"
+          className="relative overflow-hidden rounded-[2.5rem] border border-black/[0.08] bg-white shadow-sm dark:border-white/10 dark:bg-[#140F22]"
         >
           {/* Header Ambient Cover Graphic with Upload Button */}
-          <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-gradient-to-r from-purple-700 via-indigo-600 to-violet-800 dark:from-purple-950 dark:via-indigo-950 dark:to-slate-950">
+          <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-gradient-to-r from-[#170E28] via-[#24143D] to-[#120B20] dark:from-[#0E071A] dark:via-[#190D2E] dark:to-[#0A0514]">
             {coverUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -223,16 +226,16 @@ export default function LearnerProfilePage() {
             ) : (
               <>
                 <div
-                  className="absolute inset-0 opacity-20"
+                  className="absolute inset-0 opacity-15"
                   style={{
                     backgroundImage:
-                      "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.8) 1px, transparent 1px), radial-gradient(circle at 80% 50%, rgba(255,255,255,0.8) 1px, transparent 1px)",
+                      "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.6) 1px, transparent 1px), radial-gradient(circle at 80% 50%, rgba(255,255,255,0.6) 1px, transparent 1px)",
                     backgroundSize: "28px 28px",
                   }}
                 />
-                {/* Glowing Accent Rings */}
-                <div className="absolute -right-12 -top-12 h-64 w-64 rounded-full bg-cyan-400/20 blur-3xl pointer-events-none" />
-                <div className="absolute -left-12 -bottom-12 h-64 w-64 rounded-full bg-purple-500/30 blur-3xl pointer-events-none" />
+                {/* Subtle, soft ambient glow */}
+                <div className="absolute -right-12 -top-12 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
+                <div className="absolute -left-12 -bottom-12 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
               </>
             )}
 
@@ -240,7 +243,7 @@ export default function LearnerProfilePage() {
             <button
               type="button"
               onClick={() => coverInputRef.current?.click()}
-              className="absolute top-4 right-4 z-10 flex items-center gap-1.5 rounded-xl bg-black/45 px-3 py-1.5 font-poppins text-xs font-bold text-white backdrop-blur-md border border-white/20 transition hover:bg-black/65 shadow-lg"
+              className="absolute top-4 right-4 z-10 flex items-center gap-1.5 rounded-xl bg-black/45 px-3 py-1.5 font-poppins text-xs font-bold text-white backdrop-blur-md border border-white/20 transition hover:bg-black/65 shadow-sm"
               title="Upload custom background banner"
             >
               <Camera className="h-3.5 w-3.5" />
@@ -252,9 +255,9 @@ export default function LearnerProfilePage() {
           <div className="relative px-6 pb-8 pt-0 sm:px-10">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
               {/* User Avatar with Shifted-Down Text Block */}
-              <div className="flex flex-col sm:flex-row sm:items-end gap-5 -mt-16 sm:-mt-20">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-6">
                 {/* User Avatar Box with Click-to-Upload */}
-                <div className="group relative flex h-28 w-28 sm:h-32 sm:w-32 shrink-0 items-center justify-center rounded-3xl border-4 border-white bg-gradient-to-br from-purple-600 via-violet-500 to-cyan-400 font-poppins text-4xl sm:text-5xl font-black text-white shadow-2xl overflow-hidden dark:border-[#140F22]">
+                <div className="-mt-16 sm:-mt-20 group relative flex h-28 w-28 sm:h-32 sm:w-32 shrink-0 items-center justify-center rounded-3xl border-4 border-white bg-gradient-to-br from-[#2D1B4E] to-[#160E29] font-poppins text-4xl sm:text-5xl font-black text-purple-200 shadow-xl overflow-hidden dark:border-[#140F22]">
                   {avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -280,19 +283,25 @@ export default function LearnerProfilePage() {
                   <span className="absolute bottom-2 right-2 h-4 w-4 rounded-full border-2 border-white bg-emerald-500 shadow-md dark:border-[#140F22]" />
                 </div>
 
-                {/* User Meta Information - shifted comfortably down below purple banner border */}
-                <div className="pt-2 sm:pt-5 sm:pb-1">
+                {/* User Meta Information - cleanly sitting below the cover banner */}
+                <div className="pt-1 sm:pt-3">
                   <div className="flex flex-wrap items-center gap-2.5">
                     <h1 className="font-poppins text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
                       {fullName}
                     </h1>
-                    <span className="inline-flex items-center gap-1 rounded-full border border-purple-300/40 bg-purple-100/80 px-2.5 py-0.5 font-poppins text-[11px] font-bold text-purple-700 dark:border-purple-500/30 dark:bg-purple-950/60 dark:text-purple-300">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-purple-300/40 bg-purple-50 px-2.5 py-0.5 font-poppins text-[11px] font-bold text-purple-700 dark:border-purple-500/30 dark:bg-purple-950/40 dark:text-purple-300">
                       <ShieldCheck className="h-3 w-3 text-purple-600 dark:text-cyan-400" />
                       Verified Learner
                     </span>
+                    {isPro && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-500 to-amber-600 px-3 py-0.5 font-poppins text-[11px] font-black text-white shadow-sm tracking-wide ring-1 ring-amber-300/30">
+                        <Crown className="h-3 w-3 fill-white" />
+                        PRO Member
+                      </span>
+                    )}
                   </div>
 
-                  {/* Shifted down with mt-2 and generous breathing room from purple banner line */}
+                  {/* Shifted down with mt-2 and generous breathing room from banner line */}
                   <p className="mt-2 font-poppins text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300">
                     @{username} • {email}
                   </p>
@@ -314,14 +323,14 @@ export default function LearnerProfilePage() {
               <div className="flex flex-wrap items-center gap-2.5 mb-2">
                 <button
                   onClick={() => setActiveTab(activeTab === "edit" ? "overview" : "edit")}
-                  className="inline-flex items-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-2 font-poppins text-xs font-bold text-purple-700 transition hover:bg-purple-100 dark:border-white/10 dark:bg-white/[0.05] dark:text-purple-300 dark:hover:bg-white/10"
+                  className="inline-flex items-center gap-2 rounded-xl border border-black/[0.08] bg-slate-50 px-4 py-2 font-poppins text-xs font-bold text-slate-700 transition hover:bg-slate-100 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-300 dark:hover:bg-white/10"
                 >
                   <Edit3 className="h-3.5 w-3.5" />
                   {activeTab === "edit" ? "View Overview" : "Edit Profile"}
                 </button>
                 <Link
                   href="/learner/passport"
-                  className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2 font-poppins text-xs font-bold text-white shadow-md shadow-purple-600/30 transition hover:bg-purple-700"
+                  className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2 font-poppins text-xs font-bold text-white shadow-sm transition hover:bg-purple-700"
                 >
                   <FileBadge className="h-3.5 w-3.5" />
                   Skill Passport
@@ -498,6 +507,57 @@ export default function LearnerProfilePage() {
 
             {/* Right Column: Passport Quick Card & Social Links */}
             <div className="space-y-6">
+              {/* Hammet Pro Membership Status Card */}
+              {isPro ? (
+                <div className="rounded-3xl border border-amber-400/50 bg-gradient-to-br from-amber-500/15 via-[#1A1207] to-[#0E0B16] p-6 text-white shadow-xl">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-3 py-1 font-poppins text-[10px] font-black tracking-wider text-white shadow-sm ring-1 ring-amber-400/40">
+                      <Crown className="h-3 w-3 fill-white" />
+                      HAMMET PRO
+                    </span>
+                    <span className="font-poppins text-xs font-bold text-amber-300">VIP Member</span>
+                  </div>
+                  <h4 className="mt-3 font-poppins text-lg font-black text-white">
+                    Pro Privileges Active
+                  </h4>
+                  <p className="mt-1 font-poppins text-xs text-slate-300 leading-relaxed">
+                    Custom passport themes, verified recruiter badges, unmetered A100 GPU sandboxes, and portfolio themes unlocked.
+                  </p>
+                  <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-4">
+                    <span className="font-poppins text-xs font-semibold text-amber-200/90">₦2,000 / month</span>
+                    <Link
+                      href="/learner/pro"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-1.5 font-poppins text-xs font-bold text-white shadow-md transition hover:scale-105"
+                    >
+                      Manage Pro →
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-3xl border border-black/[0.08] bg-slate-50 p-6 dark:border-white/10 dark:bg-white/[0.02]">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/10 px-2.5 py-0.5 font-poppins text-[10px] font-bold text-purple-700 dark:text-purple-300">
+                      <Crown className="h-3 w-3 text-purple-600 dark:text-cyan-400" />
+                      MEMBERSHIP
+                    </span>
+                    <span className="font-poppins text-xs font-semibold text-slate-400">Standard</span>
+                  </div>
+                  <h4 className="mt-2.5 font-poppins text-base font-bold text-slate-900 dark:text-white">
+                    Hammet Pro
+                  </h4>
+                  <p className="mt-1 font-poppins text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Unlock verified Pro badges, portfolio themes, and custom passport designs for just ₦2,000/mo.
+                  </p>
+                  <Link
+                    href="/learner/pro"
+                    className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 font-poppins text-xs font-bold text-white shadow-sm transition hover:bg-purple-700"
+                  >
+                    <Crown className="h-3.5 w-3.5" />
+                    Get Hammet Pro
+                  </Link>
+                </div>
+              )}
+
               {/* Skill Passport Promo Card */}
               <div className="rounded-3xl border border-purple-400/40 bg-gradient-to-br from-purple-950/90 to-[#120B24] p-6 text-white shadow-xl">
                 <div className="flex items-center justify-between">

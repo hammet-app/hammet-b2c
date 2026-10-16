@@ -689,11 +689,10 @@ export default function RegisterPage() {
           </span>
         </div>
 
-        {/* 3 Social Buttons Row (Google, Microsoft, ChatGPT) */}
-        <div className="grid grid-cols-3 gap-2.5">
-          {/* 1. Google Button */}
+        {/* Single Google Sign-In Button */}
+        <div className="w-full">
           <div
-            className="group relative flex h-11 items-center justify-center gap-1.5 overflow-hidden rounded-xl border border-black/[0.08] bg-white px-2 text-xs font-semibold text-slate-800 shadow-sm transition-all hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08] cursor-pointer"
+            className="group relative flex h-11 w-full items-center justify-center gap-2.5 overflow-hidden rounded-xl border border-black/[0.08] bg-white px-4 text-xs font-semibold text-slate-800 shadow-sm transition-all hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08] cursor-pointer"
           >
             {/* Custom Google Visual matching other buttons */}
             <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
@@ -714,7 +713,7 @@ export default function RegisterPage() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
               />
             </svg>
-            <span className="truncate">Google</span>
+            <span className="text-xs font-semibold">Sign up with Google</span>
 
             {/* Invisible Google Sign-In iframe overlay */}
             <div
@@ -723,33 +722,6 @@ export default function RegisterPage() {
               title="Sign up with Google"
             />
           </div>
-
-          {/* 2. Microsoft Button */}
-          <button
-            type="button"
-            onClick={() => setErrors({ form: "Microsoft signup is connected in production." })}
-            className="flex h-11 items-center justify-center gap-1.5 rounded-xl border border-black/[0.08] bg-white px-2 text-xs font-semibold text-slate-800 shadow-sm transition-all hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08]"
-          >
-            <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24">
-              <rect fill="#F25022" x="1" y="1" width="10" height="10" />
-              <rect fill="#7FBA00" x="13" y="1" width="10" height="10" />
-              <rect fill="#00A4EF" x="1" y="13" width="10" height="10" />
-              <rect fill="#FFB900" x="13" y="13" width="10" height="10" />
-            </svg>
-            <span className="truncate">Microsoft</span>
-          </button>
-
-          {/* 3. ChatGPT Button */}
-          <button
-            type="button"
-            onClick={() => setErrors({ form: "ChatGPT signup is connected in production." })}
-            className="flex h-11 items-center justify-center gap-1.5 rounded-xl border border-black/[0.08] bg-white px-2 text-xs font-semibold text-slate-800 shadow-sm transition-all hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08]"
-          >
-            <svg className="h-4 w-4 shrink-0 text-slate-900 dark:text-white" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M22.28 9.9c-.23-.84-.71-1.57-1.39-2.1-.48-.37-1.04-.63-1.63-.76-.09-.9-.45-1.74-1.05-2.42-.71-.81-1.68-1.34-2.73-1.5-.78-.12-1.57-.04-2.31.25-.6-.68-1.39-1.16-2.28-1.38-1.04-.26-2.14-.14-3.1.34-.84.42-1.53 1.08-1.99 1.9-.9-.12-1.81.04-2.61.47-.94.51-1.68 1.34-2.1 2.34-.37.89-.47 1.87-.27 2.81-.8.47-1.42 1.18-1.77 2.03-.43 1.05-.46 2.22-.09 3.29.33.95.96 1.76 1.79 2.3.09.89.44 1.74 1.03 2.42.71.82 1.68 1.36 2.74 1.52.77.12 1.56.04 2.29-.24.59.67 1.38 1.15 2.27 1.37 1.04.26 2.14.14 3.1-.34.84-.42 1.54-1.08 2-1.9.91.12 1.82-.04 2.62-.47.94-.5 1.68-1.33 2.1-2.34.37-.88.46-1.86.26-2.8.8-.47 1.42-1.18 1.77-2.03.43-1.05.46-2.22.09-3.29-.33-.94-.96-1.75-1.79-2.29zm-7.63 11.23c-.76.38-1.64.48-2.47.28-.7-.17-1.33-.56-1.8-1.1.04-.02.09-.04.14-.07l4.08-2.35c.2-.12.33-.33.33-.57v-5.76l1.73 1c.02.01.03.02.03.04v6.23c0 .88-.38 1.7-1.04 2.3z" />
-            </svg>
-            <span className="truncate">ChatGPT</span>
-          </button>
         </div>
 
         <p className="mt-5 text-center text-xs leading-relaxed text-slate-500 dark:text-slate-400">
