@@ -23,6 +23,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${poppins.variable} ${geistMono.variable} font-poppins h-full antialiased`}
     >
       <head>
