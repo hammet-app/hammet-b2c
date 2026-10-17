@@ -642,7 +642,7 @@ export default function PortfolioPage() {
       </div>
 
       {/* ── ELEGANT FROSTED GLASS COMING SOON OVERLAY (PERMANENT BLUR) ── */}
-      <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 sm:p-12 text-center bg-slate-950/80 backdrop-blur-md rounded-[2.5rem] border border-white/10 shadow-2xl">
+      <div className="absolute inset-0 z-30 flex flex-col items-center justify-start pt-24 sm:pt-32 p-6 sm:p-12 text-center bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-md backdrop-brightness-110 rounded-[2.5rem] border border-black/10 dark:border-white/10 shadow-2xl">
         <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-purple-500/20 border border-purple-400/40 text-purple-400 shadow-xl shadow-purple-500/20 mb-4">
           <Timer className="h-8 w-8 text-purple-300 animate-pulse" />
         </div>

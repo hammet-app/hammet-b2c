@@ -26,6 +26,7 @@ import {
   Crown,
   Award,
   GraduationCap,
+  MessageSquare,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-context";
@@ -34,6 +35,7 @@ import { useCart } from "@/lib/store/use-cart";
 import { useLearnerStore } from "@/lib/store/use-learner-store";
 import { CartDropdown } from "./cart-dropdown";
 import { ProfileDropdown } from "./profile-dropdown";
+import { ChatWidget } from "./chat-widget";
 
 const navigation = [
   {
@@ -70,6 +72,11 @@ const navigation = [
     label: "Hammet Pro",
     href: "/learner/pro",
     icon: Crown,
+  },
+  {
+    label: "Community Chat",
+    href: "/learner/chat",
+    icon: MessageSquare,
   },
 ];
 
@@ -524,6 +531,9 @@ export function LearnerShell({ children }: LearnerShellProps) {
         </header>
 
         <main>{children}</main>
+
+        {/* Global Floating Community Chat Launcher & Widget */}
+        <ChatWidget />
       </div>
 
       {/* Mobile bottom navigation */}
