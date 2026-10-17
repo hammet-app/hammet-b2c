@@ -35,11 +35,12 @@ function redirectB2BUser(scope: UserScope | null | undefined) {
  * Place this inside the (dashboard) group layout, inside AuthProvider.
  */
 export function AuthGuard({ children }: AuthGuardProps) {
-  const { user, isLoading, isResolved, isOffline } = useAuth();
+  const { user, isLoading, isResolved, isOffline, isSessionExpired } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!isResolved) return;
+    if (isSessionExpired) return;
 
     if (!user) {
       router.replace("/login");
@@ -56,6 +57,9 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }
 
   if (!user) {
+    if (isSessionExpired) {
+      return <>{children}</>;
+    }
     return null;
   }
 
@@ -82,7 +86,11 @@ export function GuestGuard({ children }: AuthGuardProps) {
   }, [isResolved, user, router]);
 
   if (isLoading || !isResolved) {
-    return <DashboardSkeleton />;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-600 border-t-transparent dark:border-cyan-400" />
+      </div>
+    );
   }
 
   if (user) {

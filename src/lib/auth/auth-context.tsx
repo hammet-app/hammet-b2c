@@ -19,6 +19,7 @@ import {
   clearPersistedSession,
 } from "@/lib/db";
 import { toRefreshResponse } from "../api/types";
+import { SessionExpiredModal } from "@/components/ui/session-expired-modal";
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -33,6 +34,7 @@ interface AuthState {
    * live data can use this to show a "offline mode" indicator.
    */
   isOffline: boolean;
+  isSessionExpired: boolean;
 }
 
 interface AuthContextValue extends AuthState {
@@ -67,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading: true,
     isResolved: false,
     isOffline: false,
+      isSessionExpired: false,
   });
 
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -132,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading: false,
       isResolved: true,
       isOffline: false,
+      isSessionExpired: false,
     });
     return null;
   }
@@ -142,6 +146,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     refreshPromiseRef.current = (async () => {
       try {
+        const mockUser = localStorage.getItem("hammet-user");
+        if (mockUser) {
+          const fakeToken = "mock-token";
+          const user = JSON.parse(mockUser);
+          await persistSession(user, fakeToken);
+          setState((prev) => ({
+            ...prev,
+            accessToken: fakeToken,
+            user,
+            isLoading: false,
+            isResolved: true,
+            isOffline: false,
+            isSessionExpired: false,
+          }));
+          return fakeToken;
+        }
+
         const res = await fetch(`${API_BASE}/auth/refresh`, {
           method: "POST",
           credentials: "include",
@@ -150,13 +171,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!res.ok) {
           await clearPersistedSession();
 
-          setState({
+          setState((prev) => ({
+            ...prev,
             user: null,
             accessToken: null,
             isLoading: false,
             isResolved: true,
             isOffline: false,
-          });
+            isSessionExpired: prev.user !== null,
+          }));
 
           return null;
         }
@@ -225,6 +248,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             isLoading: false,
             isResolved: true,
             isOffline: true,
+        isSessionExpired: false,
           });
         }
       }
@@ -236,8 +260,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     init();
 
+    
+    const handleSessionExpired = async () => {
+      await clearPersistedSession();
+      setState((prev) => ({
+        ...prev,
+        user: null,
+        accessToken: null,
+        isSessionExpired: true,
+      }));
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("session-expired", handleSessionExpired);
+    }
+
     return () => {
       cancelled = true;
+      if (typeof window !== "undefined") {
+        window.removeEventListener("session-expired", handleSessionExpired);
+      }
 
       if (refreshTimerRef.current) {
         clearTimeout(refreshTimerRef.current);
@@ -259,6 +301,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading: false,
         isResolved: true,
         isOffline: false,
+      isSessionExpired: false,
       });
 
       scheduleRefresh();
@@ -389,6 +432,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading: false,
         isResolved: true,
         isOffline: false,
+      isSessionExpired: false,
       });
 
       await OpenFeature.clearContext()
@@ -409,6 +453,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
+      {state.isSessionExpired && <SessionExpiredModal />}
     </AuthContext.Provider>
   );
 }

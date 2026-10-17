@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -17,11 +17,25 @@ import {
   UserRound,
   X,
   FileBadge,
+  Sun,
+  Moon,
   CreditCard,
+  ShoppingCart,
+  Bell,
+  Briefcase,
+  Crown,
+  Award,
+  GraduationCap,
+  MessageSquare,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-context";
 import { useTheme } from "@/lib/use-theme";
+import { useCart } from "@/lib/store/use-cart";
+import { useLearnerStore } from "@/lib/store/use-learner-store";
+import { CartDropdown } from "./cart-dropdown";
+import { ProfileDropdown } from "./profile-dropdown";
+import { ChatWidget } from "./chat-widget";
 
 const navigation = [
   {
@@ -35,6 +49,11 @@ const navigation = [
     icon: BookOpen,
   },
   {
+    label: "School of AI foundation",
+    href: "/learner/ai-schools",
+    icon: GraduationCap,
+  },
+  {
     label: "Projects",
     href: "/learner/projects",
     icon: FolderKanban,
@@ -45,13 +64,24 @@ const navigation = [
     icon: FileBadge,
   },
   {
-    label: "AI Schools",
-    href: "/learner/ai-schools",
-    icon: BookOpen,
+    label: "Portfolio",
+    href: "/learner/portfolio",
+    icon: Briefcase,
+  },
+  {
+    label: "Hammet Pro",
+    href: "/learner/pro",
+    icon: Crown,
+  },
+  {
+    label: "Community Chat",
+    href: "/learner/chat",
+    icon: MessageSquare,
   },
 ];
 
 const STORAGE_KEY = "hammet-learner-sidebar-collapsed";
+const typingWords = ["LEARN", "BUILD", "CREATE", "GROW"];
 
 interface LearnerShellProps {
   children: React.ReactNode;
@@ -61,6 +91,59 @@ export function LearnerShell({ children }: LearnerShellProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { theme, toggle } = useTheme();
+  
+  const cartItems = useCart((state) => state.items);
+  const syncAccountState = useLearnerStore((state) => state.syncAccountState);
+  const isPro = useLearnerStore((state) => state.isPro);
+  const [mounted, setMounted] = useState(false);
+
+  // Sync test account vs real user accounts
+  useEffect(() => {
+    syncAccountState(user?.id);
+  }, [user?.id, syncAccountState]);
+
+  // Avoid hydration mismatch for cart icon badge
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const [text, setText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [loopNum, setLoopNum] = useState(0);
+
+  useEffect(() => {
+    const currentWord = typingWords[loopNum % typingWords.length];
+    
+    let timer: NodeJS.Timeout;
+
+    if (!isDeleting) {
+      if (text.length < currentWord.length) {
+        // Typing characters
+        timer = setTimeout(() => {
+          setText(currentWord.substring(0, text.length + 1));
+        }, 75);
+      } else {
+        // Word complete, pause before deleting
+        timer = setTimeout(() => {
+          setIsDeleting(true);
+        }, 1300);
+      }
+    } else {
+      if (text.length > 0) {
+        // Deleting characters quickly
+        timer = setTimeout(() => {
+          setText(currentWord.substring(0, text.length - 1));
+        }, 40);
+      } else {
+        // Fully deleted, move to next word
+        setIsDeleting(false);
+        setLoopNum((prev) => prev + 1);
+      }
+    }
+
+    return () => clearTimeout(timer);
+  }, [text, isDeleting, loopNum]);
 
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === "undefined") {
@@ -147,9 +230,14 @@ export function LearnerShell({ children }: LearnerShellProps) {
           {/* Primary navigation */}
           <nav className="w-full space-y-1">
             {!collapsed && (
-              <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-                Learn
-              </p>
+              <div className="mb-3 flex items-center px-3 text-[11px] font-black uppercase tracking-[0.22em] text-[#8B5CF6] dark:text-[#A78BFA] select-none">
+                <span>{text}</span>
+                <motion.span
+                  animate={{ opacity: [1, 0, 1] }}
+                  transition={{ duration: 0.65, repeat: Infinity, ease: "easeInOut" }}
+                  className="ml-1 inline-block h-3.5 w-[2.5px] rounded-full bg-[#06B6D4] shadow-[0_0_8px_#06B6D4]"
+                />
+              </div>
             )}
 
             {navigation.map((item) => {
@@ -239,12 +327,20 @@ export function LearnerShell({ children }: LearnerShellProps) {
             </div>
 
             {!collapsed && (
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">
-                  {user?.fullName ?? "Learner"}
-                </p>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <p className="truncate text-sm font-semibold">
+                    {user?.fullName ?? "Learner"}
+                  </p>
+                  {isPro && (
+                    <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white shadow-sm ring-1 ring-amber-400/30">
+                      <Crown className="h-2.5 w-2.5 fill-white" />
+                      PRO
+                    </span>
+                  )}
+                </div>
                 <p className="truncate text-xs text-slate-400">
-                  Learner
+                  {isPro ? "Pro Member" : "Learner"}
                 </p>
               </div>
             )}
@@ -311,6 +407,29 @@ export function LearnerShell({ children }: LearnerShellProps) {
         </nav>
 
         <div className="mt-auto border-t border-black/[0.06] p-4 dark:border-white/[0.06]">
+          {/* User profile */}
+          <div className="mb-3 flex items-center gap-3 px-2">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 text-xs font-bold text-white">
+              {user?.fullName?.charAt(0)?.toUpperCase() ?? "U"}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
+                  {user?.fullName ?? "Learner"}
+                </p>
+                {isPro && (
+                  <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white shadow-sm ring-1 ring-amber-400/30">
+                    <Crown className="h-2.5 w-2.5 fill-white" />
+                    PRO
+                  </span>
+                )}
+              </div>
+              <p className="truncate text-xs text-slate-400">
+                {isPro ? "Pro Member" : "Learner"}
+              </p>
+            </div>
+          </div>
+
           <Link
             href="/learner/settings"
             onClick={() => setMobileOpen(false)}
@@ -361,28 +480,60 @@ export function LearnerShell({ children }: LearnerShellProps) {
             </div>
 
             <div className="flex items-center gap-2">
+              <CartDropdown />
+
+              <Link
+                href="/learner/notifications"
+                aria-label="Notifications"
+                className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white/50 text-slate-500 shadow-sm ring-1 ring-black/5 transition-all hover:bg-white/80 hover:text-slate-900 dark:bg-white/[0.03] dark:text-slate-400 dark:ring-white/10 dark:hover:bg-white/[0.08] dark:hover:text-white"
+              >
+                <Bell className="h-[18px] w-[18px]" />
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-[#0D0A17]" />
+              </Link>
+
               <button
                 type="button"
                 onClick={toggle}
                 aria-label={`Switch to ${
                   theme === "dark" ? "light" : "dark"
                 } mode`}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-white"
+                className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white/50 text-slate-500 shadow-sm ring-1 ring-black/5 transition-all hover:bg-white/80 hover:text-slate-900 dark:bg-white/[0.03] dark:text-slate-400 dark:ring-white/10 dark:hover:bg-white/[0.08] dark:hover:text-white"
               >
-                {theme === "dark" ? "☼" : "◐"}
+                <motion.div
+                  initial={false}
+                  animate={{
+                    scale: theme === "dark" ? 0 : 1,
+                    opacity: theme === "dark" ? 0 : 1,
+                    rotate: theme === "dark" ? -90 : 0,
+                  }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="absolute"
+                >
+                  <Sun className="h-[18px] w-[18px]" />
+                </motion.div>
+                <motion.div
+                  initial={false}
+                  animate={{
+                    scale: theme === "dark" ? 1 : 0,
+                    opacity: theme === "dark" ? 1 : 0,
+                    rotate: theme === "dark" ? 0 : 90,
+                  }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="absolute"
+                >
+                  <Moon className="h-[18px] w-[18px]" />
+                </motion.div>
               </button>
 
-              <Link
-                href="/learner/profile"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 text-xs font-bold text-white"
-              >
-                {user?.fullName?.charAt(0)?.toUpperCase() ?? "U"}
-              </Link>
+              <ProfileDropdown />
             </div>
           </div>
         </header>
 
         <main>{children}</main>
+
+        {/* Global Floating Community Chat Launcher & Widget */}
+        <ChatWidget />
       </div>
 
       {/* Mobile bottom navigation */}

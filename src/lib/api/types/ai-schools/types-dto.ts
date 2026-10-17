@@ -28,6 +28,7 @@ export type AiSchoolCourseDto = {
   slug: string;
   description: string;
   ai_school_id: string;
+  position: number;
   price: number;
 };
 
