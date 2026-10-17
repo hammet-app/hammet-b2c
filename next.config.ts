@@ -1,5 +1,17 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV == "development"
+
+const connectSrc = [
+  "'self'",
+  ...(isDev ? ["http://localhost:8000", "https://dev-api.hammetedu.com"] : []),
+  "https://dev-api.hammetedu.com",
+  "https://staging-api.hammetedu.com",
+  "https://api.hammetedu.com",
+  "https://accounts.google.com",
+  "https://*.googleusercontent.com",
+].join(" ")
+
 const securityHeaders = [
   {
     key: "X-DNS-Prefetch-Control",
@@ -33,7 +45,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
       "img-src 'self' data: blob: https://images.unsplash.com https://*.unsplash.com https://accounts.google.com https://*.googleusercontent.com",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' https://dev-api.hammetedu.com https://api.hammetedu.com https://accounts.google.com https://*.googleusercontent.com",
+      `connect-src 'self' ${connectSrc}`,
       "frame-src 'self' https://accounts.google.com",
       "object-src 'none'",
       "base-uri 'self'",

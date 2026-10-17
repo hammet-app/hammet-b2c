@@ -191,7 +191,7 @@ export default function CheckoutPage() {
   const handleStartCourse = () => {
     let target = "/learner/ai-schools";
     if (purchasedItems.length > 0) {
-      const firstSchool = purchasedItems.find((i) => i.type === "school");
+      const firstSchool = purchasedItems.find((i) => i.type === "ai_school");
       if (firstSchool) {
         target = `/learner/ai-schools/${firstSchool.id}`;
       } else {
@@ -278,7 +278,7 @@ export default function CheckoutPage() {
                     >
                       <div className="flex items-start gap-4">
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-300">
-                          {item.type === "school" ? (
+                          {item.type === "ai_school" ? (
                             <GraduationCap className="h-6 w-6" />
                           ) : (
                             <BookOpen className="h-6 w-6" />
@@ -287,7 +287,7 @@ export default function CheckoutPage() {
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
-                              {item.type === "school" ? "Diploma School" : "Specialized Course"}
+                              {item.type === "ai_school" ? "Diploma School" : "Specialized Course"}
                             </span>
                             <span className="text-[11px] text-slate-400">• Lifetime Access</span>
                           </div>

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type CartItemType = 'school' | 'course';
+export type CartItemType = 'ai_school' | 'course' | "profile";
 
 export interface CartItem {
   id: string; // schoolId or courseId

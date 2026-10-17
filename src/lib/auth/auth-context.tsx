@@ -311,7 +311,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: user.id,
         country: user.sessionDetails?.country ?? "",
         plan: user.profileDetails?.tier ?? "free",
-        email: user.email
       }
 
       await OpenFeature.setContext(context)
@@ -349,7 +348,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: user.id,
         country: user.sessionDetails?.country ?? "",
         plan: user.profileDetails?.tier ?? "free",
-        email: user.email,
       };
 
       await OpenFeature.setContext(context);

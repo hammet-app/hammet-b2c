@@ -54,7 +54,7 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
   }, [schoolId, accessToken, refreshToken]);
 
   // Calculate full school price
-  const fullSchoolPrice = courses.reduce((total, course) => total + course.price, 0) * 0.8; // 20% discount for full school
+  const fullSchoolPrice = courses.reduce((total, course) => total + course.price, 0); // 20% discount for full school
   const isSchoolPaid = hasPaidItem(schoolId);
   const isSchoolInCart = hasItem(schoolId);
 
@@ -115,7 +115,7 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
                       if (isSchoolInCart) {
                         router.push('/learner/checkout');
                       } else {
-                        addItem({ id: schoolId, type: 'school', title: 'School of AI foundation', price: fullSchoolPrice });
+                        addItem({ id: schoolId, type: 'ai_school', title: 'School of AI foundation', price: fullSchoolPrice });
                       }
                     }}
                   >

@@ -8,10 +8,13 @@ import {
   AiSchoolCoursesResponse,
   AiSchoolCoursesResponseDto,
   toAiSchoolCoursesResponse,
+  CartResponse,
+  CartResponseDto,
+  toCartResponse,
 } from "@/lib/api/types";
 
 export const learnerApi = {
-  completeOnboarding: async (body: ProfileOnboarding, token: string, onRefresh: () => Promise<string | null>): Promise<boolean> =>{
+  completeOnboarding: async (body: ProfileOnboarding, token: string, onRefresh: () => Promise<string | null>): Promise<boolean> => {
     const response = await apiClient.patch<boolean>("/learner/onboarding", fromProfileOnboarding(body), token, { onRefresh })
 
     return response
@@ -23,12 +26,13 @@ export const learnerApi = {
     page: number = 1,
     pageSize: number = 50
   ): Promise<AiSchoolsResponse> => {
-    return {
-      aiSchools: [
-        { id: "school-1", name: "School of AI foundation", description: "Learn the basics of AI", price: 25000 },
-      ],
-      pagination: { page: 1, pageSize: 50, total: 1, totalPages: 1 }
-    };
+    const params = new URLSearchParams({
+      page: String(page),
+      page_size: String(pageSize),
+    });
+    const response = await apiClient.get<AiSchoolsResponseDto>(`/learner/ai-schools??${params.toString()}`, token, { onRefresh })
+
+    return toAiSchoolsResponse(response)
   },
 
   getAiSchoolCourses: async (
@@ -36,11 +40,17 @@ export const learnerApi = {
     token: string,
     onRefresh: () => Promise<string | null>
   ): Promise<AiSchoolCoursesResponse> => {
-    return {
-      courses: [
-        { id: "course-1", title: "Introduction to AI", slug: "intro-to-ai", description: "Learn the foundational principles of Artificial Intelligence.", price: 10000, aiSchoolId: schoolId, position: 1 },
-      ]
-    };
+    const response = await apiClient.get<AiSchoolCoursesResponseDto>(`/learner/ai-schools/${schoolId}/courses`, token, { onRefresh })
+    return toAiSchoolCoursesResponse(response)
   },
+
+  getCart: async (
+    token: string,
+    onRefresh: () => Promise<string | null>
+  ): Promise<CartResponse> => {
+    const response = await apiClient.get<CartResponseDto>("/learner/cart", token, { onRefresh })
+
+    return toCartResponse(response)
+  }
 };
 
