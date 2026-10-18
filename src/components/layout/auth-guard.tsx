@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 import { useAuth } from "@/lib/auth/auth-context";
 import { getDashboardRoute } from "@/lib/auth/routes";
@@ -37,8 +37,14 @@ function redirectB2BUser(scope: UserScope | null | undefined) {
 export function AuthGuard({ children }: AuthGuardProps) {
   const { user, isLoading, isResolved, isOffline, isSessionExpired } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+
+  const isCheckoutCallback =
+    pathname?.startsWith("/learner/checkout/callback") ||
+    pathname?.startsWith("/learner/checkout/success");
 
   useEffect(() => {
+    if (isCheckoutCallback) return;
     if (!isResolved) return;
     if (isSessionExpired) return;
 
@@ -50,7 +56,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
     if (user) {
       redirectB2BUser(user.scope);
     }
-  }, [isResolved, user, isOffline, router]);
+  }, [isResolved, user, isOffline, router, isCheckoutCallback]);
+
+  if (isCheckoutCallback) {
+    return <>{children}</>;
+  }
 
   if (isLoading || !isResolved) {
     return <DashboardSkeleton />;

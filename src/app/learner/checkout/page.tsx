@@ -38,11 +38,10 @@ import { paymentApi, type PaymentLinkData } from "@/lib/api/payment";
 import { cartApi } from "@/lib/api/cart";
 
 type CheckoutStep = "review" | "payment" | "processing" | "success";
-type PaymentMethod = "link" | "card" | "transfer";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
   const {
     items,
     removeItem,
@@ -60,7 +59,6 @@ export default function CheckoutPage() {
 
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<CheckoutStep>("review");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("link");
 
   // Keep track of what was purchased so the success page has full details even after cart is cleared
   const [purchasedItems, setPurchasedItems] = useState<CartItem[]>([]);
@@ -78,39 +76,15 @@ export default function CheckoutPage() {
   const [couponInput, setCouponInput] = useState(couponCode || "");
   const [couponFeedback, setCouponFeedback] = useState<{ success: boolean; message: string } | null>(null);
 
-  // Card Form State
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardName, setCardName] = useState(user?.fullName || "GODSWILL NWAFOR");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvv, setCardCvv] = useState("");
-  const [saveCard, setSaveCard] = useState(true);
-
-  // Bank Transfer State
-  const [copiedAccount, setCopiedAccount] = useState(false);
-  const [copiedRef, setCopiedRef] = useState(false);
-  const [secondsRemaining, setSecondsRemaining] = useState(1795); // ~30 mins
-
   // Processing stage messages
   const [processingStage, setProcessingStage] = useState(0);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setMounted(true);
-      if (user?.fullName) {
-        setCardName(user.fullName.toUpperCase());
-      }
     }, 0);
     return () => clearTimeout(timer);
-  }, [user]);
-
-  // Bank transfer countdown timer
-  useEffect(() => {
-    if (step !== "payment" || paymentMethod !== "transfer") return;
-    const interval = setInterval(() => {
-      setSecondsRemaining((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [step, paymentMethod]);
+  }, []);
 
   const rawTotal = getTotal();
   const discountAmount = getDiscountAmount();
@@ -123,13 +97,16 @@ export default function CheckoutPage() {
     if (!paymentLinkData && items.length > 0) {
       setIsGeneratingLink(true);
       try {
-        const res = await paymentApi.createPaymentLink({
-          items,
-          amount: finalTotal,
-          currency: "NGN",
-          email: user?.email,
-          customerName: user?.fullName,
-        });
+        const res = await paymentApi.createPaymentLink(
+          {
+            items,
+            amount: finalTotal,
+            currency: "NGN",
+            email: user?.email,
+            customerName: user?.fullName,
+          },
+          accessToken
+        );
         if (res.data) {
           setPaymentLinkData(res.data);
           setTransactionRef(res.data.reference);
@@ -142,14 +119,42 @@ export default function CheckoutPage() {
     }
   };
 
-  // Card brand detection
-  const cardBrand = useMemo(() => {
-    const clean = cardNumber.replace(/\s+/g, "");
-    if (clean.startsWith("4")) return "VISA";
-    if (/^(5[1-5]|2[2-7])/.test(clean)) return "MASTERCARD";
-    if (clean.startsWith("506") || clean.startsWith("6500")) return "VERVE";
-    return "CARD";
-  }, [cardNumber]);
+  // Direct Paystack Redirect
+  const handlePaystackRedirect = async () => {
+    if (paymentLinkData?.paymentUrl) {
+      window.location.href = paymentLinkData.paymentUrl;
+      return;
+    }
+    setIsGeneratingLink(true);
+    try {
+      const res = await paymentApi.createPaymentLink(
+        {
+          items,
+          amount: finalTotal,
+          currency: "NGN",
+          email: user?.email,
+          customerName: user?.fullName,
+        },
+        accessToken
+      );
+      if (res.data?.paymentUrl) {
+        setPaymentLinkData(res.data);
+        window.location.href = res.data.paymentUrl;
+      } else {
+        // Dev / staging fallback simulation when backend returns reference
+        setStep("processing");
+        setTimeout(() => {
+          router.push(
+            `/learner/checkout/callback?reference=${res.data?.reference || "TXN-PAYSTACK-DEV"}`
+          );
+        }, 900);
+      }
+    } catch (err) {
+      console.error("Paystack redirect error:", err);
+    } finally {
+      setIsGeneratingLink(false);
+    }
+  };
 
   const handleApplyCoupon = (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,49 +169,11 @@ export default function CheckoutPage() {
     setCouponFeedback(null);
   };
 
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 16);
-    const formatted = value.match(/.{1,4}/g)?.join(" ") || value;
-    setCardNumber(formatted);
-  };
-
-  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 4);
-    if (value.length >= 3) {
-      setCardExpiry(`${value.slice(0, 2)}/${value.slice(2, 4)}`);
-    } else {
-      setCardExpiry(value);
-    }
-  };
-
-  const handleCvvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 3);
-    setCardCvv(value);
-  };
-
   const handleCopyPaymentLink = () => {
     if (!paymentLinkData?.paymentUrl) return;
     navigator.clipboard.writeText(paymentLinkData.paymentUrl);
     setCopiedPaymentLink(true);
     setTimeout(() => setCopiedPaymentLink(false), 2400);
-  };
-
-  const handleCopyAccount = () => {
-    navigator.clipboard.writeText("9048831290");
-    setCopiedAccount(true);
-    setTimeout(() => setCopiedAccount(false), 2200);
-  };
-
-  const handleCopyRef = () => {
-    navigator.clipboard.writeText("HMT-8942-AI");
-    setCopiedRef(true);
-    setTimeout(() => setCopiedRef(false), 2200);
-  };
-
-  const formatTimer = (totalSec: number) => {
-    const min = Math.floor(totalSec / 60);
-    const sec = totalSec % 60;
-    return `${min}:${sec < 10 ? "0" : ""}${sec}`;
   };
 
   // Execute payment settlement and activation
@@ -300,7 +267,7 @@ export default function CheckoutPage() {
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-purple-600 dark:text-cyan-400">
             <ShieldCheck className="h-4 w-4" />
-            <span>256-Bit SSL Encrypted Checkout</span>
+            <span>Secure Checkout</span>
           </div>
 
           {step === "payment" && (
@@ -575,7 +542,7 @@ export default function CheckoutPage() {
                     <div className="mt-5 space-y-2 text-center text-xs text-slate-500 dark:text-slate-400">
                       <div className="flex items-center justify-center gap-1.5 text-[11px]">
                         <Lock className="h-3 w-3 text-slate-400" />
-                        <span>Encrypted 256-Bit Financial Checkout</span>
+                        <span>Secured via Paystack</span>
                       </div>
                       <div className="text-[10px] text-slate-400">
                         Supported: Payment Link • Mastercard • Visa • Verve • Bank Transfer
@@ -588,7 +555,7 @@ export default function CheckoutPage() {
           </motion.div>
         )}
 
-        {/* ── STEP 2: PAYMENT METHOD & FORM ─────────────────────────────────── */}
+        {/* ── STEP 2: PAYSTACK REDIRECT CHECKOUT ────────────────────────────── */}
         {step === "payment" && (
           <motion.div
             initial={{ opacity: 0, y: 14 }}
@@ -596,493 +563,226 @@ export default function CheckoutPage() {
             exit={{ opacity: 0, y: -14 }}
             transition={{ duration: 0.35 }}
           >
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl dark:text-white">
-                Complete Your Payment
-              </h1>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                Choose your preferred payment method to activate your lifetime course enrollment.
-              </p>
-            </div>
-
-            {/* ── PERSISTENT PAYMENT LINK CARD (FEATURED UPSTREAM UPDATE) ──────── */}
-            <div className="mb-6 rounded-3xl border border-purple-500/30 bg-white/90 p-5 sm:p-6 shadow-md dark:border-purple-500/20 dark:bg-[#140F24]">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-purple-100 pb-4 dark:border-white/5">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
-                    <Link2 className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                      Authorized Checkout Link
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Use this link to pay directly or complete transaction on another device
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Gateway Active</span>
-                  </span>
-                  <span className="font-mono text-xs text-slate-400">
-                    {paymentLinkData?.reference || transactionRef || "TXN-HMT-PENDING"}
-                  </span>
-                </div>
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl dark:text-white">
+                  Checkout with Paystack
+                </h1>
+                <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-400">
+                  You will be securely redirected to Paystack to complete your curriculum enrollment.
+                </p>
               </div>
-
-              {/* URL Display with Copy & Open Actions */}
-              <div className="mt-4 flex flex-col sm:flex-row items-stretch gap-2.5">
-                <div className="relative flex-1">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                    <Lock className="h-3.5 w-3.5" />
-                  </div>
-                  <input
-                    type="text"
-                    readOnly
-                    value={
-                      paymentLinkData?.paymentUrl ||
-                      `https://pay.hammetedu.com/checkout/${(transactionRef || "txn-hmt-849102").toLowerCase()}?amt=${finalTotal}`
-                    }
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-8 pr-28 py-2.5 font-mono text-xs text-slate-800 focus:outline-none dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200"
-                  />
-                  <button
-                    onClick={handleCopyPaymentLink}
-                    className="absolute right-1.5 top-1.5 bottom-1.5 flex items-center gap-1 rounded-lg bg-white px-2.5 text-xs font-semibold text-purple-700 shadow-sm border border-slate-200 hover:bg-slate-50 dark:bg-white/10 dark:border-white/10 dark:text-purple-300"
-                  >
-                    {copiedPaymentLink ? (
-                      <>
-                        <Check className="h-3.5 w-3.5 text-emerald-500" />
-                        <span>Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-3.5 w-3.5" />
-                        <span>Copy Link</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <a
-                  href={
-                    paymentLinkData?.paymentUrl ||
-                    `https://pay.hammetedu.com/checkout/${(transactionRef || "txn-hmt-849102").toLowerCase()}?amt=${finalTotal}`
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 transition"
-                >
-                  <span>Open Payment Gateway</span>
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </a>
-
-                <button
-                  type="button"
-                  onClick={() => setShowQrCode((prev) => !prev)}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/[0.05] transition"
-                  title="Toggle Mobile QR Code"
-                >
-                  <QrCode className="h-4 w-4" />
-                  <span className="hidden sm:inline">QR</span>
-                </button>
-              </div>
-
-              {/* Collapsible QR Code preview */}
-              <AnimatePresence>
-                {showQrCode && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mt-4 flex flex-col items-center justify-center rounded-2xl bg-slate-50 p-4 border border-slate-200/60 dark:bg-white/[0.02] dark:border-white/5"
-                  >
-                    <div className="flex h-36 w-36 items-center justify-center rounded-xl bg-white p-2 shadow-inner border border-slate-200 dark:border-white/10">
-                      {/* Stylized QR placeholder */}
-                      <div className="grid grid-cols-6 gap-1 w-full h-full p-2 bg-slate-900 rounded-lg">
-                        {Array.from({ length: 36 }).map((_, i) => (
-                          <div
-                            key={i}
-                            className={cn(
-                              "rounded-xs",
-                              i % 2 === 0 || i % 5 === 0 ? "bg-white" : "bg-purple-400"
-                            )}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <span className="mt-2 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                      Scan with your smartphone camera to pay immediately
-                    </span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <button
+                onClick={() => setStep("review")}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 shadow-xs hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:bg-white/[0.08] transition"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>Back to Cart</span>
+              </button>
             </div>
-
+            {/* ── UNIFIED PAYSTACK REDIRECT INTERFACE ────────────────────────────── */}
             <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
-              {/* Payment Methods & Input Forms */}
+              {/* Left: Paystack Checkout Gateway Card */}
               <div className="space-y-6">
-                {/* 3-Way Tabs: Payment Link vs Card vs Bank Transfer */}
-                <div className="grid grid-cols-3 gap-2 rounded-2xl bg-slate-200/60 p-1.5 dark:bg-white/[0.04]">
-                  <button
-                    onClick={() => setPaymentMethod("link")}
-                    className={cn(
-                      "flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs sm:text-sm font-bold transition",
-                      paymentMethod === "link"
-                        ? "bg-white text-purple-700 shadow-sm dark:bg-white/10 dark:text-white"
-                        : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                    )}
-                  >
-                    <Link2 className="h-4 w-4" />
-                    <span>Pay with Link</span>
-                  </button>
-
-                  <button
-                    onClick={() => setPaymentMethod("card")}
-                    className={cn(
-                      "flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs sm:text-sm font-bold transition",
-                      paymentMethod === "card"
-                        ? "bg-white text-purple-700 shadow-sm dark:bg-white/10 dark:text-white"
-                        : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                    )}
-                  >
-                    <CreditCard className="h-4 w-4" />
-                    <span>Pay with Card</span>
-                  </button>
-
-                  <button
-                    onClick={() => setPaymentMethod("transfer")}
-                    className={cn(
-                      "flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs sm:text-sm font-bold transition",
-                      paymentMethod === "transfer"
-                        ? "bg-white text-purple-700 shadow-sm dark:bg-white/10 dark:text-white"
-                        : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                    )}
-                  >
-                    <Building2 className="h-4 w-4" />
-                    <span>Bank Transfer</span>
-                  </button>
-                </div>
-
-                {/* ── METHOD 1: PAY WITH LINK VIEW ─────────────────────────── */}
-                {paymentMethod === "link" && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.25 }}
-                    className="space-y-6"
-                  >
-                    <div className="rounded-3xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02]">
-                      <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-white/5">
-                        <Sparkles className="h-5 w-5 text-purple-600 dark:text-cyan-400" />
-                        <h3 className="font-bold text-slate-900 dark:text-white">
-                          Direct Gateway Checkout
-                        </h3>
+                <div className="rounded-3xl border border-black/[0.06] bg-white p-6 sm:p-8 shadow-sm dark:border-white/[0.06] dark:bg-[#140F24]">
+                  {/* Gateway Status Header */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-5 dark:border-white/5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300">
+                        <Lock className="h-5 w-5" />
                       </div>
-
-                      <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                        We have dispatched your encrypted payment session to the gateway. You can settle using any Nigerian or international bank card, USSD, or transfer on the gateway.
-                      </p>
-
-                      <div className="mt-5 rounded-2xl bg-purple-50/60 p-4 border border-purple-100 dark:bg-purple-950/20 dark:border-purple-800/20 space-y-3">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-500 dark:text-slate-400">Total Amount</span>
-                          <span className="font-extrabold text-purple-700 dark:text-cyan-400 text-base">
-                            ₦{finalTotal.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs border-t border-purple-100/60 pt-2 dark:border-white/5">
-                          <span className="text-slate-500 dark:text-slate-400">Session Security</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">
-                            PCI-DSS Compliant Gateway
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="mt-6 flex flex-col gap-3">
-                        <Button
-                          onClick={handleExecutePayment}
-                          className="w-full rounded-xl bg-purple-600 py-3.5 font-bold text-white shadow-md shadow-purple-600/25 hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 text-base"
-                          size="lg"
-                        >
-                          <CheckCircle2 className="mr-2 h-5 w-5" />
-                          <span>I Have Completed Payment — Verify & Activate</span>
-                        </Button>
-
-                        <div className="flex items-center justify-center gap-2 text-center text-[11px] text-slate-400">
-                          <Clock className="h-3.5 w-3.5" />
-                          <span>Immediate local course unlock upon verification</span>
-                        </div>
+                      <div>
+                        <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                          Paystack Secure Gateway
+                        </h2>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Complete payment on Paystack's official verified checkout
+                        </p>
                       </div>
                     </div>
-                  </motion.div>
-                )}
 
-                {/* ── METHOD 2: CARD PAYMENT VIEW ──────────────────────────── */}
-                {paymentMethod === "card" && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.25 }}
-                    className="space-y-6"
-                  >
-                    {/* Interactive Debit Card Visual */}
-                    <div
-                      className="relative overflow-hidden rounded-3xl p-6 text-white shadow-xl bg-gradient-to-br from-[#1C1138] via-[#2D1B54] to-[#120A24] border border-purple-500/20"
-                      style={{
-                        boxShadow:
-                          "0 12px 30px rgba(59,18,112,0.35), inset 0 1px 0 rgba(255,255,255,0.15)",
-                      }}
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>Gateway Active</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Summary Breakdown in Main Card */}
+                  <div className="mt-6 rounded-2xl bg-[#F5F3FF]/70 p-5 border border-purple-100 dark:bg-white/[0.02] dark:border-white/5">
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                        Total Payable
+                      </span>
+                      <span className="font-mono text-2xl sm:text-3xl font-extrabold tracking-tight text-purple-700 dark:text-cyan-400">
+                        ₦{finalTotal.toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-purple-100/70 pt-3 dark:border-white/5 text-xs">
+                      <span className="text-slate-500 dark:text-slate-400">Paying account:</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        {user?.email || "learner@hammetedu.com"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Supported Payment Channels */}
+                  <div className="mt-6 space-y-3">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      Accepted Payment Channels on Paystack
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      <div className="flex items-center gap-2 rounded-xl border border-slate-200/70 bg-slate-50/60 p-2.5 text-xs font-medium text-slate-700 dark:border-white/5 dark:bg-white/[0.02] dark:text-slate-300">
+                        <CreditCard className="h-4 w-4 text-purple-600 dark:text-cyan-400 shrink-0" />
+                        <span>Debit Card</span>
+                      </div>
+                      <div className="flex items-center gap-2 rounded-xl border border-slate-200/70 bg-slate-50/60 p-2.5 text-xs font-medium text-slate-700 dark:border-white/5 dark:bg-white/[0.02] dark:text-slate-300">
+                        <Building2 className="h-4 w-4 text-purple-600 dark:text-cyan-400 shrink-0" />
+                        <span>Bank Transfer</span>
+                      </div>
+                      <div className="flex items-center gap-2 rounded-xl border border-slate-200/70 bg-slate-50/60 p-2.5 text-xs font-medium text-slate-700 dark:border-white/5 dark:bg-white/[0.02] dark:text-slate-300">
+                        <Zap className="h-4 w-4 text-purple-600 dark:text-cyan-400 shrink-0" />
+                        <span>USSD</span>
+                      </div>
+                      <div className="flex items-center gap-2 rounded-xl border border-slate-200/70 bg-slate-50/60 p-2.5 text-xs font-medium text-slate-700 dark:border-white/5 dark:bg-white/[0.02] dark:text-slate-300">
+                        <Sparkles className="h-4 w-4 text-purple-600 dark:text-cyan-400 shrink-0" />
+                        <span>Apple Pay</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Primary Call to Action Button */}
+                  <div className="mt-8 space-y-3">
+                    <Button
+                      onClick={handlePaystackRedirect}
+                      disabled={isGeneratingLink}
+                      size="lg"
+                      className="w-full h-13 rounded-2xl bg-purple-600 py-3.5 text-base font-bold text-white shadow-lg shadow-purple-600/25 hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <div className="flex items-center justify-between mb-8">
-                        {/* EMV Chip & Contactless */}
-                        <div className="flex items-center gap-2.5">
-                          <div className="h-7 w-9 rounded-md bg-gradient-to-tr from-amber-400 via-yellow-200 to-amber-500 shadow-inner flex items-center justify-center">
-                            <div className="h-4 w-6 rounded border border-amber-600/40" />
-                          </div>
-                          <span className="text-[10px] font-mono tracking-widest text-slate-300">
-                            DEBIT
-                          </span>
-                        </div>
+                      {isGeneratingLink ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          <span>Connecting to Paystack...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Pay ₦{finalTotal.toLocaleString()} with Paystack</span>
+                          <ArrowRight className="h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
 
-                        <div className="rounded-lg bg-white/10 px-2.5 py-1 text-xs font-extrabold tracking-widest text-cyan-300 backdrop-blur-sm">
-                          {cardBrand}
-                        </div>
+                    <div className="flex items-center justify-center gap-2 text-center text-xs text-slate-400 dark:text-slate-500">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span>Immediate local curriculum unlock upon payment confirmation</span>
+                    </div>
+                  </div>
+
+                  {/* Alternate Device / Cross-Device Option */}
+                  <div className="mt-8 border-t border-slate-100 pt-6 dark:border-white/5">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        Paying on another device or sharing link?
                       </div>
-
-                      {/* Card Number */}
-                      <div className="mb-6 font-mono text-xl sm:text-2xl font-bold tracking-widest text-slate-100">
-                        {cardNumber || "•••• •••• •••• ••••"}
-                      </div>
-
-                      <div className="flex items-end justify-between">
-                        <div>
-                          <div className="text-[10px] uppercase tracking-wider text-slate-400">
-                            Cardholder
-                          </div>
-                          <div className="text-sm font-semibold tracking-wide text-slate-100 uppercase truncate max-w-[200px]">
-                            {cardName || "YOUR NAME"}
-                          </div>
-                        </div>
-
-                        <div>
-                          <div className="text-[10px] uppercase tracking-wider text-slate-400">
-                            Expires
-                          </div>
-                          <div className="font-mono text-sm font-bold text-slate-100">
-                            {cardExpiry || "MM/YY"}
-                          </div>
-                        </div>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowQrCode((prev) => !prev)}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-purple-600 hover:text-purple-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition"
+                      >
+                        <QrCode className="h-3.5 w-3.5" />
+                        <span>{showQrCode ? "Hide QR" : "Show QR Code"}</span>
+                      </button>
                     </div>
 
-                    {/* Card Input Form */}
-                    <div className="rounded-3xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02] space-y-4">
-                      <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                          Card Number
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            placeholder="4532 8921 3456 7890"
-                            value={cardNumber}
-                            onChange={handleCardNumberChange}
-                            maxLength={19}
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 font-mono text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
-                          />
-                          <div className="absolute right-3 top-2.5 text-xs font-bold text-slate-400">
-                            {cardBrand}
-                          </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                          <Link2 className="h-3.5 w-3.5" />
                         </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                          Cardholder Name
-                        </label>
                         <input
                           type="text"
-                          placeholder="e.g. Godswill Nwafor"
-                          value={cardName}
-                          onChange={(e) => setCardName(e.target.value.toUpperCase())}
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:bg-white/[0.03] dark:text-white uppercase"
+                          readOnly
+                          placeholder="Paystack checkout link will appear once connected..."
+                          value={
+                            paymentLinkData?.paymentUrl ||
+                            (isGeneratingLink
+                              ? "Generating secure Paystack link..."
+                              : "")
+                          }
+                          className="w-full rounded-xl border border-slate-200 bg-slate-50/60 pl-8 pr-24 py-2 font-mono text-xs text-slate-700 focus:outline-none dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300"
                         />
+                        {paymentLinkData?.paymentUrl && (
+                          <button
+                            onClick={handleCopyPaymentLink}
+                            className="absolute right-1 top-1 bottom-1 flex items-center gap-1 rounded-lg bg-white px-2 text-[11px] font-semibold text-purple-700 shadow-xs border border-slate-200 hover:bg-slate-50 dark:bg-white/10 dark:border-white/10 dark:text-purple-300"
+                          >
+                            {copiedPaymentLink ? (
+                              <>
+                                <Check className="h-3 w-3 text-emerald-500" />
+                                <span>Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3 w-3" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        )}
                       </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                            Expiration Date
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="MM/YY"
-                            value={cardExpiry}
-                            onChange={handleExpiryChange}
-                            maxLength={5}
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 font-mono text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                            CVV / CVC
-                          </label>
-                          <input
-                            type="password"
-                            placeholder="•••"
-                            value={cardCvv}
-                            onChange={handleCvvChange}
-                            maxLength={3}
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 font-mono text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
-                          />
-                        </div>
-                      </div>
-
-                      <label className="flex items-center gap-2.5 pt-2 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={saveCard}
-                          onChange={(e) => setSaveCard(e.target.checked)}
-                          className="rounded border-slate-300 text-purple-600 focus:ring-purple-500"
-                        />
-                        <span>Remember this card for fast 1-click renewals</span>
-                      </label>
-
-                      <Button
-                        onClick={handleExecutePayment}
-                        className="w-full mt-4 rounded-xl bg-purple-600 py-3.5 font-bold text-white shadow-md shadow-purple-600/25 hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 text-base"
-                        size="lg"
-                      >
-                        <Lock className="mr-2 h-4 w-4" />
-                        <span>Pay ₦{finalTotal.toLocaleString()} Securely</span>
-                      </Button>
                     </div>
-                  </motion.div>
-                )}
 
-                {/* ── METHOD 3: BANK TRANSFER VIEW ─────────────────────────── */}
-                {paymentMethod === "transfer" && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.25 }}
-                    className="space-y-6"
-                  >
-                    <div className="rounded-3xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02]">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-white/5">
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-5 w-5 text-purple-600 dark:text-cyan-400" />
-                          <h3 className="font-bold text-slate-900 dark:text-white">
-                            Dedicated Virtual Account
-                          </h3>
-                        </div>
-                        <div className="flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
-                          <Clock className="h-3.5 w-3.5" />
-                          <span>Expires in {formatTimer(secondsRemaining)}</span>
-                        </div>
-                      </div>
-
-                      <p className="mt-4 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                        Transfer the exact amount to the temporary virtual account below. Your transfer is automatically monitored and confirmed within seconds.
-                      </p>
-
-                      {/* Bank Details Table */}
-                      <div className="mt-5 space-y-3 rounded-2xl bg-slate-50 p-4 dark:bg-white/[0.03] border border-slate-100 dark:border-white/5">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-500 dark:text-slate-400">Bank Name</span>
-                          <span className="font-bold text-slate-900 dark:text-white">
-                            Providus Bank / Wema
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between border-t border-slate-200/60 pt-3 dark:border-white/5">
-                          <span className="text-xs text-slate-500 dark:text-slate-400">
-                            Account Number
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-lg font-extrabold tracking-wider text-purple-700 dark:text-cyan-400">
-                              9048831290
-                            </span>
-                            <button
-                              onClick={handleCopyAccount}
-                              className="flex items-center gap-1 rounded-lg bg-white px-2 py-1 text-[11px] font-semibold text-purple-600 shadow-sm border border-slate-200 hover:bg-slate-50 dark:bg-white/10 dark:border-white/10 dark:text-cyan-300"
-                              title="Copy account number"
-                            >
-                              {copiedAccount ? (
-                                <>
-                                  <Check className="h-3 w-3 text-emerald-500" />
-                                  <span>Copied!</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Copy className="h-3 w-3" />
-                                  <span>Copy</span>
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between border-t border-slate-200/60 pt-3 dark:border-white/5 text-xs">
-                          <span className="text-slate-500 dark:text-slate-400">Account Name</span>
-                          <span className="font-semibold text-slate-900 dark:text-white">
-                            Hammet AI Academy Ltd
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between border-t border-slate-200/60 pt-3 dark:border-white/5 text-xs">
-                          <span className="text-slate-500 dark:text-slate-400">Exact Amount</span>
-                          <span className="font-extrabold text-slate-900 dark:text-white">
-                            ₦{finalTotal.toLocaleString()}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between border-t border-slate-200/60 pt-3 dark:border-white/5 text-xs">
-                          <span className="text-slate-500 dark:text-slate-400">
-                            Transfer Narration
-                          </span>
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-mono text-slate-700 dark:text-slate-300">
-                              HMT-8942-AI
-                            </span>
-                            <button
-                              onClick={handleCopyRef}
-                              className="text-[10px] text-purple-600 underline dark:text-cyan-400"
-                            >
-                              {copiedRef ? "Copied" : "Copy"}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-6 flex flex-col gap-3">
-                        <Button
-                          onClick={handleExecutePayment}
-                          className="w-full rounded-xl bg-purple-600 py-3.5 font-bold text-white shadow-md shadow-purple-600/25 hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 text-base"
-                          size="lg"
+                    {/* QR Code expansion */}
+                    <AnimatePresence>
+                      {showQrCode && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mt-4 flex flex-col items-center justify-center rounded-2xl bg-slate-50 p-4 border border-slate-200/60 dark:bg-white/[0.02] dark:border-white/5"
                         >
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                          <span>I Have Sent ₦{finalTotal.toLocaleString()}</span>
-                        </Button>
+                          <div className="flex h-36 w-36 items-center justify-center rounded-xl bg-white p-2 shadow-inner border border-slate-200 dark:border-white/10">
+                            <div className="grid grid-cols-6 gap-1 w-full h-full p-2 bg-slate-900 rounded-lg">
+                              {Array.from({ length: 36 }).map((_, i) => (
+                                <div
+                                  key={i}
+                                  className={cn(
+                                    "rounded-xs",
+                                    i % 2 === 0 || i % 5 === 0 ? "bg-white" : "bg-purple-400"
+                                  )}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <span className="mt-2 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                            Scan with your smartphone camera to pay on mobile
+                          </span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
 
-                        <div className="text-center text-[11px] text-slate-400">
-                          Automated confirmation takes 5–15 seconds once transfer leaves your bank.
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
+                {/* Trust and reassurance footer */}
+                <div className="flex flex-wrap items-center justify-between gap-3 px-2 text-xs text-slate-500 dark:text-slate-400">
+                  <div className="flex items-center gap-1.5">
+                    <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>Paystack PCI-DSS Certified</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Zap className="h-4 w-4 text-purple-600 dark:text-cyan-400" />
+                    <span>Instant Automated Webhook Settlement</span>
+                  </div>
+                </div>
               </div>
 
               {/* Right: Order Summary Sidebar */}
               <div>
-                <div className="sticky top-24 rounded-3xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02]">
+                <div className="sticky top-24 rounded-3xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/[0.06] dark:bg-[#140F24]">
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
-                    Summary
+                    Order Summary
                   </h3>
 
                   <div className="space-y-3 border-b border-slate-100 pb-4 text-xs dark:border-white/5">
@@ -1117,10 +817,10 @@ export default function CheckoutPage() {
                   <div className="rounded-xl bg-slate-50 p-3.5 text-xs text-slate-500 dark:bg-white/[0.03] dark:text-slate-400 space-y-2">
                     <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium">
                       <Zap className="h-3.5 w-3.5 text-amber-500" />
-                      <span>Instant Access Provisioning</span>
+                      <span>Instant Access Guarantee</span>
                     </div>
                     <p className="text-[11px] leading-relaxed">
-                      Upon confirmation, your curriculum licenses, GPU compute credentials, and Skill Passport are immediately unlocked in your account.
+                      Upon confirmation, your curriculum licenses and Skill Passport are immediately unlocked in your account with zero delay.
                     </p>
                   </div>
                 </div>
@@ -1263,13 +963,9 @@ export default function CheckoutPage() {
               </div>
 
               <div className="flex items-center justify-between border-b border-slate-200 py-3 dark:border-white/5 text-xs">
-                <span className="text-slate-500 dark:text-slate-400">Payment Method</span>
+                <span className="text-slate-500 dark:text-slate-400">Payment Gateway</span>
                 <span className="font-semibold text-slate-900 dark:text-white">
-                  {paymentMethod === "link"
-                    ? "Direct Payment Gateway Link"
-                    : paymentMethod === "card"
-                    ? `Card (${cardBrand})`
-                    : "Direct Bank Transfer"}
+                  Paystack (Cards, Bank Transfer, USSD)
                 </span>
               </div>
 

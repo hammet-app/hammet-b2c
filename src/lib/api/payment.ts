@@ -49,11 +49,10 @@ export const paymentApi = {
   ): Promise<PaymentApiResponse<PaymentLinkData>> => {
     const reference = `TXN-HMT-${Math.floor(100000 + Math.random() * 900000)}`;
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-    const fallbackUrl = `https://pay.hammetedu.com/checkout/${reference.toLowerCase()}?amt=${payload.amount}`;
 
     try {
-      const response = await apiClient.post<PaymentLinkData>(
-        "/learner/payment/initialize",
+      const response = await apiClient.post<any>(
+        "/learner/checkout",
         {
           items: payload.items.map((i) => ({
             id: i.id,
@@ -67,27 +66,48 @@ export const paymentApi = {
           customer_email: payload.email,
           customer_name: payload.customerName,
           reference,
-          callback_url: payload.callbackUrl || `${typeof window !== "undefined" ? window.location.origin : ""}/learner/checkout?status=success`,
+          callback_url: payload.callbackUrl || `${typeof window !== "undefined" ? window.location.origin : ""}/learner/checkout/callback`,
         },
         token
       );
 
-      if (response && response.paymentUrl) {
-        return { success: true, data: response };
+      const url =
+        response?.paymentUrl ||
+        response?.data?.authorization_url ||
+        response?.authorization_url ||
+        "";
+
+      const finalRef =
+        response?.reference ||
+        response?.data?.reference ||
+        reference;
+
+      if (url) {
+        return {
+          success: true,
+          data: {
+            paymentUrl: url,
+            reference: finalRef,
+            amount: payload.amount,
+            currency: payload.currency || "NGN",
+            expiresAt,
+            provider: "paystack",
+          },
+        };
       }
     } catch {
-      // Fallback gracefully for local dev / staging mock
+      // Backend payment endpoint offline or not yet deployed
     }
 
     return {
       success: true,
       data: {
-        paymentUrl: fallbackUrl,
+        paymentUrl: "",
         reference,
         amount: payload.amount,
         currency: payload.currency || "NGN",
         expiresAt,
-        provider: "hammet_gateway",
+        provider: "paystack",
       },
     };
   },
