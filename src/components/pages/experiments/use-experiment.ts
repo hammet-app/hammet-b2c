@@ -23,7 +23,7 @@ export function useExperiment(featureKey: string, defaultVariant: "A" | "B" = "B
 
     // 2. Evaluate from Growthbook / OpenFeature
     let isMounted = true;
-    is_enabled(featureKey, true)
+    is_enabled(featureKey, true, defaultVariant)
       .then((val) => {
         if (!isMounted) return;
         if (val === "A" || val === "B") {

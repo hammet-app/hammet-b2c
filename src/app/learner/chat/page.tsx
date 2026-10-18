@@ -81,7 +81,7 @@ export default function LearnerChatPage() {
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2.5">
-              <div className="relative h-8 w-8 shrink-0 drop-shadow-[0_4px_12px_rgba(144,52,234,0.4)]">
+              <div className="relative h-8 w-8 shrink-0 drop-shadow-[0_4px_12px_rgba(144,52,234,0.25)]">
                 <Image
                   src="/chat-3d-bubble.png"
                   alt="Hammet Community Chat"
@@ -106,7 +106,7 @@ export default function LearnerChatPage() {
             <span className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
               Cohort: Fall 2026
             </span>
-            <span className="rounded-xl bg-purple-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm">
+            <span className="rounded-xl bg-purple-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm dark:bg-purple-800/80 dark:border dark:border-purple-500/30 dark:text-purple-100">
               Global Relay: Connected
             </span>
           </div>
@@ -585,11 +585,11 @@ export default function LearnerChatPage() {
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 sm:p-12 text-center bg-slate-900/40 dark:bg-slate-950/85 backdrop-blur-md backdrop-brightness-110">
         {/* 3D Glass Bubble & Pulsing Timer Icon */}
         <div className="relative mb-6 flex h-28 w-28 items-center justify-center">
-          <div className="absolute -inset-2 rounded-full bg-purple-500/25 blur-2xl animate-pulse" />
+          <div className="absolute -inset-2 rounded-full bg-purple-500/15 blur-2xl animate-pulse" />
           <motion.div
             animate={{ y: [0, -6, 0] }}
             transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
-            className="relative h-24 w-24 drop-shadow-[0_16px_32px_rgba(144,52,234,0.65)]"
+            className="relative h-24 w-24 drop-shadow-[0_12px_24px_rgba(144,52,234,0.3)]"
           >
             <Image
               src="/chat-3d-bubble.png"
@@ -600,13 +600,13 @@ export default function LearnerChatPage() {
               priority
             />
           </motion.div>
-          <span className="absolute bottom-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-slate-950 border-2 border-purple-400 text-purple-300 shadow-lg">
+          <span className="absolute bottom-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-slate-950 border border-purple-500/40 text-purple-300 shadow-lg">
             <Timer className="h-4 w-4 animate-spin-slow" />
           </span>
         </div>
 
         {/* Status Chip */}
-        <span className="rounded-full bg-purple-500/20 border border-purple-400/30 px-4 py-1 text-[11px] font-mono font-bold tracking-widest text-purple-200 uppercase mb-3 shadow-inner">
+        <span className="rounded-full bg-purple-900/40 border border-purple-500/30 px-4 py-1 text-[11px] font-mono font-bold tracking-widest text-purple-200 uppercase mb-3 shadow-inner">
           Coming Soon // Live WebSocket Gateway in Development
         </span>
 
@@ -665,13 +665,13 @@ export default function LearnerChatPage() {
 
         {/* Security & Launch Notice */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <div className="flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/10 px-4 py-2 text-xs text-slate-200 font-mono">
-            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-            <span>Encrypted Direct Messaging</span>
+          <div className="flex items-center gap-2 rounded-xl bg-white/95 border border-slate-200/90 px-4 py-2 text-xs text-slate-800 font-mono font-medium shadow-sm backdrop-blur-md transition-colors hover:border-purple-400/50 dark:bg-white/[0.08] dark:border-white/15 dark:text-slate-200">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="font-semibold">Encrypted Direct Messaging</span>
           </div>
-          <div className="flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/10 px-4 py-2 text-xs text-slate-200 font-mono">
-            <ShieldCheck className="h-4 w-4 text-cyan-400" />
-            <span>Profile &amp; Badges Auto-Linked</span>
+          <div className="flex items-center gap-2 rounded-xl bg-white/95 border border-slate-200/90 px-4 py-2 text-xs text-slate-800 font-mono font-medium shadow-sm backdrop-blur-md transition-colors hover:border-purple-400/50 dark:bg-white/[0.08] dark:border-white/15 dark:text-slate-200">
+            <ShieldCheck className="h-4 w-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
+            <span className="font-semibold">Profile &amp; Badges Auto-Linked</span>
           </div>
         </div>
 
@@ -679,10 +679,10 @@ export default function LearnerChatPage() {
         <div className="mt-8">
           <Link
             href="/learner/projects"
-            className="inline-flex items-center gap-2 rounded-2xl bg-white/10 border border-white/20 px-5 py-2.5 text-xs font-bold text-white hover:bg-white/15 transition-all shadow-lg hover:shadow-xl"
+            className="group inline-flex items-center gap-2.5 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-bold border border-purple-400/30 px-6 py-2.5 text-xs shadow-lg shadow-purple-600/35 hover:shadow-xl hover:shadow-purple-600/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 dark:bg-purple-600 dark:hover:bg-purple-500"
           >
             <span>Explore Active Course Projects</span>
-            <ArrowRight className="h-3.5 w-3.5" />
+            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
           </Link>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AuthProvider } from "@/lib/auth/auth-context";
+import { SmoothScrollProvider } from "@/components/providers/smooth-scroll-provider";
 import { Poppins, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
@@ -49,7 +50,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
 
       <body className="min-h-full flex flex-col">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <SmoothScrollProvider>{children}</SmoothScrollProvider>
+        </AuthProvider>
       </body>
     </html>
   );

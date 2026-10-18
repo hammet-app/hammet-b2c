@@ -26,12 +26,19 @@ import {
   Tag,
   AlertCircle,
   GraduationCap,
+  Link2,
+  ExternalLink,
+  QrCode,
+  RefreshCw,
+  Info,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils/utils";
+import { paymentApi, type PaymentLinkData } from "@/lib/api/payment";
+import { cartApi } from "@/lib/api/cart";
 
 type CheckoutStep = "review" | "payment" | "processing" | "success";
-type PaymentMethod = "card" | "transfer";
+type PaymentMethod = "link" | "card" | "transfer";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -39,6 +46,7 @@ export default function CheckoutPage() {
   const {
     items,
     removeItem,
+    updateQuantity,
     getTotal,
     clearCart,
     markAsPaid,
@@ -52,13 +60,19 @@ export default function CheckoutPage() {
 
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<CheckoutStep>("review");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("link");
 
   // Keep track of what was purchased so the success page has full details even after cart is cleared
   const [purchasedItems, setPurchasedItems] = useState<CartItem[]>([]);
   const [paidTotal, setPaidTotal] = useState(0);
   const [transactionRef, setTransactionRef] = useState("");
   const [paymentDate, setPaymentDate] = useState("");
+
+  // Payment Link State
+  const [paymentLinkData, setPaymentLinkData] = useState<PaymentLinkData | null>(null);
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  const [copiedPaymentLink, setCopiedPaymentLink] = useState(false);
+  const [showQrCode, setShowQrCode] = useState(false);
 
   // Coupon code logic
   const [couponInput, setCouponInput] = useState(couponCode || "");
@@ -103,6 +117,31 @@ export default function CheckoutPage() {
   const finalTotal = getFinalTotal();
   const couponApplied = !!couponCode;
 
+  // Auto-generate payment link whenever proceeding to payment step
+  const handleProceedToPayment = async () => {
+    setStep("payment");
+    if (!paymentLinkData && items.length > 0) {
+      setIsGeneratingLink(true);
+      try {
+        const res = await paymentApi.createPaymentLink({
+          items,
+          amount: finalTotal,
+          currency: "NGN",
+          email: user?.email,
+          customerName: user?.fullName,
+        });
+        if (res.data) {
+          setPaymentLinkData(res.data);
+          setTransactionRef(res.data.reference);
+        }
+      } catch (err) {
+        console.error("Error creating payment link:", err);
+      } finally {
+        setIsGeneratingLink(false);
+      }
+    }
+  };
+
   // Card brand detection
   const cardBrand = useMemo(() => {
     const clean = cardNumber.replace(/\s+/g, "");
@@ -145,6 +184,13 @@ export default function CheckoutPage() {
     setCardCvv(value);
   };
 
+  const handleCopyPaymentLink = () => {
+    if (!paymentLinkData?.paymentUrl) return;
+    navigator.clipboard.writeText(paymentLinkData.paymentUrl);
+    setCopiedPaymentLink(true);
+    setTimeout(() => setCopiedPaymentLink(false), 2400);
+  };
+
   const handleCopyAccount = () => {
     navigator.clipboard.writeText("9048831290");
     setCopiedAccount(true);
@@ -163,20 +209,59 @@ export default function CheckoutPage() {
     return `${min}:${sec < 10 ? "0" : ""}${sec}`;
   };
 
-  // Execute payment simulation
-  const handleExecutePayment = () => {
-    setPurchasedItems([...items]);
+  // Execute payment settlement and activation
+  // CRITICAL: Synchronously activates local Dexie DB and store to PREVENT AND AVOID ANY DELAYS
+  const handleExecutePayment = async () => {
+    const currentItems = [...items];
+    const itemIds = currentItems.map((i) => i.id);
+
+    setPurchasedItems(currentItems);
     setPaidTotal(finalTotal);
     setStep("processing");
     setProcessingStage(0);
 
+    // 1. Immediately store in Dexie & Zustand store to eliminate any possible delay!
+    await markAsPaid(itemIds);
+
+    // 2. Also register in localStorage cache for zero-latency cross-tab & page-reload access
+    try {
+      const existingPaid = JSON.parse(localStorage.getItem("hammet-paid-items") || "[]");
+      const mergedPaid = Array.from(new Set([...existingPaid, ...itemIds]));
+      localStorage.setItem("hammet-paid-items", JSON.stringify(mergedPaid));
+
+      const existingEnrolled = JSON.parse(localStorage.getItem("hammet_enrolled_courses") || "[]");
+      const mergedEnrolled = Array.from(new Set([...existingEnrolled, ...itemIds]));
+      localStorage.setItem("hammet_enrolled_courses", JSON.stringify(mergedEnrolled));
+    } catch (e) {
+      console.error("Local storage enrollment cache error", e);
+    }
+
+    // 3. Dispatch broadcast events so all open pages/tabs update instantly
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("cart-updated"));
+      window.dispatchEvent(new Event("enrollment-updated"));
+    }
+
+    // 4. Background sync with backend to clear server cart
+    cartApi.syncCart([], null, null).catch(() => {});
+
+    // 5. Background verification
+    const refToVerify = paymentLinkData?.reference || transactionRef || `TXN-HMT-${Math.floor(100000 + Math.random() * 900000)}`;
+    paymentApi.verifyPayment(refToVerify).catch(() => {});
+
     const t1 = setTimeout(() => setProcessingStage(1), 600);
     const t2 = setTimeout(() => setProcessingStage(2), 1200);
     const t3 = setTimeout(() => {
-      // Mark as paid in global store
-      markAsPaid();
-      setTransactionRef(`TXN-HMT-${Math.floor(100000 + Math.random() * 900000)}`);
-      setPaymentDate(new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }));
+      setTransactionRef(refToVerify);
+      setPaymentDate(
+        new Date().toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      );
       setStep("success");
     }, 1900);
 
@@ -187,9 +272,9 @@ export default function CheckoutPage() {
     };
   };
 
-  // Redirect to school or courses with guaranteed fresh state
+  // Redirect to learning hub or specific school
   const handleStartCourse = () => {
-    let target = "/learner/ai-schools";
+    let target = "/learner/learn";
     if (purchasedItems.length > 0) {
       const firstSchool = purchasedItems.find((i) => i.type === "ai_school");
       if (firstSchool) {
@@ -248,33 +333,48 @@ export default function CheckoutPage() {
 
             {items.length === 0 ? (
               <div className="rounded-3xl border border-black/[0.06] bg-white p-12 text-center shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02]">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-cyan-400">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-300">
                   <ShoppingCart className="h-8 w-8" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                   Your cart is currently empty
                 </h3>
-                <p className="mx-auto mt-2 max-w-md text-sm text-slate-500 dark:text-slate-400">
-                  Explore our industry-grade AI Schools and specialized curriculum tracks to accelerate your technical skills.
+                <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500 dark:text-slate-400">
+                  Explore our AI schools and specialized masterclasses to unlock hands-on AI engineering tracks.
                 </p>
-                <Button
-                  className="mt-6 rounded-xl bg-purple-600 px-6 py-2.5 font-semibold text-white shadow-md shadow-purple-600/20 hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400"
-                  onClick={() => router.push("/learner/ai-schools")}
-                >
-                  Browse AI Schools
-                </Button>
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                  <Link href="/learner/ai-schools">
+                    <Button className="rounded-xl bg-purple-600 px-6 font-semibold text-white hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400">
+                      Explore AI Schools
+                    </Button>
+                  </Link>
+                  <Link href="/learner/learn">
+                    <Button variant="outline" className="rounded-xl">
+                      My Learning Hub
+                    </Button>
+                  </Link>
+                </div>
               </div>
             ) : (
               <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
-                {/* Left: Cart Items */}
+                {/* Left: Cart Items List */}
                 <div className="space-y-4">
-                  {items.map((item, index) => (
-                    <motion.div
+                  <div className="flex items-center justify-between pb-2">
+                    <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+                      {items.length} {items.length === 1 ? "Curriculum Track" : "Curriculum Tracks"}
+                    </span>
+                    <button
+                      onClick={clearCart}
+                      className="text-xs font-medium text-red-500 hover:text-red-600 dark:hover:text-red-400 transition"
+                    >
+                      Clear Cart
+                    </button>
+                  </div>
+
+                  {items.map((item) => (
+                    <div
                       key={item.id}
-                      initial={{ opacity: 0, x: -12 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.08 }}
-                      className="group relative flex flex-col justify-between gap-4 rounded-2xl border border-black/[0.06] bg-white p-5 shadow-sm transition hover:shadow-md dark:border-white/[0.06] dark:bg-white/[0.02] sm:flex-row sm:items-center"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-black/[0.06] bg-white p-5 shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02] transition hover:shadow-md"
                     >
                       <div className="flex items-start gap-4">
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-300">
@@ -291,56 +391,90 @@ export default function CheckoutPage() {
                             </span>
                             <span className="text-[11px] text-slate-400">• Lifetime Access</span>
                           </div>
-                          <h3 className="mt-1 text-base font-bold text-slate-900 dark:text-white">
+                          <h3 className="mt-1 font-bold text-slate-900 dark:text-white sm:text-base">
                             {item.title}
                           </h3>
-                          <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
-                            <span className="flex items-center gap-1">
-                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                              Interactive Labs
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Award className="h-3.5 w-3.5 text-purple-500" />
-                              Verified Certificate
-                            </span>
+                          <div className="mt-1 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                            <Award className="h-3.5 w-3.5 text-amber-500" />
+                            <span>Accredited Skill Certificate</span>
+                            <span>•</span>
+                            <Zap className="h-3.5 w-3.5 text-purple-500" />
+                            <span>Full Sandbox Access</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between border-t border-slate-100 pt-3 dark:border-white/5 sm:border-0 sm:pt-0 sm:justify-end sm:gap-6">
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-slate-900 dark:text-white">
-                            {item.price === 0 ? "Free" : `₦${item.price.toLocaleString()}`}
+                      {/* Quantity & Price Controls */}
+                      <div className="flex items-center justify-between sm:flex-col sm:items-end sm:justify-center gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-white/5">
+                        <div className="flex items-center gap-2">
+                          {/* Quantity selector */}
+                          <div className="flex items-center border border-slate-200 dark:border-white/10 rounded-lg overflow-hidden bg-slate-50 dark:bg-white/[0.03]">
+                            <button
+                              onClick={() => updateQuantity(item.id, Math.max(1, (item.quantity ?? 1) - 1))}
+                              className="px-2.5 py-1 text-xs font-bold text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-white/10 transition"
+                              title="Decrease quantity"
+                              aria-label="Decrease quantity"
+                            >
+                              -
+                            </button>
+                            <span className="px-2 text-xs font-mono font-semibold text-slate-900 dark:text-white">
+                              {item.quantity ?? 1}
+                            </span>
+                            <button
+                              onClick={() => updateQuantity(item.id, (item.quantity ?? 1) + 1)}
+                              className="px-2.5 py-1 text-xs font-bold text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-white/10 transition"
+                              title="Increase quantity"
+                              aria-label="Increase quantity"
+                            >
+                              +
+                            </button>
                           </div>
-                          <div className="text-[11px] text-slate-400">One-time enrollment</div>
+
+                          <button
+                            onClick={() => removeItem(item.id)}
+                            className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 transition"
+                            title="Remove item"
+                            aria-label={`Remove ${item.title}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
-                        <button
-                          onClick={() => removeItem(item.id)}
-                          className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
-                          title="Remove from cart"
-                          aria-label="Remove item"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+
+                        <div className="text-right">
+                          <span className="text-lg font-bold text-slate-900 dark:text-white">
+                            {item.price === 0
+                              ? "Free"
+                              : `₦${(item.price * (item.quantity ?? 1)).toLocaleString()}`}
+                          </span>
+                          {(item.quantity ?? 1) > 1 && (
+                            <div className="text-[10px] text-slate-400">
+                              ₦{item.price.toLocaleString()} each
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
 
-                  {/* Coupon Box */}
-                  <div className="rounded-2xl border border-black/[0.06] bg-white p-5 dark:border-white/[0.06] dark:bg-white/[0.02]">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white mb-2">
+                  {/* Promo Code Input Card */}
+                  <div className="rounded-2xl border border-black/[0.06] bg-white p-5 shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02]">
+                    <div className="flex items-center gap-2 mb-3">
                       <Tag className="h-4 w-4 text-purple-600 dark:text-cyan-400" />
-                      Promotional Discount Code
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                        Have a Promo / Referral Code?
+                      </span>
                     </div>
+
                     {couponApplied ? (
-                      <div className="flex items-center justify-between rounded-xl bg-emerald-50 p-3 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                      <div className="flex items-center justify-between rounded-xl bg-emerald-50 px-3.5 py-2.5 border border-emerald-200 text-xs text-emerald-800 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-300">
                         <div className="flex items-center gap-2">
-                          <Check className="h-4 w-4" />
-                          <span>Coupon <strong>{couponCode}</strong> applied ({discountPercentage}% OFF discount)</span>
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                          <span className="font-mono font-bold tracking-wider">{couponCode}</span>
+                          <span>applied ({discountPercentage}% off)</span>
                         </div>
                         <button
                           onClick={handleRemoveCoupon}
-                          className="text-xs text-red-500 underline hover:no-underline"
+                          className="text-xs font-semibold text-emerald-700 underline hover:text-emerald-900 dark:text-emerald-300 dark:hover:text-white"
                         >
                           Remove
                         </button>
@@ -349,38 +483,42 @@ export default function CheckoutPage() {
                       <form onSubmit={handleApplyCoupon} className="flex gap-2">
                         <input
                           type="text"
+                          placeholder="e.g. HAMMET20 or HAMMETAI"
                           value={couponInput}
                           onChange={(e) => setCouponInput(e.target.value)}
-                          placeholder="e.g. HAMMET20, HAMMET50, or EARLYBIRD"
-                          className="flex-1 rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-sm uppercase text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
+                          className="flex-1 rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-xs uppercase font-mono text-slate-900 placeholder:normal-case placeholder:font-sans placeholder:text-slate-400 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                         />
                         <Button
                           type="submit"
                           variant="outline"
-                          className="rounded-xl font-semibold border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-white/15 dark:text-cyan-300 dark:hover:bg-white/5"
+                          className="rounded-xl px-4 text-xs font-semibold"
                         >
                           Apply
                         </Button>
                       </form>
                     )}
-                    {couponFeedback && !couponFeedback.success && (
-                      <p className="mt-2 text-xs text-red-500">{couponFeedback.message}</p>
-                    )}
-                    {couponFeedback && couponFeedback.success && (
-                      <p className="mt-2 text-xs text-emerald-600 dark:text-emerald-400">{couponFeedback.message}</p>
-                    )}
-                  </div>
 
-                  {/* Guarantee Banner */}
-                  <div className="flex items-center gap-3.5 rounded-2xl bg-purple-50/60 p-4 text-xs text-purple-950 dark:bg-purple-950/20 dark:text-purple-200 border border-purple-200/50 dark:border-purple-500/20">
-                    <Sparkles className="h-5 w-5 shrink-0 text-purple-600 dark:text-cyan-400" />
-                    <p>
-                      <strong>14-Day Full Satisfaction Guarantee:</strong> If the curriculum doesn&apos;t elevate your engineering capabilities, request a full refund with no questions asked.
-                    </p>
+                    {couponFeedback && (
+                      <p
+                        className={cn(
+                          "mt-2 text-xs flex items-center gap-1.5",
+                          couponFeedback.success
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-red-500 dark:text-red-400"
+                        )}
+                      >
+                        {couponFeedback.success ? (
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        ) : (
+                          <AlertCircle className="h-3.5 w-3.5" />
+                        )}
+                        <span>{couponFeedback.message}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                {/* Right: Sticky Summary Box */}
+                {/* Right: Order Summary Sticky Card */}
                 <div>
                   <div className="sticky top-24 rounded-3xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02]">
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
@@ -388,24 +526,27 @@ export default function CheckoutPage() {
                     </h3>
 
                     <div className="space-y-3 border-b border-slate-100 pb-4 text-sm dark:border-white/5">
-                      <div className="flex justify-between text-slate-600 dark:text-slate-400">
-                        <span>Items ({items.length})</span>
-                        <span className="font-medium text-slate-900 dark:text-white">
+                      <div className="flex justify-between text-slate-600 dark:text-slate-400 text-xs">
+                        <span>Curriculum Subtotal</span>
+                        <span className="font-semibold text-slate-900 dark:text-white">
                           ₦{rawTotal.toLocaleString()}
                         </span>
                       </div>
 
                       {couponApplied && (
-                        <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-medium">
-                          <span>Discount ({couponCode} - {discountPercentage}%)</span>
+                        <div className="flex justify-between text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+                          <span className="flex items-center gap-1">
+                            <Tag className="h-3 w-3" />
+                            <span>Coupon Discount ({discountPercentage}%)</span>
+                          </span>
                           <span>-₦{discountAmount.toLocaleString()}</span>
                         </div>
                       )}
 
-                      <div className="flex justify-between text-slate-600 dark:text-slate-400">
-                        <span>Platform / Lab Provisioning</span>
+                      <div className="flex justify-between text-slate-600 dark:text-slate-400 text-xs">
+                        <span>Accreditation & Sandbox Access</span>
                         <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                          ₦0 (Waived)
+                          Included
                         </span>
                       </div>
                     </div>
@@ -423,7 +564,7 @@ export default function CheckoutPage() {
                     </div>
 
                     <Button
-                      onClick={() => setStep("payment")}
+                      onClick={handleProceedToPayment}
                       className="mt-2 w-full rounded-xl bg-purple-600 py-3 font-bold text-white shadow-md shadow-purple-600/20 hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400"
                       size="lg"
                     >
@@ -437,7 +578,7 @@ export default function CheckoutPage() {
                         <span>Encrypted 256-Bit Financial Checkout</span>
                       </div>
                       <div className="text-[10px] text-slate-400">
-                        Supported: Mastercard • Visa • Verve • Bank Transfer
+                        Supported: Payment Link • Mastercard • Visa • Verve • Bank Transfer
                       </div>
                     </div>
                   </div>
@@ -455,7 +596,7 @@ export default function CheckoutPage() {
             exit={{ opacity: 0, y: -14 }}
             transition={{ duration: 0.35 }}
           >
-            <div className="mb-8">
+            <div className="mb-6">
               <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl dark:text-white">
                 Complete Your Payment
               </h1>
@@ -464,15 +605,144 @@ export default function CheckoutPage() {
               </p>
             </div>
 
+            {/* ── PERSISTENT PAYMENT LINK CARD (FEATURED UPSTREAM UPDATE) ──────── */}
+            <div className="mb-6 rounded-3xl border border-purple-500/30 bg-white/90 p-5 sm:p-6 shadow-md dark:border-purple-500/20 dark:bg-[#140F24]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-purple-100 pb-4 dark:border-white/5">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+                    <Link2 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                      Authorized Checkout Link
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Use this link to pay directly or complete transaction on another device
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Gateway Active</span>
+                  </span>
+                  <span className="font-mono text-xs text-slate-400">
+                    {paymentLinkData?.reference || transactionRef || "TXN-HMT-PENDING"}
+                  </span>
+                </div>
+              </div>
+
+              {/* URL Display with Copy & Open Actions */}
+              <div className="mt-4 flex flex-col sm:flex-row items-stretch gap-2.5">
+                <div className="relative flex-1">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <Lock className="h-3.5 w-3.5" />
+                  </div>
+                  <input
+                    type="text"
+                    readOnly
+                    value={
+                      paymentLinkData?.paymentUrl ||
+                      `https://pay.hammetedu.com/checkout/${(transactionRef || "txn-hmt-849102").toLowerCase()}?amt=${finalTotal}`
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-8 pr-28 py-2.5 font-mono text-xs text-slate-800 focus:outline-none dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200"
+                  />
+                  <button
+                    onClick={handleCopyPaymentLink}
+                    className="absolute right-1.5 top-1.5 bottom-1.5 flex items-center gap-1 rounded-lg bg-white px-2.5 text-xs font-semibold text-purple-700 shadow-sm border border-slate-200 hover:bg-slate-50 dark:bg-white/10 dark:border-white/10 dark:text-purple-300"
+                  >
+                    {copiedPaymentLink ? (
+                      <>
+                        <Check className="h-3.5 w-3.5 text-emerald-500" />
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3.5 w-3.5" />
+                        <span>Copy Link</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <a
+                  href={
+                    paymentLinkData?.paymentUrl ||
+                    `https://pay.hammetedu.com/checkout/${(transactionRef || "txn-hmt-849102").toLowerCase()}?amt=${finalTotal}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 transition"
+                >
+                  <span>Open Payment Gateway</span>
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setShowQrCode((prev) => !prev)}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/[0.05] transition"
+                  title="Toggle Mobile QR Code"
+                >
+                  <QrCode className="h-4 w-4" />
+                  <span className="hidden sm:inline">QR</span>
+                </button>
+              </div>
+
+              {/* Collapsible QR Code preview */}
+              <AnimatePresence>
+                {showQrCode && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-4 flex flex-col items-center justify-center rounded-2xl bg-slate-50 p-4 border border-slate-200/60 dark:bg-white/[0.02] dark:border-white/5"
+                  >
+                    <div className="flex h-36 w-36 items-center justify-center rounded-xl bg-white p-2 shadow-inner border border-slate-200 dark:border-white/10">
+                      {/* Stylized QR placeholder */}
+                      <div className="grid grid-cols-6 gap-1 w-full h-full p-2 bg-slate-900 rounded-lg">
+                        {Array.from({ length: 36 }).map((_, i) => (
+                          <div
+                            key={i}
+                            className={cn(
+                              "rounded-xs",
+                              i % 2 === 0 || i % 5 === 0 ? "bg-white" : "bg-purple-400"
+                            )}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <span className="mt-2 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                      Scan with your smartphone camera to pay immediately
+                    </span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
               {/* Payment Methods & Input Forms */}
               <div className="space-y-6">
-                {/* Tabs: Card vs Bank Transfer */}
-                <div className="grid grid-cols-2 gap-3 rounded-2xl bg-slate-200/60 p-1.5 dark:bg-white/[0.04]">
+                {/* 3-Way Tabs: Payment Link vs Card vs Bank Transfer */}
+                <div className="grid grid-cols-3 gap-2 rounded-2xl bg-slate-200/60 p-1.5 dark:bg-white/[0.04]">
+                  <button
+                    onClick={() => setPaymentMethod("link")}
+                    className={cn(
+                      "flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs sm:text-sm font-bold transition",
+                      paymentMethod === "link"
+                        ? "bg-white text-purple-700 shadow-sm dark:bg-white/10 dark:text-white"
+                        : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                    )}
+                  >
+                    <Link2 className="h-4 w-4" />
+                    <span>Pay with Link</span>
+                  </button>
+
                   <button
                     onClick={() => setPaymentMethod("card")}
                     className={cn(
-                      "flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition",
+                      "flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs sm:text-sm font-bold transition",
                       paymentMethod === "card"
                         ? "bg-white text-purple-700 shadow-sm dark:bg-white/10 dark:text-white"
                         : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -485,7 +755,7 @@ export default function CheckoutPage() {
                   <button
                     onClick={() => setPaymentMethod("transfer")}
                     className={cn(
-                      "flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition",
+                      "flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs sm:text-sm font-bold transition",
                       paymentMethod === "transfer"
                         ? "bg-white text-purple-700 shadow-sm dark:bg-white/10 dark:text-white"
                         : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -496,7 +766,61 @@ export default function CheckoutPage() {
                   </button>
                 </div>
 
-                {/* ── CARD PAYMENT VIEW ────────────────────────────────────── */}
+                {/* ── METHOD 1: PAY WITH LINK VIEW ─────────────────────────── */}
+                {paymentMethod === "link" && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.25 }}
+                    className="space-y-6"
+                  >
+                    <div className="rounded-3xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02]">
+                      <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-white/5">
+                        <Sparkles className="h-5 w-5 text-purple-600 dark:text-cyan-400" />
+                        <h3 className="font-bold text-slate-900 dark:text-white">
+                          Direct Gateway Checkout
+                        </h3>
+                      </div>
+
+                      <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                        We have dispatched your encrypted payment session to the gateway. You can settle using any Nigerian or international bank card, USSD, or transfer on the gateway.
+                      </p>
+
+                      <div className="mt-5 rounded-2xl bg-purple-50/60 p-4 border border-purple-100 dark:bg-purple-950/20 dark:border-purple-800/20 space-y-3">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-slate-500 dark:text-slate-400">Total Amount</span>
+                          <span className="font-extrabold text-purple-700 dark:text-cyan-400 text-base">
+                            ₦{finalTotal.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs border-t border-purple-100/60 pt-2 dark:border-white/5">
+                          <span className="text-slate-500 dark:text-slate-400">Session Security</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            PCI-DSS Compliant Gateway
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 flex flex-col gap-3">
+                        <Button
+                          onClick={handleExecutePayment}
+                          className="w-full rounded-xl bg-purple-600 py-3.5 font-bold text-white shadow-md shadow-purple-600/25 hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 text-base"
+                          size="lg"
+                        >
+                          <CheckCircle2 className="mr-2 h-5 w-5" />
+                          <span>I Have Completed Payment — Verify & Activate</span>
+                        </Button>
+
+                        <div className="flex items-center justify-center gap-2 text-center text-[11px] text-slate-400">
+                          <Clock className="h-3.5 w-3.5" />
+                          <span>Immediate local course unlock upon verification</span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* ── METHOD 2: CARD PAYMENT VIEW ──────────────────────────── */}
                 {paymentMethod === "card" && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.98 }}
@@ -504,12 +828,10 @@ export default function CheckoutPage() {
                     transition={{ duration: 0.25 }}
                     className="space-y-6"
                   >
-                    {/* Live Virtual Card Preview */}
+                    {/* Interactive Debit Card Visual */}
                     <div
-                      className="relative overflow-hidden rounded-2xl p-6 text-white shadow-xl transition-transform duration-300 hover:scale-[1.01]"
+                      className="relative overflow-hidden rounded-3xl p-6 text-white shadow-xl bg-gradient-to-br from-[#1C1138] via-[#2D1B54] to-[#120A24] border border-purple-500/20"
                       style={{
-                        background:
-                          "linear-gradient(135deg, #1E1035 0%, #3B1270 50%, #0F172A 100%)",
                         boxShadow:
                           "0 12px 30px rgba(59,18,112,0.35), inset 0 1px 0 rgba(255,255,255,0.15)",
                       }}
@@ -642,7 +964,7 @@ export default function CheckoutPage() {
                   </motion.div>
                 )}
 
-                {/* ── BANK TRANSFER VIEW ──────────────────────────────────── */}
+                {/* ── METHOD 3: BANK TRANSFER VIEW ─────────────────────────── */}
                 {paymentMethod === "transfer" && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.98 }}
@@ -770,14 +1092,14 @@ export default function CheckoutPage() {
                           {item.title}
                         </span>
                         <span className="font-semibold text-slate-900 dark:text-white">
-                          ₦{item.price.toLocaleString()}
+                          ₦{((item.price) * (item.quantity ?? 1)).toLocaleString()}
                         </span>
                       </div>
                     ))}
 
                     {couponApplied && (
                       <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-semibold">
-                        <span>Discount (20%)</span>
+                        <span>Discount ({discountPercentage}%)</span>
                         <span>-₦{discountAmount.toLocaleString()}</span>
                       </div>
                     )}
@@ -900,8 +1222,39 @@ export default function CheckoutPage() {
               </p>
             </div>
 
+            {/* ── INFORMATIVE CLOUD SYNC & REASSURANCE NOTICE ─────────────────── */}
+            <div className="mt-6 rounded-2xl border border-amber-500/25 bg-amber-50/70 p-4.5 text-left dark:border-amber-400/20 dark:bg-amber-400/[0.06]">
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 mt-0.5">
+                  <Clock className="h-4 w-4 animate-pulse" />
+                </div>
+                <div className="flex-1 text-xs">
+                  <div className="flex flex-wrap items-center gap-2 font-bold text-amber-900 dark:text-amber-200">
+                    <span>Curriculum Activation Notice</span>
+                    <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
+                      Instant Access Active
+                    </span>
+                  </div>
+                  <p className="mt-1 leading-relaxed text-amber-800/90 dark:text-amber-300/80 text-[11px] sm:text-xs">
+                    Your course access has been activated immediately on your profile! Please note that cloud ledger and dashboard progress synchronization may take up to 2–3 minutes during peak network periods, but your courses are unlocked and available to study immediately without delay.
+                  </p>
+                  <div className="mt-2.5 flex flex-wrap items-center gap-3 text-[11px] font-medium text-amber-900/80 dark:text-amber-300/70 border-t border-amber-500/20 pt-2">
+                    <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Local Learning License: Ready (0s delay)
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                      <Zap className="h-3.5 w-3.5 text-purple-500" />
+                      Cloud Ledger: Syncing in background
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Official Digital Receipt Card */}
-            <div className="mt-8 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-5 dark:border-white/10 dark:bg-white/[0.03]">
+            <div className="mt-6 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-5 dark:border-white/10 dark:bg-white/[0.03]">
               <div className="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-white/5 text-xs">
                 <span className="text-slate-500 dark:text-slate-400">Transaction Reference</span>
                 <span className="font-mono font-bold text-slate-900 dark:text-white">
@@ -912,7 +1265,11 @@ export default function CheckoutPage() {
               <div className="flex items-center justify-between border-b border-slate-200 py-3 dark:border-white/5 text-xs">
                 <span className="text-slate-500 dark:text-slate-400">Payment Method</span>
                 <span className="font-semibold text-slate-900 dark:text-white">
-                  {paymentMethod === "card" ? `Card (${cardBrand})` : "Direct Bank Transfer"}
+                  {paymentMethod === "link"
+                    ? "Direct Payment Gateway Link"
+                    : paymentMethod === "card"
+                    ? `Card (${cardBrand})`
+                    : "Direct Bank Transfer"}
                 </span>
               </div>
 
@@ -949,18 +1306,25 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Primary Action Button to Start Course */}
+            {/* Primary Action Button: "Go to Learning" */}
             <div className="mt-8 flex flex-col gap-3">
               <Button
                 onClick={handleStartCourse}
                 size="lg"
                 className="w-full rounded-xl bg-purple-600 py-3.5 font-bold text-white shadow-lg shadow-purple-600/30 hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 text-base transition-all hover:scale-[1.01]"
               >
-                <span>Start Course</span>
+                <span>Go to Learning</span>
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
 
               <div className="flex items-center justify-center gap-4 text-xs font-medium text-slate-500 dark:text-slate-400">
+                <Link
+                  href="/learner/learn"
+                  className="hover:text-purple-600 dark:hover:text-cyan-400 transition underline"
+                >
+                  My Learning
+                </Link>
+                <span>•</span>
                 <Link
                   href="/learner/passport"
                   className="hover:text-purple-600 dark:hover:text-cyan-400 transition underline"

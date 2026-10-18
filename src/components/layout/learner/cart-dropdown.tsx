@@ -64,7 +64,11 @@ export function CartDropdown() {
                             {item.title}
                           </h4>
                           <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            {item.price === 0 ? "Free" : `₦${item.price.toLocaleString()}`}
+                            {item.price === 0
+                              ? "Free"
+                              : (item.quantity && item.quantity > 1)
+                              ? `₦${(item.price * item.quantity).toLocaleString()} (${item.quantity} × ₦${item.price.toLocaleString()})`
+                              : `₦${item.price.toLocaleString()}`}
                           </div>
                         </div>
                         <button

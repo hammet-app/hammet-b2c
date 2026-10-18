@@ -31,12 +31,12 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
   }, []);
 
   useEffect(() => {
-    if (!accessToken || !schoolId) return;
+    if (!schoolId) return;
 
     async function fetchCourses() {
       try {
         setLoading(true);
-        const data = await learnerApi.getAiSchoolCourses(schoolId, accessToken!, refreshToken);
+        const data = await learnerApi.getAiSchoolCourses(schoolId, accessToken ?? "", refreshToken);
         setCourses(data.courses.sort((a, b) => (a.position || 0) - (b.position || 0)));
         setError(null);
       } catch (err: unknown) {

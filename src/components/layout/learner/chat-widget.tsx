@@ -35,14 +35,14 @@ export function ChatWidget() {
           className="group relative flex h-15 w-15 items-center justify-center transition-all duration-300 select-none"
         >
           {/* Ambient Multi-Layer Glow */}
-          <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-purple-600 via-indigo-500 to-cyan-500 opacity-40 blur-xl group-hover:opacity-75 transition-opacity animate-pulse" />
+          <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-purple-600 via-indigo-500 to-cyan-500 opacity-40 blur-xl group-hover:opacity-75 transition-opacity animate-pulse dark:opacity-20" />
 
           {isOpen ? (
             <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-slate-900 text-white shadow-2xl backdrop-blur-xl dark:bg-white dark:text-slate-950">
               <X className="h-6 w-6" />
             </div>
           ) : (
-            <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-purple-400/50 bg-gradient-to-tr from-purple-700 via-purple-600 to-indigo-600 shadow-xl shadow-purple-600/40 backdrop-blur-xl transition-transform group-hover:scale-105">
+            <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-purple-400/50 bg-gradient-to-tr from-purple-700 via-purple-600 to-indigo-600 shadow-xl shadow-purple-600/40 backdrop-blur-xl transition-transform group-hover:scale-105 dark:shadow-purple-900/25">
               {/* Floating 3D Bubble Image */}
               <motion.div
                 animate={{ y: [0, -3, 0] }}
@@ -211,7 +211,7 @@ export function ChatWidget() {
                 <Link
                   href="/learner/chat"
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:bg-purple-700 transition-colors"
+                  className="flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:bg-purple-700 transition-colors dark:bg-purple-800/80 dark:border dark:border-purple-500/30 dark:hover:bg-purple-700/80"
                 >
                   <span>Explore Full Community Hub</span>
                   <ChevronRight className="h-3.5 w-3.5" />

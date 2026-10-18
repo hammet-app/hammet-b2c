@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "lenis/dist/lenis.css";
 @config "../../tailwind.config.ts";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -93,9 +94,7 @@
   --color-danger-dark:    #f87171; /* Bright red text */
 }
 
-html {
-  scroll-behavior: smooth;
-}
+/* Lenis manages virtual smooth scrolling at 60/120fps; avoid native CSS scroll-behavior conflict */
 
 /* ── Driver.js tour popover — Hammet brand theme ── */
 .hammet-tour-popover {

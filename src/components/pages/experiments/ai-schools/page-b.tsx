@@ -40,12 +40,10 @@ export default function AiSchoolsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!accessToken) return;
-
     async function fetchSchools() {
       try {
         setLoading(true);
-        const data = await learnerApi.getAiSchools(accessToken!, refreshToken);
+        const data = await learnerApi.getAiSchools(accessToken ?? "", refreshToken);
         setSchools(data.aiSchools);
         setError(null);
       } catch (err: unknown) {

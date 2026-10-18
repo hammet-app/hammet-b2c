@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User, Settings, LogOut, Heart, Crown } from "lucide-react";
+import { User, Settings, LogOut, Heart, Crown, LifeBuoy } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useLearnerStore } from "@/lib/store/use-learner-store";
@@ -102,6 +102,13 @@ export function ProfileDropdown() {
               >
                 <Heart className="h-4 w-4 text-slate-400" />
                 Wishlist
+              </Link>
+              <Link
+                href="/learner/support"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-purple-600 dark:text-slate-200 dark:hover:bg-white/[0.05] dark:hover:text-cyan-400"
+              >
+                <LifeBuoy className="h-4 w-4 text-slate-400" />
+                Support &amp; Help
               </Link>
             </div>
 
