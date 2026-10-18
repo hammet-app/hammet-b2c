@@ -72,9 +72,7 @@ import {
   DoodleGroovy,
   DoodlePeekingCoder,
   DoodlePeekingGirl,
-  DoodlePeekingBot,
 } from "@/components/ui/open-doodles";
-import { ExpandingCoursePanels } from "@/components/ui/expanding-course-panels";
 
 const testimonials = [
   {
@@ -125,54 +123,30 @@ const courses = [
   {
     number: "01",
     title: "Introduction to AI",
-    badge: "Foundations",
-    level: "Beginner Friendly",
-    duration: "7 modules • 4 hours",
-    description: "What it is, what it isn't, and how to talk about it without bluffing. Build intuitive mental models of neural weights, training loops, and real capabilities.",
-    topics: ["How AI learns", "Capabilities", "Limitations", "Neural weights", "Embeddings"],
-    capstone: "Interactive LLM capability diagnostic matrix",
-    image: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&q=80&w=800",
-    gradient: "from-purple-600/20 via-indigo-600/10 to-transparent",
-    icon: NeuroBotIcon,
+    description:
+      "What it is, what it isn't, and how to talk about it without bluffing.",
+    topics: ["How AI learns", "Capabilities", "Limitations"],
   },
   {
     number: "02",
     title: "Generative AI Fundamentals",
-    badge: "Core LLMs",
-    level: "Hands-on",
-    duration: "6 modules • 5 hours",
-    description: "How transformer models produce text, code, and reasoning tokens—and where hallucination actually originates in latent space.",
-    topics: ["Attention Math", "Token Probability", "Hallucination Audits", "Context Windows"],
-    capstone: "Live hallucination detector & context guardrail",
-    image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800",
-    gradient: "from-blue-600/20 via-cyan-600/10 to-transparent",
-    icon: TensorCubieIcon,
+    description:
+      "How tools like ChatGPT produce what they do, and where they get it wrong.",
+    topics: ["Generative AI", "Models", "Output evaluation"],
   },
   {
     number: "03",
     title: "AI Tools for Everyday Work",
-    badge: "Productivity",
-    level: "Practical",
-    duration: "7 modules • 4.5 hours",
-    description: "Faster research, cleaner writing, less administrative drudgery. The autonomous tools and Model Context Protocol workflows worth your time.",
-    topics: ["Cursor AI", "LangGraph Swarms", "MCP Integrations", "Database RAG"],
-    capstone: "Autonomous meeting & customer analysis agent swarm",
-    image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=800",
-    gradient: "from-amber-600/20 via-orange-600/10 to-transparent",
-    icon: QuantumBulbIcon,
+    description:
+      "Faster research, cleaner writing, less admin. The tools worth your time.",
+    topics: ["Research", "Writing", "Workflows"],
   },
   {
     number: "04",
     title: "Prompt Engineering",
-    badge: "Advanced",
-    level: "Architect Level",
-    duration: "6 modules • 5 hours",
-    description: "Move beyond guesswork. Design structured system instructions, DSPy automated prompts, few-shot chains, and reliable JSON schema outputs.",
-    topics: ["Few-Shot Chains", "DSPy Optimizers", "JSON Enforcement", "Red-Teaming"],
-    capstone: "Production-grade customer support reasoning pipeline",
-    image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=800",
-    gradient: "from-emerald-600/20 via-teal-600/10 to-transparent",
-    icon: TerminalDoodleIcon,
+    description:
+      "How to ask, so you get answers you can actually use.",
+    topics: ["Prompt design", "Refinement", "Real tasks"],
   },
 ];
 
@@ -1132,49 +1106,75 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Courses (Image 4 feedback - Upgraded Interactive Course Cards) */}
+      {/* Courses (Reverted to Variant A design as requested) */}
       <section id="courses" className="relative z-10 py-24 sm:py-32 scroll-mt-24 sm:scroll-mt-28">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-purple-500/20 bg-purple-500/10 px-3.5 py-1 text-xs font-bold text-purple-700 dark:text-cyan-300">
-              <Layers className="h-3.5 w-3.5 text-purple-600 dark:text-cyan-400" />
-              <span>THE FOUNDATION // PRODUCTION TRACKS</span>
-            </div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-purple-600 dark:text-purple-400">
+              The foundation
+            </p>
 
             <h2 className="mt-4 text-4xl font-black tracking-[-0.05em] text-[#17131F] dark:text-white sm:text-5xl lg:text-6xl">
               Four courses.
               <br />
-              <span className="bg-gradient-to-r from-purple-700 via-violet-600 to-cyan-500 bg-clip-text text-transparent dark:from-purple-300 dark:via-violet-200 dark:to-cyan-300">
+              <span className="text-slate-400 dark:text-slate-600">
                 One useful foundation.
               </span>
             </h2>
 
-            <p className="mt-6 max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-400 sm:text-lg">
-              Each course is 6 to 7 hands-on modules. Small enough to finish over a weekend, deep enough to build real production AI systems.
+            <p className="mt-6 max-w-2xl text-base leading-7 text-slate-500 dark:text-slate-400 sm:text-lg">
+              Each course is 6 to 7 modules. Small enough to finish,
+              deep enough to matter.
             </p>
           </div>
 
-          {/* Interactive Expanding Course Panels (Reference Image 3) */}
-          <div className="relative mt-14">
-            {/* Peeking AI Bot resting on top edge of expanding panels */}
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ type: "spring", stiffness: 220, damping: 20 }}
-              className="absolute top-0 right-4 sm:right-12 -translate-y-[calc(100%-2px)] z-20 pointer-events-none flex flex-row items-end gap-3 select-none"
-            >
-              <div className="mb-3 rounded-2xl border border-purple-200/90 bg-white/95 px-3.5 py-1.5 text-xs font-bold text-slate-800 shadow-[0_6px_24px_rgba(0,0,0,0.1)] dark:border-white/10 dark:bg-slate-900/95 dark:text-cyan-300">
-                Hover any panel to expand track &amp; labs! ⚡
-              </div>
-              <DoodlePeekingBot
-                className="h-20 sm:h-24 w-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.08)] select-none pointer-events-none"
-                accentColor="#06B6D4"
-              />
-            </motion.div>
+          <div className="mt-14 grid gap-4 md:grid-cols-2">
+            {courses.map((course, index) => (
+              <motion.article
+                key={course.number}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{
+                  duration: 0.5,
+                  delay: index * 0.06,
+                }}
+                className="group relative overflow-hidden rounded-[1.75rem] border border-black/[0.07] bg-white/70 p-7 backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-950/[0.06] dark:border-white/[0.07] dark:bg-white/[0.035] dark:hover:border-purple-400/20 dark:hover:bg-white/[0.05] dark:hover:shadow-black/20 sm:p-8"
+              >
+                <div className="flex items-start justify-between">
+                  <span className="text-sm font-bold tracking-[0.08em] text-purple-600 dark:text-purple-400">
+                    {course.number}
+                  </span>
 
-            {/* Accordion Panels Component with Cursor Animation */}
-            <ExpandingCoursePanels />
+                  <ArrowUpRight className="h-5 w-5 text-slate-300 transition duration-300 group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-purple-500 dark:text-slate-600 dark:group-hover:text-purple-400" />
+                </div>
+
+                <h3 className="mt-12 max-w-md text-2xl font-bold tracking-[-0.035em] text-[#17131F] dark:text-white sm:text-[1.75rem]">
+                  {course.title}
+                </h3>
+
+                <p className="mt-4 max-w-lg text-sm leading-6 text-slate-500 dark:text-slate-400 sm:text-base">
+                  {course.description}
+                </p>
+
+                <div className="mt-7 flex flex-wrap gap-2">
+                  {course.topics.map((topic) => (
+                    <span
+                      key={topic}
+                      className="rounded-full bg-[#F5F3FF] px-3 py-1.5 text-[11px] font-semibold text-slate-500 dark:bg-white/[0.05] dark:text-slate-400"
+                    >
+                      {topic}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="mt-8 flex items-center gap-2 text-xs font-semibold text-slate-400 dark:text-slate-500">
+                  <span>6–7 modules</span>
+                  <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+                  <span>Practical</span>
+                </div>
+              </motion.article>
+            ))}
           </div>
         </div>
       </section>
