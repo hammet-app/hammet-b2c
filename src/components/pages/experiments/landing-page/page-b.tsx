@@ -123,30 +123,54 @@ const courses = [
   {
     number: "01",
     title: "Introduction to AI",
+    level: "Foundations",
+    modules: "7 modules",
+    duration: "4 hours",
     description:
-      "What it is, what it isn't, and how to talk about it without bluffing.",
-    topics: ["How AI learns", "Capabilities", "Limitations"],
+      "What it is, what it isn't, and how to talk about it without bluffing. Build intuitive mental models of neural weights, training loops, and real capabilities.",
+    topics: ["How AI learns", "Capabilities", "Limitations", "Neural weights"],
+    numberBg: "bg-purple-100/90 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 border border-purple-500/20",
+    accentGradient: "from-purple-500/15 via-violet-500/10 to-transparent",
+    icon: NeuroBotIcon,
   },
   {
     number: "02",
     title: "Generative AI Fundamentals",
+    level: "Core LLMs",
+    modules: "6 modules",
+    duration: "5 hours",
     description:
-      "How tools like ChatGPT produce what they do, and where they get it wrong.",
-    topics: ["Generative AI", "Models", "Output evaluation"],
+      "How tools like ChatGPT produce what they do, and where they get it wrong. Demystify token probabilities, latent spaces, and attention matrices.",
+    topics: ["Generative AI", "Models", "Attention Math", "Output evaluation"],
+    numberBg: "bg-indigo-100/90 text-indigo-700 dark:bg-indigo-500/20 dark:text-cyan-300 border border-indigo-500/20",
+    accentGradient: "from-indigo-500/15 via-cyan-500/10 to-transparent",
+    icon: TensorCubieIcon,
   },
   {
     number: "03",
     title: "AI Tools for Everyday Work",
+    level: "Productivity",
+    modules: "7 modules",
+    duration: "4.5 hours",
     description:
-      "Faster research, cleaner writing, less admin. The tools worth your time.",
-    topics: ["Research", "Writing", "Workflows"],
+      "Faster research, cleaner writing, less admin drudgery. Master Cursor AI, MCP protocols, and autonomous tool-augmented workflows.",
+    topics: ["Research", "Writing", "Workflows", "MCP Tools"],
+    numberBg: "bg-amber-100/90 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-500/20",
+    accentGradient: "from-amber-500/15 via-orange-500/10 to-transparent",
+    icon: QuantumBulbIcon,
   },
   {
     number: "04",
     title: "Prompt Engineering",
+    level: "Architect Level",
+    modules: "6 modules",
+    duration: "5 hours",
     description:
-      "How to ask, so you get answers you can actually use.",
-    topics: ["Prompt design", "Refinement", "Real tasks"],
+      "How to ask, so you get answers you can actually use. Structure reliable system instructions, few-shot reasoning chains, and strict JSON output formats.",
+    topics: ["Prompt design", "Refinement", "Few-shot chains", "Real tasks"],
+    numberBg: "bg-emerald-100/90 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-500/20",
+    accentGradient: "from-emerald-500/15 via-teal-500/10 to-transparent",
+    icon: TerminalDoodleIcon,
   },
 ];
 
@@ -1106,75 +1130,118 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Courses (Reverted to Variant A design as requested) */}
+      {/* Courses (Production AI Tracks) */}
       <section id="courses" className="relative z-10 py-24 sm:py-32 scroll-mt-24 sm:scroll-mt-28">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
           <div className="max-w-3xl">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-purple-600 dark:text-purple-400">
-              The foundation
-            </p>
+            <div className="inline-flex items-center gap-2 rounded-full border border-purple-500/20 bg-purple-500/10 px-3.5 py-1 text-xs font-bold text-purple-700 dark:border-cyan-400/20 dark:bg-cyan-400/10 dark:text-cyan-300">
+              <Layers className="h-3.5 w-3.5 text-purple-600 dark:text-cyan-400" />
+              <span>THE FOUNDATION // PRODUCTION TRACKS</span>
+            </div>
 
             <h2 className="mt-4 text-4xl font-black tracking-[-0.05em] text-[#17131F] dark:text-white sm:text-5xl lg:text-6xl">
               Four courses.
               <br />
-              <span className="text-slate-400 dark:text-slate-600">
+              <span className="bg-gradient-to-r from-purple-700 via-violet-600 to-cyan-500 bg-clip-text text-transparent dark:from-purple-300 dark:via-violet-200 dark:to-cyan-300">
                 One useful foundation.
               </span>
             </h2>
 
-            <p className="mt-6 max-w-2xl text-base leading-7 text-slate-500 dark:text-slate-400 sm:text-lg">
-              Each course is 6 to 7 modules. Small enough to finish,
-              deep enough to matter.
+            <p className="mt-6 max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-400 sm:text-lg">
+              Each course is 6 to 7 hands-on modules. Small enough to finish over a weekend, deep enough to build real production AI systems.
             </p>
           </div>
 
-          <div className="mt-14 grid gap-4 md:grid-cols-2">
-            {courses.map((course, index) => (
-              <motion.article
-                key={course.number}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-80px" }}
-                transition={{
-                  duration: 0.5,
-                  delay: index * 0.06,
-                }}
-                className="group relative overflow-hidden rounded-[1.75rem] border border-black/[0.07] bg-white/70 p-7 backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-950/[0.06] dark:border-white/[0.07] dark:bg-white/[0.035] dark:hover:border-purple-400/20 dark:hover:bg-white/[0.05] dark:hover:shadow-black/20 sm:p-8"
-              >
-                <div className="flex items-start justify-between">
-                  <span className="text-sm font-bold tracking-[0.08em] text-purple-600 dark:text-purple-400">
-                    {course.number}
-                  </span>
+          <div className="mt-14 grid gap-6 md:grid-cols-2">
+            {courses.map((course, index) => {
+              const Icon = course.icon;
+              return (
+                <motion.div
+                  key={course.number}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{
+                    duration: 0.5,
+                    delay: index * 0.08,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  whileHover={{ y: -6 }}
+                >
+                  <Link
+                    href="/learner/ai-schools"
+                    className="group relative flex h-full flex-col justify-between overflow-hidden rounded-[2rem] border border-black/[0.08] bg-white/80 p-7 sm:p-9 shadow-lg backdrop-blur-xl transition-all duration-300 hover:border-purple-500/40 hover:shadow-2xl hover:shadow-purple-950/[0.08] dark:border-white/[0.08] dark:bg-[#120E1E]/90 dark:hover:border-cyan-400/30 dark:hover:shadow-cyan-950/20"
+                  >
+                    {/* Ambient corner radial aura on hover */}
+                    <div
+                      className={`pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br ${course.accentGradient} blur-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100`}
+                    />
 
-                  <ArrowUpRight className="h-5 w-5 text-slate-300 transition duration-300 group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-purple-500 dark:text-slate-600 dark:group-hover:text-purple-400" />
-                </div>
+                    <div>
+                      {/* Top Header Row */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <span
+                            className={`flex h-8 w-8 items-center justify-center rounded-xl font-mono text-xs font-black shadow-xs ${course.numberBg}`}
+                          >
+                            {course.number}
+                          </span>
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            {course.level}
+                          </span>
+                        </div>
 
-                <h3 className="mt-12 max-w-md text-2xl font-bold tracking-[-0.035em] text-[#17131F] dark:text-white sm:text-[1.75rem]">
-                  {course.title}
-                </h3>
+                        <div className="flex items-center gap-3">
+                          <div className="hidden sm:block opacity-75 transition-all duration-300 group-hover:opacity-100 group-hover:scale-110">
+                            <Icon size="sm" />
+                          </div>
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full border border-black/[0.06] bg-slate-100/70 text-slate-400 transition-all duration-300 group-hover:scale-105 group-hover:border-purple-500/30 group-hover:bg-purple-600 group-hover:text-white dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400 dark:group-hover:border-cyan-400/30 dark:group-hover:bg-cyan-400 dark:group-hover:text-slate-950 shadow-xs">
+                            <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                          </div>
+                        </div>
+                      </div>
 
-                <p className="mt-4 max-w-lg text-sm leading-6 text-slate-500 dark:text-slate-400 sm:text-base">
-                  {course.description}
-                </p>
+                      {/* Title & Description */}
+                      <h3 className="mt-7 text-2xl sm:text-[1.65rem] font-black tracking-[-0.035em] text-slate-950 transition-colors duration-300 group-hover:text-purple-600 dark:text-white dark:group-hover:text-cyan-300">
+                        {course.title}
+                      </h3>
 
-                <div className="mt-7 flex flex-wrap gap-2">
-                  {course.topics.map((topic) => (
-                    <span
-                      key={topic}
-                      className="rounded-full bg-[#F5F3FF] px-3 py-1.5 text-[11px] font-semibold text-slate-500 dark:bg-white/[0.05] dark:text-slate-400"
-                    >
-                      {topic}
-                    </span>
-                  ))}
-                </div>
+                      <p className="mt-3.5 text-sm sm:text-base leading-relaxed text-slate-600 dark:text-slate-400">
+                        {course.description}
+                      </p>
 
-                <div className="mt-8 flex items-center gap-2 text-xs font-semibold text-slate-400 dark:text-slate-500">
-                  <span>6–7 modules</span>
-                  <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-                  <span>Practical</span>
-                </div>
-              </motion.article>
-            ))}
+                      {/* Topic Tags */}
+                      <div className="mt-6 flex flex-wrap gap-2">
+                        {course.topics.map((topic) => (
+                          <span
+                            key={topic}
+                            className="rounded-full border border-purple-500/10 bg-purple-50/70 px-3 py-1 text-xs font-semibold text-purple-700 transition-colors duration-200 group-hover:border-purple-500/25 group-hover:bg-purple-100/70 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:group-hover:border-cyan-400/25 dark:group-hover:bg-cyan-400/10 dark:group-hover:text-cyan-200"
+                          >
+                            {topic}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Bottom Meta & Interactive CTA */}
+                    <div className="mt-8 flex items-center justify-between border-t border-black/[0.05] pt-4 text-xs font-semibold text-slate-500 dark:border-white/[0.06] dark:text-slate-400">
+                      <div className="flex items-center gap-2">
+                        <span className="relative flex h-2 w-2">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                        </span>
+                        <span>{course.modules}</span>
+                        <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+                        <span>{course.duration}</span>
+                      </div>
+                      <span className="inline-flex items-center gap-1 font-bold text-purple-600 transition-all duration-300 group-hover:translate-x-1 dark:text-cyan-400">
+                        Explore track →
+                      </span>
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -1267,46 +1334,47 @@ export default function HomePage() {
       </section>
 
       {/* Fellowship */}
-      <section id="fellowship" className="relative z-10 scroll-mt-24 sm:scroll-mt-28">
-        <div className="relative mx-auto max-w-7xl px-5 pb-24 sm:px-8 lg:px-10 lg:pb-32">
-          {/* Peeking Coder Fellow resting cleanly on Fellowship card top border */}
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ type: "spring", stiffness: 220, damping: 20 }}
-            className="absolute top-0 right-8 sm:right-20 -translate-y-[calc(100%-2px)] z-20 pointer-events-none flex flex-row items-end gap-3 select-none"
-          >
-            <div className="mb-3 rounded-2xl border border-cyan-400/30 bg-slate-900/95 px-3.5 py-1.5 text-xs font-bold text-cyan-200 shadow-[0_6px_24px_rgba(0,0,0,0.3)]">
-              Admissions rolling for Cohort 2026! 🚀
-            </div>
-            <DoodlePeekingCoder
-              className="h-20 sm:h-24 w-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.2)] select-none pointer-events-none"
-              accentColor="#38BDF8"
-            />
-          </motion.div>
+      <section
+        id="fellowship"
+        className="relative z-10 border-y border-white/10 bg-[#140F22] py-24 sm:py-32 dark:bg-[#0A0714] scroll-mt-24 sm:scroll-mt-28"
+      >
+        {/* Ambient Background Glows & Grid (spanning 100% full screen width) */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div
+            className="absolute inset-0 opacity-[0.07]"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.8) 1px, transparent 1px)",
+              backgroundSize: "48px 48px",
+            }}
+          />
+          <div className="absolute -right-24 -top-32 h-[520px] w-[520px] rounded-full bg-cyan-400/20 blur-[130px]" />
+          <div className="absolute -bottom-32 -left-24 h-[520px] w-[520px] rounded-full bg-purple-600/25 blur-[130px]" />
+        </div>
 
-          <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-[#140F22] px-7 py-12 shadow-2xl shadow-purple-950/25 dark:bg-[#0F0B1A] dark:shadow-black/60 sm:px-12 sm:py-16 lg:px-16 lg:py-20">
-            {/* Ambient Background Glows */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 opacity-[0.07]"
-              style={{
-                backgroundImage:
-                  "linear-gradient(rgba(255,255,255,.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.8) 1px, transparent 1px)",
-                backgroundSize: "48px 48px",
-              }}
-            />
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute -right-24 -top-32 h-[520px] w-[520px] rounded-full bg-cyan-400/20 blur-[130px]"
-            />
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute -bottom-32 -left-24 h-[520px] w-[520px] rounded-full bg-purple-600/25 blur-[130px]"
-            />
+        {/* Peeking Coder Fellow resting cleanly on Fellowship section top border */}
+        <div className="pointer-events-none absolute top-0 left-0 right-0 z-20">
+          <div className="relative mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ type: "spring", stiffness: 220, damping: 20 }}
+              className="absolute top-0 right-8 sm:right-20 -translate-y-[calc(100%-2px)] flex flex-row items-end gap-3 select-none"
+            >
+              <div className="mb-3 rounded-2xl border border-cyan-400/30 bg-slate-900/95 px-3.5 py-1.5 text-xs font-bold text-cyan-200 shadow-[0_6px_24px_rgba(0,0,0,0.3)]">
+                Admissions rolling for Cohort 2026! 🚀
+              </div>
+              <DoodlePeekingCoder
+                className="h-20 sm:h-24 w-auto drop-shadow-[0_8px_16px_rgba(0,0,0,0.2)] select-none pointer-events-none"
+                accentColor="#38BDF8"
+              />
+            </motion.div>
+          </div>
+        </div>
 
-            {/* Header Content */}
+        <div className="relative mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
+          {/* Header Content */}
             <div className="relative z-10 max-w-3xl">
               <div className="inline-flex items-center gap-2.5 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-xs font-bold text-cyan-300">
                 <span className="relative flex h-2 w-2">
@@ -1542,7 +1610,6 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-        </div>
       </section>
 
       {/* ── SECTION: UPCOMING LIVE MASTERCLASSES & AI LABS (from Image 4) ── */}
