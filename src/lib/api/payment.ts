@@ -68,7 +68,8 @@ export const paymentApi = {
           reference,
           callback_url: payload.callbackUrl || `${typeof window !== "undefined" ? window.location.origin : ""}/learner/checkout/callback`,
         },
-        token
+        token,
+        { skipSessionExpired: true }
       );
 
       const url =
@@ -122,7 +123,8 @@ export const paymentApi = {
     try {
       const response = await apiClient.get<VerifyPaymentResult>(
         `/learner/payment/verify/${reference}`,
-        token
+        token,
+        { skipSessionExpired: true }
       );
       return { success: true, data: response };
     } catch {

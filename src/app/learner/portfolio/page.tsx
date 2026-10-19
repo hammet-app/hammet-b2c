@@ -300,8 +300,8 @@ export default function PortfolioPage() {
                     <span className="font-bold text-purple-600 dark:text-cyan-400">{badges.length} Credentials</span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500 dark:text-slate-400">A100 GPU Hours</span>
-                    <span className="font-bold text-amber-600">42.8 Logged</span>
+                    <span className="text-slate-500 dark:text-slate-400">Lab Practice Hours</span>
+                    <span className="font-bold text-amber-600">42.8 Hours</span>
                   </div>
                 </div>
 

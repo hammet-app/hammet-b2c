@@ -951,14 +951,14 @@ export default function HomePage() {
                   <div className="flex items-center gap-2">
                     <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
                     <span className="text-xs font-bold text-slate-900 dark:text-white">
-                      Cloud GPU Sandbox
+                      Interactive AI Sandbox
                     </span>
                   </div>
                   <p className="mt-1 text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                    NVIDIA A100 (80GB) Active
+                    Python & AI Runtime Ready
                   </p>
                   <div className="mt-2 flex items-center justify-between text-[11px] font-semibold text-purple-600 dark:text-cyan-400">
-                    <span>34.5 hrs compute remaining →</span>
+                    <span>Start practice lab →</span>
                   </div>
                 </Link>
               </motion.div>

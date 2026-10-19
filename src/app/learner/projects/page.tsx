@@ -164,13 +164,13 @@ export default function ProjectsPage() {
             {
               label: "In Progress Labs",
               value: `${inProgressCount} Active`,
-              sub: "Cloud GPU Sandboxes Allocated",
+              sub: "Interactive Coding Sandboxes",
               color: "text-purple-600 dark:text-cyan-400",
             },
             {
-              label: "GPU Compute Logged",
+              label: "Lab Practice Time",
               value: "42.8 hrs",
-              sub: "NVIDIA A100 Tensor Cloud",
+              sub: "Cloud Practice Environment",
               color: "text-amber-600 dark:text-amber-400",
             },
             {
@@ -430,17 +430,17 @@ export default function ProjectsPage() {
                             {launchingId === project.id ? (
                               <>
                                 <span className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                                Allocating A100 GPU...
+                                Launching Practice Lab...
                               </>
                             ) : sandboxLaunched[project.id] ? (
                               <>
                                 <CheckCircle2 className="h-3.5 w-3.5" />
-                                Sandbox Active (Port 8080)
+                                Practice Lab Active (Port 8080)
                               </>
                             ) : (
                               <>
                                 <Play className="h-3.5 w-3.5 fill-current" />
-                                Launch Cloud GPU Sandbox
+                                Launch Practice Lab
                               </>
                             )}
                           </button>

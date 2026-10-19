@@ -2,10 +2,12 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
-interface RequestOptions {
+export interface RequestOptions {
   token?: string | null;
   /** Pass a refreshToken fn so the client can retry once on 401 */
   onRefresh?: () => Promise<string | null>;
+  /** If true, do not broadcast global session-expired event on 401 */
+  skipSessionExpired?: boolean;
 }
 async function buildApiError(
     response: Response
@@ -59,7 +61,7 @@ async function requestForm<T>(
     if (newToken) {
       res = await makeRequest(newToken);
     } else {
-      if (typeof window !== "undefined") {
+      if (!options.skipSessionExpired && typeof window !== "undefined") {
         window.dispatchEvent(new Event("session-expired"));
       }
       throw new ApiError(401, null, "Session expired");
@@ -67,7 +69,7 @@ async function requestForm<T>(
   }
 
   if (!res.ok) {
-    if (res.status === 401 && !path.includes("/auth/") && typeof window !== "undefined") {
+    if (res.status === 401 && !path.includes("/auth/") && !options.skipSessionExpired && typeof window !== "undefined") {
       window.dispatchEvent(new Event("session-expired"));
     }
     throw await buildApiError(res)
@@ -116,7 +118,7 @@ async function request<T>(
       });
 
       if (!retryRes.ok) {
-        if (retryRes.status === 401 && typeof window !== "undefined") {
+        if (retryRes.status === 401 && !options.skipSessionExpired && typeof window !== "undefined") {
           window.dispatchEvent(new Event("session-expired"));
         }
         throw await buildApiError(retryRes)
@@ -126,14 +128,14 @@ async function request<T>(
     }
 
     // Refresh failed — throw so the dashboard guard can redirect to login
-    if (typeof window !== "undefined") {
+    if (!options.skipSessionExpired && typeof window !== "undefined") {
       window.dispatchEvent(new Event("session-expired"));
     }
     throw new ApiError(401, null, "Session expired");
   }
 
   if (!res.ok) {
-    if (res.status === 401 && !path.includes("/auth/") && typeof window !== "undefined") {
+    if (res.status === 401 && !path.includes("/auth/") && !options.skipSessionExpired && typeof window !== "undefined") {
       window.dispatchEvent(new Event("session-expired"));
     }
     throw await buildApiError(res);

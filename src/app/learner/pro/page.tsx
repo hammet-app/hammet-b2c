@@ -95,7 +95,7 @@ export default function HammetProPage() {
           </h1>
 
           <p className="mt-4 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-            Gain unfair advantages in the global AI job market. Unlock bespoke passport holographic styling, recruiter talent search prominence, dedicated NVIDIA A100 GPU sandboxes, and executive portfolio templates.
+            Gain an edge in your AI learning journey. Unlock custom passport credential themes, verified recruiter badges, interactive hands-on coding sandboxes, and developer portfolio templates.
           </p>
 
           {/* Current Membership Status Badge */}
@@ -198,7 +198,7 @@ export default function HammetProPage() {
               <button
                 disabled={!isPro}
                 onClick={handleTogglePro}
-                className="w-full rounded-xl border border-slate-200 py-3 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-slate-300 transition"
+                className="w-full rounded-xl border border-slate-200 py-3 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white transition"
               >
                 {!isPro ? "Current Plan" : "Downgrade to Standard"}
               </button>
@@ -227,7 +227,7 @@ export default function HammetProPage() {
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
-                Unlocks bespoke passport customization, recruiter search priority, 4 developer portfolio themes, and A100 GPU compute.
+                Unlocks custom passport styling, recruiter search prominence, 4 developer portfolio themes, and interactive AI practice sandboxes.
               </p>
 
               <div className="space-y-3 border-t border-amber-500/20 pt-5 text-xs text-slate-700 dark:text-slate-200">
@@ -245,7 +245,7 @@ export default function HammetProPage() {
                 </div>
                 <div className="flex items-center gap-2.5">
                   <Cpu className="h-4 w-4 text-cyan-500 shrink-0" />
-                  <span>100 Hours/Month Dedicated NVIDIA A100 GPU Cloud</span>
+                  <span>Interactive Hands-on AI Coding Sandboxes</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <Code2 className="h-4 w-4 text-purple-600 dark:text-purple-400 shrink-0" />
@@ -348,10 +348,10 @@ export default function HammetProPage() {
               <Cpu className="h-6 w-6" />
             </div>
             <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-              NVIDIA A100 GPU Clusters
+              Interactive AI Practice Labs
             </h3>
             <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              No need to configure local drivers or spend thousands on cloud compute. Launch interactive JupyterLab and PyTorch 2.3 sandboxes with 80GB VRAM directly in your browser.
+              Learn by doing directly in your browser. No complex terminal setup, driver installations, or expensive hardware needed — start writing, testing, and running practical AI models instantly.
             </p>
           </div>
 
@@ -385,7 +385,7 @@ export default function HammetProPage() {
             </button>
             <Link
               href="/learner/portfolio"
-              className="rounded-xl border border-black/[0.1] bg-white px-5 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-white transition"
+              className="rounded-xl border border-black/[0.1] bg-white px-5 py-3 text-xs font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/15 dark:hover:text-white transition shadow-xs"
             >
               View Your Portfolio →
             </Link>

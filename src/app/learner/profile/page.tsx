@@ -355,7 +355,7 @@ export default function LearnerProfilePage() {
                 <span>•</span>
                 <span className="flex items-center gap-1.5">
                   <Cpu className="h-4 w-4 text-cyan-500" />
-                  <strong className="text-slate-900 dark:text-white">A100 GPU Quota Active</strong>
+                  <strong className="text-slate-900 dark:text-white">AI Practice Lab Active</strong>
                 </span>
               </div>
             </div>
@@ -521,7 +521,7 @@ export default function LearnerProfilePage() {
                     Pro Privileges Active
                   </h4>
                   <p className="mt-1 font-poppins text-xs text-slate-300 leading-relaxed">
-                    Custom passport themes, verified recruiter badges, unmetered A100 GPU sandboxes, and portfolio themes unlocked.
+                    Custom passport themes, verified recruiter badges, interactive AI practice sandboxes, and portfolio themes unlocked.
                   </p>
                   <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-4">
                     <span className="font-poppins text-xs font-semibold text-amber-200/90">₦2,000 / month</span>
@@ -947,7 +947,7 @@ export default function LearnerProfilePage() {
                   title: "Completed Module 04: Production Agent Orchestration & DSPy",
                   date: "Today, 4:15 PM",
                   badge: "Module Verified",
-                  desc: "Chained autonomous reasoning loops with live unit tests in cloud GPU sandbox.",
+                  desc: "Chained autonomous reasoning loops with live unit tests in cloud AI learning sandbox.",
                 },
                 {
                   title: "Earned Skill Passport Badge: RAG Architecture & Milvus",
@@ -956,10 +956,10 @@ export default function LearnerProfilePage() {
                   desc: "Demonstrated contextual retrieval and vector indexing with sub-50ms latency.",
                 },
                 {
-                  title: "Provisioned Dedicated NVIDIA A100 Compute Sandbox",
+                  title: "Launched Interactive AI Practice Sandbox",
                   date: "3 days ago",
-                  badge: "Infrastructure",
-                  desc: "Allocated 80GB VRAM GPU runtime for fine-tuning open weights with LoRA.",
+                  badge: "Practice Lab",
+                  desc: "Ran hands-on code exercises for fine-tuning open weights with LoRA.",
                 },
                 {
                   title: "Joined Hammet AI Academy Cohort 2026",
