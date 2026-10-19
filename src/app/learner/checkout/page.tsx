@@ -35,7 +35,6 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils/utils";
 import { paymentApi, type PaymentLinkData } from "@/lib/api/payment";
-import { cartApi } from "@/lib/api/cart";
 
 type CheckoutStep = "review" | "payment" | "processing" | "success";
 
@@ -209,10 +208,7 @@ export default function CheckoutPage() {
       window.dispatchEvent(new Event("enrollment-updated"));
     }
 
-    // 4. Background sync with backend to clear server cart
-    cartApi.syncCart([], null, null).catch(() => {});
-
-    // 5. Background verification
+    // 4. Background verification
     const refToVerify = paymentLinkData?.reference || transactionRef || `TXN-HMT-${Math.floor(100000 + Math.random() * 900000)}`;
     paymentApi.verifyPayment(refToVerify).catch(() => {});
 

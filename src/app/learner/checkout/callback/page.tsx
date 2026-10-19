@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { useCart, CartItem } from "@/lib/store/use-cart";
 import { useAuth } from "@/lib/auth/auth-context";
 import { paymentApi } from "@/lib/api/payment";
-import { cartApi } from "@/lib/api/cart";
 
 function PaystackCallbackContent() {
   const searchParams = useSearchParams();
@@ -112,9 +111,8 @@ function PaystackCallbackContent() {
         paymentApi.verifyPayment(reference, accessToken).catch(() => {});
       }
 
-      // 5. Clear cart on server and local store
+      // 5. Clear cart on local store
       clearCart();
-      cartApi.syncCart([], null, accessToken).catch(() => {});
 
       // Short smooth verification delay for visual feedback
       setTimeout(() => {

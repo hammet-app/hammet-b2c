@@ -59,12 +59,12 @@ export function fromCartItemDto(dto: CartItemDto): Omit<DexieCartItem, 'createdA
 
 export const cartApi = {
   /**
-   * Fetch remote cart from backend.
+   * Fetch remote cart from backend using official API contract route (/learner/cart).
    * Fails gracefully if backend is unavailable or offline.
    */
   getCart: async (token?: string | null): Promise<CartApiResult<CartResponseDto>> => {
     try {
-      const data = await apiClient.get<CartResponseDto>("/cart", token, { skipSessionExpired: true });
+      const data = await apiClient.get<CartResponseDto>("/learner/cart", token, { skipSessionExpired: true });
       return { success: true, data };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to fetch remote cart";
@@ -73,81 +73,46 @@ export const cartApi = {
   },
 
   /**
-   * Sync the entire local cart with the backend.
+   * Sync the local cart.
+   * Note: The backend API contract does not implement a dedicated POST /cart/sync route.
+   * Primary local persistence is managed offline-first in Dexie/IndexedDB.
    */
   syncCart: async (
     items: DexieCartItem[],
     couponCode?: string | null,
     token?: string | null
   ): Promise<CartApiResult<CartResponseDto>> => {
-    try {
-      const payload: SyncCartPayloadDto = {
+    return {
+      success: true,
+      data: {
         items: items.map(toCartItemDto),
         coupon_code: couponCode ?? null,
-      };
-      const data = await apiClient.post<CartResponseDto>("/cart/sync", payload, token, { skipSessionExpired: true });
-      return { success: true, data };
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Cart sync failed";
-      return { success: false, error: msg };
-    }
+      },
+    };
   },
 
   /**
-   * Notify backend about an added item.
+   * Item mutation helpers:
+   * Local Dexie is the source of truth. Does not spam non-existent endpoints.
    */
   addItem: async (item: DexieCartItem, token?: string | null): Promise<CartApiResult<CartItemDto>> => {
-    try {
-      const payload = toCartItemDto(item);
-      const data = await apiClient.post<CartItemDto>("/cart/items", payload, token, { skipSessionExpired: true });
-      return { success: true, data };
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to add remote item";
-      return { success: false, error: msg };
-    }
+    return { success: true, data: toCartItemDto(item) };
   },
 
-  /**
-   * Update item quantity on backend.
-   */
   updateQuantity: async (
     id: string,
     quantity: number,
     token?: string | null
   ): Promise<CartApiResult<boolean>> => {
-    try {
-      await apiClient.patch<{ success: boolean }>(`/cart/items/${id}`, { quantity }, token, { skipSessionExpired: true });
-      return { success: true, data: true };
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to update remote item quantity";
-      return { success: false, error: msg };
-    }
+    return { success: true, data: true };
   },
 
-  /**
-   * Delete an item on the backend.
-   */
   removeItem: async (id: string, token?: string | null): Promise<CartApiResult<boolean>> => {
-    try {
-      await apiClient.delete<void>(`/cart/items/${id}`, undefined, token, { skipSessionExpired: true });
-      return { success: true, data: true };
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to remove remote item";
-      return { success: false, error: msg };
-    }
+    return { success: true, data: true };
   },
 
-  /**
-   * Clear the cart on the backend.
-   */
   clearCart: async (token?: string | null): Promise<CartApiResult<boolean>> => {
-    try {
-      await apiClient.delete<void>("/cart", undefined, token, { skipSessionExpired: true });
-      return { success: true, data: true };
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to clear remote cart";
-      return { success: false, error: msg };
-    }
+    return { success: true, data: true };
   },
 };
 

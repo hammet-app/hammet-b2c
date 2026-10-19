@@ -272,7 +272,7 @@ export default function AiSchoolsPage() {
                           <Button
                             variant="outline"
                             onClick={() => router.push("/learner/checkout")}
-                            className="w-full rounded-xl font-bold border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-cyan-500/40 dark:text-cyan-300"
+                            className="w-full rounded-xl font-bold border-purple-300 text-purple-700 bg-white hover:bg-purple-600 hover:text-white hover:border-purple-600 dark:border-cyan-400/60 dark:bg-cyan-500/10 dark:text-cyan-300 dark:hover:bg-white dark:hover:text-slate-950 dark:hover:border-white transition-all shadow-sm"
                           >
                             Proceed to Checkout →
                           </Button>
