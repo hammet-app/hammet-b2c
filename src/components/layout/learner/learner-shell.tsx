@@ -572,7 +572,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
           paddingLeft: isDesktop ? (collapsed ? 76 : 248) : 0,
         }}
         transition={sidebarTransition}
-        className="min-h-screen will-change-[padding-left] transform-gpu"
+        className="min-h-screen will-change-[padding-left]"
       >
         {/* Top bar */}
         <header className="sticky top-0 z-30 h-16 border-b border-black/[0.06] bg-[#F5F3FF]/85 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#0D0A17]/85">
