@@ -29,6 +29,17 @@ async function buildApiError(
   );
 }
 
+function shouldTriggerSessionExpired(token?: string | null, options?: RequestOptions): boolean {
+  if (!token || typeof window === "undefined" || options?.skipSessionExpired) {
+    return false;
+  }
+  // Ignore local development mock / test tokens
+  if (token.startsWith("mock-")) {
+    return false;
+  }
+  return true;
+}
+
 async function requestForm<T>(
   method: HttpMethod,
   path: string,
@@ -56,12 +67,12 @@ async function requestForm<T>(
   let res = await makeRequest(token);
 
   // ── retry on 401 ──
-  if (res.status === 401 && onRefresh) {
+  if (res.status === 401 && onRefresh && token) {
     const newToken = await onRefresh();
     if (newToken) {
       res = await makeRequest(newToken);
     } else {
-      if (!options.skipSessionExpired && typeof window !== "undefined") {
+      if (shouldTriggerSessionExpired(token, options)) {
         window.dispatchEvent(new Event("session-expired"));
       }
       throw new ApiError(401, null, "Session expired");
@@ -69,7 +80,11 @@ async function requestForm<T>(
   }
 
   if (!res.ok) {
-    if (res.status === 401 && !path.includes("/auth/") && !options.skipSessionExpired && typeof window !== "undefined") {
+    if (
+      res.status === 401 &&
+      !path.includes("/auth/") &&
+      shouldTriggerSessionExpired(token, options)
+    ) {
       window.dispatchEvent(new Event("session-expired"));
     }
     throw await buildApiError(res)
@@ -104,7 +119,7 @@ async function request<T>(
   });
 
   // ── 401: try silent refresh once then retry ──
-  if (res.status === 401 && onRefresh) {
+  if (res.status === 401 && onRefresh && token) {
     const newToken = await onRefresh();
     if (newToken) {
       const retryRes = await fetch(`${API_BASE}${path}`, {
@@ -118,7 +133,10 @@ async function request<T>(
       });
 
       if (!retryRes.ok) {
-        if (retryRes.status === 401 && !options.skipSessionExpired && typeof window !== "undefined") {
+        if (
+          retryRes.status === 401 &&
+          shouldTriggerSessionExpired(token, options)
+        ) {
           window.dispatchEvent(new Event("session-expired"));
         }
         throw await buildApiError(retryRes)
@@ -128,14 +146,18 @@ async function request<T>(
     }
 
     // Refresh failed — throw so the dashboard guard can redirect to login
-    if (!options.skipSessionExpired && typeof window !== "undefined") {
+    if (shouldTriggerSessionExpired(token, options)) {
       window.dispatchEvent(new Event("session-expired"));
     }
     throw new ApiError(401, null, "Session expired");
   }
 
   if (!res.ok) {
-    if (res.status === 401 && !path.includes("/auth/") && !options.skipSessionExpired && typeof window !== "undefined") {
+    if (
+      res.status === 401 &&
+      !path.includes("/auth/") &&
+      shouldTriggerSessionExpired(token, options)
+    ) {
       window.dispatchEvent(new Event("session-expired"));
     }
     throw await buildApiError(res);

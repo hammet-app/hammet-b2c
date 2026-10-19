@@ -46,7 +46,8 @@ interface AuthContextValue extends AuthState {
   ) => Promise<void>;
   redirectAfterAuth: (user?: AuthUser | null) => void;
   logout: () => Promise<void>;
-  refreshToken: () => Promise<string | null>;
+  refreshToken: (isSilentInit?: boolean) => Promise<string | null>;
+  dismissSessionExpired: () => void;
 }
 
 // ─── Context ──────────────────────────────────────────────────
@@ -127,18 +128,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [getPostAuthRoute, router, state.user]
   );
 
-  const refreshToken = useCallback(async (): Promise<string | null> => {
+  const dismissSessionExpired = useCallback(() => {
+    setState((prev) => ({ ...prev, isSessionExpired: false }));
+  }, []);
+
+  const refreshToken = useCallback(async (isSilentInit = false): Promise<string | null> => {
     if (localStorage.getItem("logged_out") === "true") {
-    setState({
-      user: null,
-      accessToken: null,
-      isLoading: false,
-      isResolved: true,
-      isOffline: false,
-      isSessionExpired: false,
-    });
-    return null;
-  }
+      setState({
+        user: null,
+        accessToken: null,
+        isLoading: false,
+        isResolved: true,
+        isOffline: false,
+        isSessionExpired: false,
+      });
+      return null;
+    }
 
     if (refreshPromiseRef.current) {
       return refreshPromiseRef.current;
@@ -169,6 +174,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         if (!res.ok) {
+          if (isSilentInit) {
+            // Initial silent background check on startup:
+            // Never pop up "Session Expired". If we hydrated a cached user, retain offline mode.
+            // If there was no cached user, cleanly mark resolved as unauthenticated.
+            setState((prev) => ({
+              ...prev,
+              isLoading: false,
+              isResolved: true,
+              isOffline: prev.user !== null,
+              isSessionExpired: false,
+            }));
+            return null;
+          }
+
+          // Active online runtime refresh failed:
           await clearPersistedSession();
 
           setState((prev) => ({
@@ -178,7 +198,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             isLoading: false,
             isResolved: true,
             isOffline: false,
-            isSessionExpired: prev.user !== null,
+            // Only expire if the user had an active online session with a token and was not offline
+            isSessionExpired: prev.user !== null && !prev.isOffline && Boolean(prev.accessToken),
           }));
 
           return null;
@@ -189,7 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (localStorage.getItem("logged_out") === "true") {
           return null;
-}
+        }
 
         await persistSession(data.user, data.accessToken);
 
@@ -200,6 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           isLoading: false,
           isResolved: true,
           isOffline: false,
+          isSessionExpired: false,
         }));
 
         scheduleRefresh();
@@ -211,6 +233,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           isLoading: false,
           isResolved: true,
           isOffline: true,
+          isSessionExpired: false,
         }));
 
         return null;
@@ -241,6 +264,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (age > SESSION_MAX_AGE_MS) {
           await clearPersistedSession();
+          setState({
+            user: null,
+            accessToken: null,
+            isLoading: false,
+            isResolved: true,
+            isOffline: false,
+            isSessionExpired: false,
+          });
         } else {
           setState({
             user: cached.user,
@@ -248,27 +279,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             isLoading: false,
             isResolved: true,
             isOffline: true,
-        isSessionExpired: false,
+            isSessionExpired: false,
           });
         }
+      } else {
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          isResolved: true,
+          isOffline: false,
+          isSessionExpired: false,
+        }));
       }
 
       if (!cancelled) {
-        await refreshToken();
+        await refreshToken(true);
       }
     }
 
     init();
 
-    
     const handleSessionExpired = async () => {
-      await clearPersistedSession();
-      setState((prev) => ({
-        ...prev,
-        user: null,
-        accessToken: null,
-        isSessionExpired: true,
-      }));
+      setState((prev) => {
+        // If there was no active user or active access token, ignore phantom session-expired event
+        if (!prev.user || !prev.accessToken) {
+          return prev;
+        }
+        void clearPersistedSession();
+        return {
+          ...prev,
+          user: null,
+          accessToken: null,
+          isSessionExpired: true,
+        };
+      });
     };
 
     if (typeof window !== "undefined") {
@@ -448,6 +492,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         redirectAfterAuth,
         logout,
         refreshToken,
+        dismissSessionExpired,
       }}
     >
       {children}

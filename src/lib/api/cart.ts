@@ -64,7 +64,7 @@ export const cartApi = {
    */
   getCart: async (token?: string | null): Promise<CartApiResult<CartResponseDto>> => {
     try {
-      const data = await apiClient.get<CartResponseDto>("/cart", token);
+      const data = await apiClient.get<CartResponseDto>("/cart", token, { skipSessionExpired: true });
       return { success: true, data };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to fetch remote cart";
@@ -85,7 +85,7 @@ export const cartApi = {
         items: items.map(toCartItemDto),
         coupon_code: couponCode ?? null,
       };
-      const data = await apiClient.post<CartResponseDto>("/cart/sync", payload, token);
+      const data = await apiClient.post<CartResponseDto>("/cart/sync", payload, token, { skipSessionExpired: true });
       return { success: true, data };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Cart sync failed";
@@ -99,7 +99,7 @@ export const cartApi = {
   addItem: async (item: DexieCartItem, token?: string | null): Promise<CartApiResult<CartItemDto>> => {
     try {
       const payload = toCartItemDto(item);
-      const data = await apiClient.post<CartItemDto>("/cart/items", payload, token);
+      const data = await apiClient.post<CartItemDto>("/cart/items", payload, token, { skipSessionExpired: true });
       return { success: true, data };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to add remote item";
@@ -116,7 +116,7 @@ export const cartApi = {
     token?: string | null
   ): Promise<CartApiResult<boolean>> => {
     try {
-      await apiClient.patch<{ success: boolean }>(`/cart/items/${id}`, { quantity }, token);
+      await apiClient.patch<{ success: boolean }>(`/cart/items/${id}`, { quantity }, token, { skipSessionExpired: true });
       return { success: true, data: true };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to update remote item quantity";
@@ -129,7 +129,7 @@ export const cartApi = {
    */
   removeItem: async (id: string, token?: string | null): Promise<CartApiResult<boolean>> => {
     try {
-      await apiClient.delete<void>(`/cart/items/${id}`, undefined, token);
+      await apiClient.delete<void>(`/cart/items/${id}`, undefined, token, { skipSessionExpired: true });
       return { success: true, data: true };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to remove remote item";
@@ -142,7 +142,7 @@ export const cartApi = {
    */
   clearCart: async (token?: string | null): Promise<CartApiResult<boolean>> => {
     try {
-      await apiClient.delete<void>("/cart", undefined, token);
+      await apiClient.delete<void>("/cart", undefined, token, { skipSessionExpired: true });
       return { success: true, data: true };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to clear remote cart";

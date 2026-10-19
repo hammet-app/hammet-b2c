@@ -87,8 +87,12 @@ export const learnerApi = {
       page_size: String(pageSize),
     });
     try {
-      const response = await apiClient.get<AiSchoolsResponseDto>(`/learner/ai-schools?${params.toString()}`, token, { onRefresh })
-      return toAiSchoolsResponse(response)
+      const response = await apiClient.get<AiSchoolsResponseDto>(
+        `/learner/ai-schools?${params.toString()}`,
+        token,
+        { onRefresh, skipSessionExpired: true }
+      );
+      return toAiSchoolsResponse(response);
     } catch {
       // If backend endpoint is not yet live/accessible, return resilient fallback data
       return {
@@ -109,8 +113,12 @@ export const learnerApi = {
     onRefresh: () => Promise<string | null>
   ): Promise<AiSchoolCoursesResponse> => {
     try {
-      const response = await apiClient.get<AiSchoolCoursesResponseDto>(`/learner/ai-schools/${schoolId}/courses`, token, { onRefresh })
-      return toAiSchoolCoursesResponse(response)
+      const response = await apiClient.get<AiSchoolCoursesResponseDto>(
+        `/learner/ai-schools/${schoolId}/courses`,
+        token,
+        { onRefresh, skipSessionExpired: true }
+      );
+      return toAiSchoolCoursesResponse(response);
     } catch {
       // If backend endpoint is not yet live/accessible, return resilient fallback courses
       return {
@@ -125,9 +133,21 @@ export const learnerApi = {
     token: string,
     onRefresh: () => Promise<string | null>
   ): Promise<CartResponse> => {
-    const response = await apiClient.get<CartResponseDto>("/learner/cart", token, { onRefresh })
-
-    return toCartResponse(response)
+    try {
+      const response = await apiClient.get<CartResponseDto>(
+        "/learner/cart",
+        token,
+        { onRefresh, skipSessionExpired: true }
+      );
+      return toCartResponse(response);
+    } catch {
+      return {
+        id: "",
+        total: 0,
+        carts: [],
+        invalidCarts: [],
+      };
+    }
   }
 };
 
