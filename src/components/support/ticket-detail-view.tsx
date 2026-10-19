@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   useTicketStore,
   TicketAttachment,
@@ -50,6 +51,11 @@ export function TicketDetailView() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingAttachments, setPendingAttachments] = useState<TicketAttachment[]>([]);
   const [activePreview, setActivePreview] = useState<TicketAttachment | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const ticket = tickets.find((t) => t.id === selectedTicketId);
 
@@ -482,39 +488,48 @@ export function TicketDetailView() {
       </div>
 
       {/* ── ATTACHMENT PREVIEW LIGHTBOX ──────────────────────────── */}
-      <AnimatePresence>
-        {activePreview && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl text-white"
-            >
-              <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  {getAttachmentIcon(activePreview.type)}
-                  <h4 className="text-sm font-bold truncate">
-                    {activePreview.name}
-                  </h4>
-                </div>
-                <button
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {activePreview && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   onClick={() => setActivePreview(null)}
-                  className="rounded-lg p-1 text-slate-400 hover:text-white"
+                  className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100]"
+                />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="relative z-[101] w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl text-white"
                 >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="mt-4 p-4 rounded-2xl bg-black/40 border border-white/5 font-mono text-xs text-slate-300 max-h-60 overflow-y-auto">
-                {activePreview.type === "image" ? (
-                  <div className="flex flex-col items-center justify-center py-6 text-center text-slate-400">
-                    <ImageIcon className="h-12 w-12 text-purple-400 mb-2" />
-                    <p className="text-xs font-bold text-white">Diagnostic Image Preview</p>
-                    <p className="text-[11px] text-slate-500 mt-1">Resolution 1920x1080 • Verified PNG</p>
+                  <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      {getAttachmentIcon(activePreview.type)}
+                      <h4 className="text-sm font-bold truncate">
+                        {activePreview.name}
+                      </h4>
+                    </div>
+                    <button
+                      onClick={() => setActivePreview(null)}
+                      className="rounded-lg p-1 text-slate-400 hover:text-white"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
-                ) : activePreview.type === "code" ? (
-                  <pre className="whitespace-pre-wrap leading-relaxed">
+
+                  <div className="mt-4 p-4 rounded-2xl bg-black/40 border border-white/5 font-mono text-xs text-slate-300 max-h-60 overflow-y-auto">
+                    {activePreview.type === "image" ? (
+                      <div className="flex flex-col items-center justify-center py-6 text-center text-slate-400">
+                        <ImageIcon className="h-12 w-12 text-purple-400 mb-2" />
+                        <p className="text-xs font-bold text-white">Diagnostic Image Preview</p>
+                        <p className="text-[11px] text-slate-500 mt-1">Resolution 1920x1080 • Verified PNG</p>
+                      </div>
+                    ) : activePreview.type === "code" ? (
+                      <pre className="whitespace-pre-wrap leading-relaxed">
 {`# Repro configuration
 import torch
 from transformers import AutoModelForCausalLM
@@ -522,28 +537,30 @@ from transformers import AutoModelForCausalLM
 model_id = "meta-llama/Meta-Llama-3-8B"
 print(f"Allocating {model_id} on cluster node...")
 # Verified configuration parameters`}
-                  </pre>
-                ) : (
-                  <pre className="whitespace-pre-wrap leading-relaxed text-amber-300/90">
+                      </pre>
+                    ) : (
+                      <pre className="whitespace-pre-wrap leading-relaxed text-amber-300/90">
 {`[2026-10-17 07:14:22] [CUDA-INFO] Initializing PyTorch runtime v2.4.0+cu124
 [2026-10-17 07:14:38] [ALLOC-WARN] VRAM consumption 15.82 GiB / 16.00 GiB
 [2026-10-17 07:15:00] [TRACEBACK] RuntimeError: CUDA out of memory. Tried to allocate 512.00 MiB`}
-                  </pre>
-                )}
-              </div>
+                      </pre>
+                    )}
+                  </div>
 
-              <div className="mt-4 flex justify-end gap-2">
-                <button
-                  onClick={() => setActivePreview(null)}
-                  className="rounded-xl px-4 py-2 text-xs font-bold text-slate-300 hover:bg-white/10"
-                >
-                  Close
-                </button>
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      onClick={() => setActivePreview(null)}
+                      className="rounded-xl px-4 py-2 text-xs font-bold text-slate-300 hover:bg-white/10"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </motion.div>
               </div>
-            </motion.div>
-          </div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </div>
   );
 }
