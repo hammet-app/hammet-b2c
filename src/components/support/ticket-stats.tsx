@@ -1,13 +1,12 @@
 "use client";
 
-import { useTicketStore } from "@/lib/store/use-ticket-store";
+import { useTicketStore, HAMMET_SUPPORT_EMAIL } from "@/lib/store/use-ticket-store";
 import {
   LifeBuoy,
   Clock,
   CheckCircle2,
-  AlertCircle,
-  Zap,
-  TrendingUp,
+  Mail,
+  ShieldCheck,
 } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -18,31 +17,28 @@ export function TicketStats() {
   const inProgress = tickets.filter(
     (t) => t.status === "in-progress" || t.status === "open" || t.status === "pending"
   ).length;
-  const resolved = tickets.filter(
-    (t) => t.status === "resolved" || t.status === "closed"
-  ).length;
 
   const stats = [
     {
-      label: "Total Tickets",
-      value: total,
-      sublabel: "All submitted tickets",
-      icon: LifeBuoy,
+      label: "Support Channel",
+      value: "Email Desk",
+      sublabel: HAMMET_SUPPORT_EMAIL,
+      icon: Mail,
       color: "from-purple-500/15 to-indigo-500/10 text-purple-600 dark:text-purple-400",
       border: "border-purple-200/60 dark:border-purple-500/20",
     },
     {
-      label: "In Progress",
-      value: inProgress,
-      sublabel: "Currently being handled",
+      label: "My Logged Inquiries",
+      value: total,
+      sublabel: inProgress > 0 ? `${inProgress} active / awaiting reply` : "All inquiries up to date",
       icon: Clock,
       color: "from-amber-500/15 to-orange-500/10 text-amber-600 dark:text-amber-400",
       border: "border-amber-200/60 dark:border-amber-500/20",
     },
     {
-      label: "Resolved",
-      value: resolved,
-      sublabel: "Successfully resolved",
+      label: "Response SLA",
+      value: "< 24 Hours",
+      sublabel: "Direct academic & tech review",
       icon: CheckCircle2,
       color: "from-emerald-500/15 to-teal-500/10 text-emerald-600 dark:text-emerald-400",
       border: "border-emerald-200/60 dark:border-emerald-500/20",
@@ -87,4 +83,3 @@ export function TicketStats() {
     </div>
   );
 }
-

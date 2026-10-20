@@ -36,7 +36,7 @@ export default function SupportPage() {
             </h1>
 
             <p className="mt-1 text-xs sm:text-[13px] text-slate-500 dark:text-slate-400 max-w-xl font-sans leading-relaxed">
-              Need help? Submit a ticket and our team will assist you with courses, certificates, billing, or account issues.
+              Need help? Submit a ticket directly to <span className="font-semibold text-purple-600 dark:text-purple-300">support@hammetedu.com</span> and our academic &amp; technical staff will assist you via email.
             </p>
           </div>
 

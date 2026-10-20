@@ -11,6 +11,8 @@ export type TicketCategory =
   | "certification"
   | "general";
 
+export const HAMMET_SUPPORT_EMAIL = "support@hammetedu.com";
+
 export interface TicketAgent {
   id: string;
   name: string;
@@ -101,256 +103,49 @@ interface TicketStoreState {
   resetToDefaults: () => void;
 }
 
+export const HAMMET_SUPPORT_DESK: TicketAgent = {
+  id: "hammet_support_desk",
+  name: "Hammet Email Support",
+  role: "Direct Help Desk",
+  department: "Support & Operations",
+  email: HAMMET_SUPPORT_EMAIL,
+  isOnline: true,
+};
+
 export const SUPPORT_AGENTS: Record<TicketCategory, TicketAgent> = {
-  courseware: {
-    id: "agent_sj",
-    name: "Sarah Jenkins",
-    role: "Student Support Specialist",
-    department: "Learner Support Team",
-    email: "s.jenkins@hammet.ai",
-    isOnline: true,
-  },
-  billing: {
-    id: "agent_dk",
-    name: "David Kim",
-    role: "Billing Support",
-    department: "Finance Operations",
-    email: "d.kim@hammet.ai",
-    isOnline: true,
-  },
-  account: {
-    id: "agent_dr",
-    name: "Devon Reed",
-    role: "Account Support",
-    department: "User Operations",
-    email: "d.reed@hammet.ai",
-    isOnline: false,
-  },
-  certification: {
-    id: "agent_er",
-    name: "Elena Rostova",
-    role: "Certificates & Credentials",
-    department: "Academic Office",
-    email: "e.rostova@hammet.ai",
-    isOnline: true,
-  },
-  technical: {
-    id: "agent_ar",
-    name: "Alex Rivera",
-    role: "Technical Support",
-    department: "Platform Engineering",
-    email: "a.rivera@hammet.ai",
-    isOnline: true,
-  },
-  general: {
-    id: "agent_kb",
-    name: "Kendra Bailey",
-    role: "Student Advisor",
-    department: "Support Desk",
-    email: "k.bailey@hammet.ai",
-    isOnline: true,
-  },
+  courseware: HAMMET_SUPPORT_DESK,
+  billing: HAMMET_SUPPORT_DESK,
+  account: HAMMET_SUPPORT_DESK,
+  certification: HAMMET_SUPPORT_DESK,
+  technical: HAMMET_SUPPORT_DESK,
+  general: HAMMET_SUPPORT_DESK,
 };
 
 export const INITIAL_TICKETS: SupportTicket[] = [
   {
-    id: "HMT-1024",
-    title: "Can't access Module 3 quiz",
+    id: "HMT-SUP-1012",
+    title: "Hammet Support & Direct Help Desk",
     description:
-      "Every time I complete video lecture 3.4 and click 'Start Quiz', the page shows a blank white screen with the error 'Session expired'. I need to finish this quiz to unlock the next module.",
-    category: "courseware",
-    priority: "high",
-    status: "in-progress",
-    assignedAgent: SUPPORT_AGENTS.courseware,
-    createdAt: "2026-10-17T09:30:00Z",
-    updatedAt: "2026-10-17T10:15:00Z",
-    slaTarget: "4 Hours",
-    attachments: [
-      {
-        id: "att-1",
-        name: "quiz_blank_error.png",
-        size: "380 KB",
-        type: "image",
-      },
-    ],
-    comments: [
-      {
-        id: "c-1",
-        author: {
-          name: "Godswill Chibueze",
-          role: "user",
-          title: "Learner",
-        },
-        content:
-          "Attached a screenshot of the blank quiz error. I have tried refreshing and clearing my browser cache but the quiz still doesn't load.",
-        timestamp: "2026-10-17T09:30:00Z",
-        attachments: [
-          {
-            id: "att-1",
-            name: "quiz_blank_error.png",
-            size: "380 KB",
-            type: "image",
-          },
-        ],
-      },
-      {
-        id: "c-2",
-        author: {
-          name: "Sarah Jenkins",
-          role: "agent",
-          title: "Student Support Specialist",
-          avatar: "SJ",
-        },
-        content:
-          "Hi Godswill, thanks for reporting this! Our technical team identified a session token mismatch on the Module 3 quiz service and pushed a fix. Could you please refresh your browser and click 'Start Quiz' again to confirm it loads?",
-        timestamp: "2026-10-17T10:15:00Z",
-      },
-    ],
-  },
-  {
-    id: "HMT-1018",
-    title: "Need invoice receipt for Pro subscription",
-    description:
-      "I upgraded to Hammet Pro this month and need an official PDF receipt with the transaction details to submit for university reimbursement.",
-    category: "billing",
+      "Welcome to Hammet Support! We handle all learner questions, courseware inquiries, and account assistance directly through our dedicated team email at support@hammetedu.com. Submit a ticket here anytime and our staff will reply directly to your email address.",
+    category: "general",
     priority: "low",
-    status: "resolved",
-    assignedAgent: SUPPORT_AGENTS.billing,
-    createdAt: "2026-10-16T14:00:00Z",
-    updatedAt: "2026-10-16T15:20:00Z",
-    resolvedAt: "2026-10-16T15:20:00Z",
-    slaTarget: "24 Hours",
-    satisfactionRating: 5,
-    attachments: [
-      {
-        id: "att-2",
-        name: "Invoice_INV-2026-0481.pdf",
-        size: "185 KB",
-        type: "document",
-      },
-    ],
-    comments: [
-      {
-        id: "c-3",
-        author: {
-          name: "David Kim",
-          role: "agent",
-          title: "Billing Support",
-          avatar: "DK",
-        },
-        content:
-          "Hello Godswill, I have attached your official PDF invoice (INV-2026-0481). You can also view and download past payment receipts anytime under Settings > Billing.",
-        timestamp: "2026-10-16T15:20:00Z",
-        attachments: [
-          {
-            id: "att-2",
-            name: "Invoice_INV-2026-0481.pdf",
-            size: "185 KB",
-            type: "document",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "HMT-1009",
-    title: "Typo in my certificate name",
-    description:
-      "My completed AI Foundations certificate displays my name as 'Godswill C.' but I need my full name 'Godswill Chibueze' on the verified certificate.",
-    category: "certification",
-    priority: "medium",
-    status: "resolved",
-    assignedAgent: SUPPORT_AGENTS.certification,
-    createdAt: "2026-10-15T11:00:00Z",
-    updatedAt: "2026-10-15T12:30:00Z",
-    resolvedAt: "2026-10-15T12:30:00Z",
-    slaTarget: "24 Hours",
-    satisfactionRating: 5,
-    attachments: [],
-    comments: [
-      {
-        id: "c-4",
-        author: {
-          name: "Elena Rostova",
-          role: "agent",
-          title: "Certificates & Credentials",
-          avatar: "ER",
-        },
-        content:
-          "Hi Godswill, we have updated your full legal name across our certificate registry. Your updated AI Foundations certificate is now live and available in your Passport tab.",
-        timestamp: "2026-10-15T12:30:00Z",
-      },
-    ],
-  },
-  {
-    id: "HMT-1002",
-    title: "Unable to upload final project video",
-    description:
-      "When uploading my capstone project walkthrough video (a 45MB MP4 file), the progress bar stops at 95% and displays 'Upload failed. Network timeout'.",
-    category: "technical",
-    priority: "high",
     status: "open",
-    assignedAgent: SUPPORT_AGENTS.technical,
-    createdAt: "2026-10-17T11:45:00Z",
-    updatedAt: "2026-10-17T11:45:00Z",
-    slaTarget: "4 Hours",
-    attachments: [
-      {
-        id: "att-3",
-        name: "upload_timeout_screen.png",
-        size: "520 KB",
-        type: "image",
-      },
-    ],
-    comments: [
-      {
-        id: "c-5",
-        author: {
-          name: "Godswill Chibueze",
-          role: "user",
-          title: "Learner",
-        },
-        content:
-          "I have tested my Wi-Fi speed and tried uploading from Chrome and Firefox, but both time out at 95%.",
-        timestamp: "2026-10-17T11:45:00Z",
-        attachments: [
-          {
-            id: "att-3",
-            name: "upload_timeout_screen.png",
-            size: "520 KB",
-            type: "image",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "HMT-0994",
-    title: "Update my account email address",
-    description:
-      "I will be graduating next month and would like to change my primary account email from my student email to my personal email address.",
-    category: "account",
-    priority: "low",
-    status: "closed",
-    assignedAgent: SUPPORT_AGENTS.account,
-    createdAt: "2026-10-12T08:00:00Z",
-    updatedAt: "2026-10-12T10:00:00Z",
-    resolvedAt: "2026-10-12T10:00:00Z",
-    slaTarget: "48 Hours",
-    satisfactionRating: 5,
+    assignedAgent: HAMMET_SUPPORT_DESK,
+    createdAt: "2026-10-20T08:00:00Z",
+    updatedAt: "2026-10-20T08:00:00Z",
+    slaTarget: "Within 24 Hours",
     attachments: [],
     comments: [
       {
-        id: "c-6",
+        id: "c-welcome-1",
         author: {
-          name: "Devon Reed",
-          role: "agent",
-          title: "Account Support",
-          avatar: "DR",
+          name: "Hammet Support Team",
+          role: "system",
+          title: "Official Support Channel",
         },
         content:
-          "We sent a security verification link to your new email. Once verified, your primary login will automatically update.",
-        timestamp: "2026-10-12T10:00:00Z",
+          "All submitted tickets are forwarded directly to support@hammetedu.com. Our team responds promptly to your registered email address.",
+        timestamp: "2026-10-20T08:00:00Z",
       },
     ],
   },
@@ -360,7 +155,7 @@ export const useTicketStore = create<TicketStoreState>()(
   persist(
     (set, get) => ({
       tickets: INITIAL_TICKETS,
-      selectedTicketId: "HMT-1024",
+      selectedTicketId: "HMT-SUP-1012",
       filterStatus: "all",
       filterCategory: "all",
       filterPriority: "all",
@@ -368,23 +163,21 @@ export const useTicketStore = create<TicketStoreState>()(
       isCreateModalOpen: false,
 
       setSelectedTicketId: (id) => set({ selectedTicketId: id }),
-      setFilterStatus: (filterStatus) => set({ filterStatus }),
-      setFilterCategory: (filterCategory) => set({ filterCategory }),
-      setFilterPriority: (filterPriority) => set({ filterPriority }),
-      setSearchQuery: (searchQuery) => set({ searchQuery }),
-      setIsCreateModalOpen: (isCreateModalOpen) => set({ isCreateModalOpen }),
+      setFilterStatus: (status) => set({ filterStatus: status }),
+      setFilterCategory: (category) => set({ filterCategory: category }),
+      setFilterPriority: (priority) => set({ filterPriority: priority }),
+      setSearchQuery: (query) => set({ searchQuery: query }),
+      setIsCreateModalOpen: (open) => set({ isCreateModalOpen: open }),
 
       createTicket: ({ title, description, category, priority, attachments = [] }) => {
-        const idNumber = Math.floor(1000 + Math.random() * 9000);
-        const ticketId = `HMT-${idNumber}`;
+        const ticketId = `HMT-SUP-${Math.floor(100000 + Math.random() * 900000)}`;
         const now = new Date().toISOString();
-        const agent = SUPPORT_AGENTS[category] || SUPPORT_AGENTS.general;
 
         const slaMap: Record<TicketPriority, string> = {
-          critical: "1 Hour (Critical SLA Response)",
-          high: "4 Hours (High Priority Tier)",
-          medium: "24 Hours (Standard Tier)",
-          low: "48 Hours (Standard Tier)",
+          critical: "2-4 Hours (Urgent)",
+          high: "4-12 Hours (High Priority)",
+          medium: "Within 24 Hours",
+          low: "Within 48 Hours",
         };
 
         const newTicket: SupportTicket = {
@@ -394,18 +187,18 @@ export const useTicketStore = create<TicketStoreState>()(
           category,
           priority,
           status: "open",
-          assignedAgent: agent,
+          assignedAgent: HAMMET_SUPPORT_DESK,
           createdAt: now,
           updatedAt: now,
-          slaTarget: slaMap[priority],
+          slaTarget: slaMap[priority] || "Within 24 Hours",
           attachments,
           comments: [
             {
               id: `c-${Date.now()}`,
               author: {
-                name: "Godswill Chibueze",
+                name: "Learner Inquiry",
                 role: "user",
-                title: "Pro Learner",
+                title: "Sent via Email",
               },
               content: description,
               timestamp: now,
@@ -425,34 +218,6 @@ export const useTicketStore = create<TicketStoreState>()(
           selectedTicketId: ticketId,
         }));
 
-        // Simulate agent auto-acknowledgment after 2.5 seconds
-        setTimeout(() => {
-          const autoReply: TicketComment = {
-            id: `c-${Date.now()}`,
-            author: {
-              name: agent.name,
-              role: "agent",
-              title: agent.role,
-              avatar: agent.name.split(" ").map((n) => n[0]).join(""),
-            },
-            content: `Hello Godswill, I'm ${agent.name} from ${agent.department}. We have received your ticket regarding "${title}" and are reviewing it now.`,
-            timestamp: new Date().toISOString(),
-          };
-
-          set((state) => ({
-            tickets: state.tickets.map((t) =>
-              t.id === ticketId
-                ? {
-                    ...t,
-                    status: "in-progress" as TicketStatus,
-                    updatedAt: new Date().toISOString(),
-                    comments: [...t.comments, autoReply],
-                  }
-                : t
-            ),
-          }));
-        }, 2500);
-
         return ticketId;
       },
 
@@ -463,9 +228,9 @@ export const useTicketStore = create<TicketStoreState>()(
         const newComment: TicketComment = {
           id: commentId,
           author: {
-            name: "Godswill Chibueze",
+            name: "Learner Follow-up",
             role: "user",
-            title: "Pro Learner",
+            title: "Follow-up Note",
           },
           content,
           timestamp: now,
@@ -494,7 +259,7 @@ export const useTicketStore = create<TicketStoreState>()(
                   ...t,
                   status,
                   updatedAt: now,
-                  resolvedAt: status === "resolved" ? now : t.resolvedAt,
+                  resolvedAt: status === "resolved" || status === "closed" ? now : t.resolvedAt,
                 }
               : t
           ),
@@ -517,7 +282,7 @@ export const useTicketStore = create<TicketStoreState>()(
       resetToDefaults: () => {
         set({
           tickets: INITIAL_TICKETS,
-          selectedTicketId: "HMT-1024",
+          selectedTicketId: "HMT-SUP-1012",
           filterStatus: "all",
           filterCategory: "all",
           filterPriority: "all",
@@ -527,8 +292,7 @@ export const useTicketStore = create<TicketStoreState>()(
       },
     }),
     {
-      name: "hammet-support-tickets-v2",
+      name: "hammet-support-tickets-v3",
     }
   )
 );
-
