@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import {
   ArrowLeft,
   Check,
-  Eye,
-  EyeOff,
   GraduationCap,
   Plus,
 } from "lucide-react";
@@ -16,6 +14,8 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { CreateAiSchoolRequest } from "@/lib/api/types";
 import { createAiSchool } from "@/lib/api/hammet";
 import { ApiError } from "@/lib/api/api-client";
+import { is_enabled } from "@/lib/features/flags";
+import { trackGloriaEvent } from "@/lib/analytics";
 import { Alert } from "@/components/ui";
 
 const inputClassName =
@@ -34,11 +34,18 @@ export default function CreateAiSchoolPage() {
 
   const canCreate = isHammetAdmin && (isPlatformAdmin || isB2CCoursesAdmin);
 
+  const [featureEnabled, setFeatureEnabled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    is_enabled("gloria_school_creation").then((value) => setFeatureEnabled(Boolean(value)));
+  }, []);
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [published, setPublished] = useState(false);
 
+  const [createdSchoolId, setCreatedSchoolId] = useState("");
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [isSuccessful, setIsSuccessful] = useState(false);
   const [error, setError] = useState("");
@@ -51,6 +58,7 @@ export default function CreateAiSchoolPage() {
 
   function resetForm() {
     setIsSuccessful(false);
+    setCreatedSchoolId("");
     setName("");
     setDescription("");
     setPrice("");
@@ -66,13 +74,21 @@ export default function CreateAiSchoolPage() {
         name: name.trim(),
         description: description.trim(),
         price: parsedPrice,
-        published: published,
+        published,
       } satisfies CreateAiSchoolRequest;
 
-      await createAiSchool(body, accessToken, refreshToken);
+      const school = await createAiSchool(body, accessToken, refreshToken);
+      trackGloriaEvent("gloria_school_created", {
+        schoolId: school.id,
+        price: school.price,
+      });
 
+      setCreatedSchoolId(school.id);
       setIsSuccessful(true);
     } catch (err) {
+      trackGloriaEvent("gloria_school_create_failed", {
+        error: err instanceof Error ? err.message : "Unknown error",
+      });
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
@@ -101,6 +117,21 @@ export default function CreateAiSchoolPage() {
     );
   }
 
+  if (featureEnabled === false) {
+    return (
+      <div className="px-5 pb-28 pt-8 sm:px-7 sm:pt-10 lg:px-10 lg:pb-12 lg:pt-10">
+        <div className="mx-auto max-w-[900px]">
+          <div className="rounded-[28px] border border-amber-200 bg-amber-50 p-8 text-amber-900 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200">
+            <h1 className="text-2xl font-semibold">School creation is disabled</h1>
+            <p className="mt-2 text-sm leading-6">
+              Turn on the gloria_school_creation flag in Growthbook to roll out school creation.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (isSuccessful) {
     return (
       <div className="px-5 pb-28 pt-8 sm:px-7 sm:pt-10 lg:px-10 lg:pb-12 lg:pt-10">
@@ -116,28 +147,26 @@ export default function CreateAiSchoolPage() {
             </div>
 
             <p className="mt-6 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-300">
-              {published ? "Published" : "Saved as draft"}
+              School created
             </p>
 
             <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-slate-950 dark:text-white">
-              AI school created
+              Gloria school ready
             </h1>
 
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-500 dark:text-slate-400">
               <span className="font-medium text-slate-700 dark:text-slate-200">
                 {name}
               </span>{" "}
-              {published
-                ? "is now live and visible to learners."
-                : "has been saved and is not visible to learners until it is published."}
+              is ready for courses. Keep its ID available while you create the first course.
             </p>
 
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <Link
-                href="/hammet"
+                href={`/hammet/courses/new?schoolId=${encodeURIComponent(createdSchoolId)}`}
                 className="rounded-xl bg-[#24134F] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#321b68] dark:bg-cyan-400 dark:text-[#24134F] dark:hover:bg-cyan-300"
               >
-                Back to dashboard
+                Create a course
               </Link>
 
               <button
@@ -181,13 +210,11 @@ export default function CreateAiSchoolPage() {
           </h1>
 
           <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-            Set up a new AI school. Keep it unpublished until it&apos;s ready
-            for learners.
+            Create the Gloria school record. Its courses can be added immediately.
           </p>
         </motion.section>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-          {/* Details */}
+        <div className="mx-auto max-w-[760px]">
           <motion.section
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -254,81 +281,22 @@ export default function CreateAiSchoolPage() {
                   </span>
                 )}
               </label>
-            </div>
-          </motion.section>
 
-          {/* Visibility */}
-          <motion.section
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.1 }}
-            className="rounded-[28px] border border-black/[0.06] bg-white p-7 dark:border-white/[0.06] dark:bg-white/[0.03] sm:p-8"
-          >
-            <div className="mb-7">
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600 dark:bg-cyan-400/10 dark:text-cyan-300">
-                <Eye className="h-5 w-5" />
-              </div>
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-black/[0.08] bg-slate-50 px-4 py-3 dark:border-white/[0.08] dark:bg-white/[0.04]">
+                <input
+                  type="checkbox"
+                  checked={published}
+                  onChange={(event) => setPublished(event.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-purple-600"
+                />
 
-              <h2 className="text-xl font-semibold tracking-[-0.03em]">
-                Visibility
-              </h2>
-
-              <p className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
-                Decide whether learners can see this school yet.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              {[
-                {
-                  value: false,
-                  label: "Draft",
-                  description: "Hidden from learners until you publish it.",
-                  icon: EyeOff,
-                },
-                {
-                  value: true,
-                  label: "Published",
-                  description: "Visible to learners immediately.",
-                  icon: Eye,
-                },
-              ].map((option) => {
-                const selected = published === option.value;
-                const Icon = option.icon;
-
-                return (
-                  <button
-                    key={option.label}
-                    type="button"
-                    onClick={() => setPublished(option.value)}
-                    className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left transition ${selected
-                        ? "border-purple-300 bg-purple-50 dark:border-purple-400/30 dark:bg-purple-500/10"
-                        : "border-black/[0.06] hover:bg-slate-50 dark:border-white/[0.06] dark:hover:bg-white/[0.03]"
-                      }`}
-                  >
-                    <div
-                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${selected
-                          ? "border-purple-600 bg-purple-600 dark:border-cyan-400 dark:bg-cyan-400"
-                          : "border-slate-300 dark:border-slate-600"
-                        }`}
-                    >
-                      {selected && (
-                        <span className="h-2 w-2 rounded-full bg-white dark:bg-[#24134F]" />
-                      )}
-                    </div>
-
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold">{option.label}</p>
-
-                      <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                        {option.description}
-                      </p>
-                    </div>
-
-                    <Icon className="h-4 w-4 shrink-0 text-slate-400" />
-                  </button>
-                );
-              })}
+                <span>
+                  <span className="block text-sm font-medium">Publish school</span>
+                  <span className="block text-xs leading-5 text-slate-500 dark:text-slate-400">
+                    Leave unchecked to save as a draft. Learners can&apos;t see unpublished schools.
+                  </span>
+                </span>
+              </label>
             </div>
 
             <button
@@ -338,11 +306,7 @@ export default function CreateAiSchoolPage() {
               disabled={isCreating || !isFormValid}
             >
               <Plus className="h-4 w-4" />
-              {isCreating
-                ? "Creating..."
-                : published
-                  ? "Create and publish"
-                  : "Save as draft"}
+              {isCreating ? "Creating..." : "Create school"}
             </button>
             {error && (
               <Alert title="Error creating AI school" variant="error">
