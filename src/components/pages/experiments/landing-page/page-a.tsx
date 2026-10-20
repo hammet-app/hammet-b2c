@@ -6,8 +6,8 @@ import {
   ArrowRight,
   ArrowUpRight,
   Check,
-  Sparkles,
 } from "lucide-react";
+import { GlowingMagicSparkle } from "@/components/ui/vibrant-ai-icons";
 
 import { useTheme } from "@/lib/use-theme";
 import Image from "next/image";
@@ -133,7 +133,7 @@ export default function HomePage() {
               transition={{ duration: 0.7, ease: "easeOut" }}
             >
               <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-purple-200/80 bg-white/60 px-3.5 py-2 text-xs font-semibold text-purple-700 backdrop-blur-sm dark:border-purple-400/15 dark:bg-white/[0.04] dark:text-purple-300">
-                <Sparkles className="h-3.5 w-3.5" />
+                <GlowingMagicSparkle size="xs" />
                 AI education without the noise
               </div>
 

@@ -27,10 +27,11 @@ import {
   Timer,
   GraduationCap,
 } from "lucide-react";
+import { GlowingMagicSparkle } from "@/components/ui/vibrant-ai-icons";
 
 import { cn } from "@/lib/utils/utils";
 import { useAuth } from "@/lib/auth/auth-context";
-import { useLearnerStore } from "@/lib/store/use-learner-store";
+import { useLearnerStore, INITIAL_BADGES } from "@/lib/store/use-learner-store";
 import { SkillBadgeComponent } from "@/components/ui/skill-badge";
 import { BadgeCelebrationModal } from "@/components/ui/badge-celebration-modal";
 
@@ -1014,10 +1015,10 @@ export default function PassportPage() {
 
               {/* Status footer without mock toggle buttons */}
               <div className="mt-5 pt-4 border-t border-amber-200/60 dark:border-white/10 flex items-center justify-between">
-                <span className="text-[11px] font-mono font-bold text-amber-800 dark:text-amber-300">
+                <span className="text-[11px] font-poppins font-bold text-amber-800 dark:text-amber-300">
                   Status: Accreditation in Progress ⏳
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-3 py-1 font-mono text-[10px] font-bold text-amber-800 dark:text-amber-300 border border-amber-400/30">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-3 py-1 font-poppins text-[10px] font-bold text-amber-800 dark:text-amber-300 border border-amber-400/30">
                   <Timer className="h-3 w-3" /> Blurred Until Release
                 </span>
               </div>
@@ -1029,28 +1030,61 @@ export default function PassportPage() {
         <div className="mb-14">
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/10 px-3 py-0.5 text-xs font-mono font-bold text-purple-700 dark:text-cyan-300">
-                <Sparkles className="h-3.5 w-3.5" />
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/10 px-3 py-1 text-xs font-poppins font-bold text-purple-700 dark:text-cyan-300">
+                <GlowingMagicSparkle size="xs" />
                 <span>CRYPTOGRAPHIC SKILL MEDALLIONS</span>
               </div>
-              <h3 className="mt-1 text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+              <h3 className="mt-1 text-2xl font-black tracking-tight text-slate-900 dark:text-white font-poppins">
                 Minted Skill Badges
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-poppins">
                 Cryptographically verified micro-credentials issued upon passing capstone projects &amp; benchmark tests.
               </p>
             </div>
 
-            <div className="inline-flex items-center gap-2 rounded-xl border border-black/[0.08] bg-white px-3.5 py-2 text-xs font-mono font-bold text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+            <div className="inline-flex items-center gap-2 rounded-xl border border-black/[0.08] bg-white px-3.5 py-2 text-xs font-poppins font-bold text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
               <BadgeCheck className="h-4 w-4 text-purple-600 dark:text-cyan-400" />
               <span>{badges.length} Badges Minted &amp; Anchored</span>
             </div>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {badges.map((badge) => (
-              <SkillBadgeComponent key={badge.id} badge={badge} />
-            ))}
+          <div className="relative min-h-[380px] rounded-3xl overflow-hidden p-4 sm:p-6 border border-purple-500/15 bg-white/40 dark:bg-slate-900/40">
+            {/* Blurred Badges Grid */}
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 filter blur-md select-none pointer-events-none opacity-35">
+              {(badges.length > 0 ? badges : INITIAL_BADGES).map((badge) => (
+                <SkillBadgeComponent key={badge.id} badge={badge} />
+              ))}
+            </div>
+
+            {/* Frosted Glass Overlay with Coming Soon tag */}
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 sm:p-10 text-center bg-slate-950/80 dark:bg-slate-950/85 backdrop-blur-md rounded-3xl border border-white/15">
+              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-purple-500/20 border border-purple-400/40 text-purple-300 shadow-xl shadow-purple-500/20 mb-3">
+                <GlowingMagicSparkle size="lg" className="animate-pulse" />
+              </div>
+
+              <span className="rounded-full bg-purple-600/30 border border-purple-400/40 px-4 py-1 text-xs font-poppins font-bold tracking-widest text-purple-200 uppercase mb-3 shadow-sm">
+                COMING SOON • UNDER ACCREDITATION
+              </span>
+
+              <h4 className="text-2xl sm:text-3xl font-black tracking-tight text-white font-poppins">
+                Skill Badges &amp; Medallions Coming Soon
+              </h4>
+
+              <p className="mt-2.5 max-w-lg text-xs sm:text-sm text-slate-100 font-medium font-poppins leading-relaxed">
+                Cryptographically verified skill medallions and proof-of-work badges are being finalized. Complete course module benchmarks (≥80%) and capstone repositories to unlock and mint them upon release.
+              </p>
+
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+                <div className="flex items-center gap-2 rounded-xl bg-white/15 border border-white/20 px-3.5 py-2 text-xs font-poppins font-bold text-white shadow-sm">
+                  <ShieldCheck className="h-4 w-4 text-cyan-400" />
+                  <span>Module Progress &amp; Scores Safe</span>
+                </div>
+                <div className="flex items-center gap-2 rounded-xl bg-white/15 border border-white/20 px-3.5 py-2 text-xs font-poppins font-bold text-white shadow-sm">
+                  <BadgeCheck className="h-4 w-4 text-emerald-400" />
+                  <span>Verified Rubric Criteria Ready</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

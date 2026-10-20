@@ -23,6 +23,7 @@ import {
   Award,
   Zap,
 } from "lucide-react";
+import { GlowingMagicSparkle } from "@/components/ui/vibrant-ai-icons";
 
 import { useAuth } from "@/lib/auth/auth-context";
 import {
@@ -79,7 +80,7 @@ export default function LearnerHomePage() {
               Neural Intelligence Lab
             </span>
             <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500/15 to-cyan-500/15 px-2.5 py-0.5 font-poppins text-[10.5px] font-semibold text-purple-800 dark:text-cyan-200 border border-purple-300/30 dark:border-cyan-400/30">
-              <Sparkles className="h-3 w-3 text-purple-600 dark:text-cyan-300" />
+              <GlowingMagicSparkle size="xs" />
               Active Lab
             </span>
           </div>

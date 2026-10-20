@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
 import {
-  Sparkles,
   Award,
   CheckCircle2,
   Share2,
@@ -15,6 +14,7 @@ import {
   X,
   ArrowRight,
 } from "lucide-react";
+import { GlowingMagicSparkle } from "@/components/ui/vibrant-ai-icons";
 import { useLearnerStore } from "@/lib/store/use-learner-store";
 import { useAuth } from "@/lib/auth/auth-context";
 import { SkillBadgeComponent } from "@/components/ui/skill-badge";
@@ -122,7 +122,7 @@ export function BadgeCelebrationModal() {
             transition={{ delay: 0.15, type: "spring" }}
             className="inline-flex items-center gap-2 rounded-full border border-amber-400/50 bg-amber-400/10 px-4 py-1.5 text-xs font-mono font-bold text-amber-600 dark:text-amber-300 shadow-sm"
           >
-            <Sparkles className="h-3.5 w-3.5 animate-spin" style={{ animationDuration: "6s" }} />
+            <GlowingMagicSparkle size="xs" className="animate-spin" style={{ animationDuration: "6s" }} />
             <span>NEW SKILL CREDENTIAL MINTED!</span>
           </motion.div>
 

@@ -313,11 +313,11 @@ export function LearnerShell({ children }: LearnerShellProps) {
                   href={item.href}
                   title={collapsed ? item.label : undefined}
                   className={[
-                    "group relative flex h-11 items-center rounded-xl text-sm font-medium transition-all duration-200 overflow-hidden",
+                    "group relative flex h-11 items-center rounded-xl text-sm font-medium transition-colors duration-150 overflow-hidden select-none",
                     collapsed ? "justify-center px-0" : "px-3 gap-3",
                     active
-                      ? "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300 shadow-[inset_0_0_12px_rgba(168,85,247,0.12)]"
-                      : "text-slate-500 hover:bg-purple-50/60 hover:text-purple-700 dark:text-slate-400 dark:hover:bg-purple-500/10 dark:hover:text-purple-300",
+                      ? "text-purple-700 font-semibold dark:text-cyan-300"
+                      : "text-slate-600 hover:text-purple-700 dark:text-slate-400 dark:hover:text-purple-300",
                   ].join(" ")}
                 >
                   {active && (
@@ -326,10 +326,10 @@ export function LearnerShell({ children }: LearnerShellProps) {
 
                   <Icon
                     className={[
-                      "h-[18px] w-[18px] shrink-0 transition-all duration-200",
+                      "h-[18px] w-[18px] shrink-0 transition-colors duration-150",
                       active
-                        ? "text-purple-600 drop-shadow-[0_0_6px_rgba(168,85,247,0.4)] dark:text-cyan-400"
-                        : "text-slate-400 group-hover:text-purple-600 group-hover:drop-shadow-[0_0_8px_rgba(168,85,247,0.65)] dark:text-slate-400 dark:group-hover:text-purple-300 dark:group-hover:drop-shadow-[0_0_8px_rgba(168,85,247,0.65)]",
+                        ? "text-purple-600 dark:text-cyan-400"
+                        : "text-slate-400 group-hover:text-purple-700 dark:text-slate-400 dark:group-hover:text-purple-300",
                     ].join(" ")}
                   />
 
@@ -343,9 +343,10 @@ export function LearnerShell({ children }: LearnerShellProps) {
                       ease: [0.16, 1, 0.3, 1],
                     }}
                     className={[
-                      "truncate whitespace-nowrap overflow-hidden transition-all duration-200",
-                      "group-hover:text-purple-600 group-hover:[text-shadow:0_0_12px_rgba(168,85,247,0.7),0_0_22px_rgba(147,51,234,0.45)] dark:group-hover:text-purple-300 dark:group-hover:[text-shadow:0_0_14px_rgba(192,132,252,0.85),0_0_26px_rgba(168,85,247,0.55)]",
-                      active ? "[text-shadow:0_0_8px_rgba(168,85,247,0.3)]" : "",
+                      "truncate whitespace-nowrap overflow-hidden transition-colors duration-150",
+                      active
+                        ? "text-purple-700 dark:text-cyan-300 font-semibold"
+                        : "text-slate-600 group-hover:text-purple-700 dark:text-slate-400 dark:group-hover:text-purple-300",
                     ].join(" ")}
                   >
                     {item.label}
@@ -364,11 +365,11 @@ export function LearnerShell({ children }: LearnerShellProps) {
               href="/learner/settings"
               title={collapsed ? "Settings" : undefined}
               className={[
-                "group flex h-11 items-center rounded-xl text-sm font-medium text-slate-500 transition-all duration-200 hover:bg-purple-50/60 hover:text-purple-700 dark:text-slate-400 dark:hover:bg-purple-500/10 dark:hover:text-purple-300 overflow-hidden",
+                "group flex h-11 items-center rounded-xl text-sm font-medium text-slate-600 transition-colors duration-150 hover:text-purple-700 dark:text-slate-400 dark:hover:text-purple-300 overflow-hidden select-none",
                 collapsed ? "justify-center px-0" : "px-3 gap-3",
               ].join(" ")}
             >
-              <Settings className="h-[18px] w-[18px] shrink-0 text-slate-400 transition-all duration-200 group-hover:text-purple-600 group-hover:drop-shadow-[0_0_8px_rgba(168,85,247,0.65)] dark:text-slate-400 dark:group-hover:text-purple-300" />
+              <Settings className="h-[18px] w-[18px] shrink-0 text-slate-400 transition-colors duration-150 group-hover:text-purple-700 dark:text-slate-400 dark:group-hover:text-purple-300" />
               <motion.span
                 animate={{
                   opacity: collapsed ? 0 : 1,
@@ -378,7 +379,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
                   duration: 0.12,
                   ease: [0.16, 1, 0.3, 1],
                 }}
-                className="truncate whitespace-nowrap overflow-hidden transition-all duration-200 group-hover:text-purple-600 group-hover:[text-shadow:0_0_12px_rgba(168,85,247,0.7),0_0_22px_rgba(147,51,234,0.45)] dark:group-hover:text-purple-300 dark:group-hover:[text-shadow:0_0_14px_rgba(192,132,252,0.85),0_0_26px_rgba(168,85,247,0.55)]"
+                className="truncate whitespace-nowrap overflow-hidden transition-colors duration-150 group-hover:text-purple-700 dark:group-hover:text-purple-300"
               >
                 Settings
               </motion.span>
@@ -389,11 +390,11 @@ export function LearnerShell({ children }: LearnerShellProps) {
               onClick={() => void logout()}
               title={collapsed ? "Sign out" : undefined}
               className={[
-                "mt-1 flex h-11 w-full items-center rounded-xl text-sm font-medium text-slate-500 transition-colors duration-150 hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400 overflow-hidden",
+                "mt-1 flex h-11 w-full items-center rounded-xl text-sm font-medium text-slate-600 transition-colors duration-150 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 overflow-hidden select-none",
                 collapsed ? "justify-center px-0" : "px-3 gap-3",
               ].join(" ")}
             >
-              <LogOut className="h-[18px] w-[18px] shrink-0" />
+              <LogOut className="h-[18px] w-[18px] shrink-0 text-slate-400 transition-colors duration-150 group-hover:text-red-600 dark:group-hover:text-red-400" />
               <motion.span
                 animate={{
                   opacity: collapsed ? 0 : 1,
@@ -403,7 +404,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
                   duration: 0.12,
                   ease: [0.16, 1, 0.3, 1],
                 }}
-                className="truncate whitespace-nowrap overflow-hidden"
+                className="truncate whitespace-nowrap overflow-hidden transition-colors duration-150 group-hover:text-red-600 dark:group-hover:text-red-400"
               >
                 Sign out
               </motion.span>
@@ -501,14 +502,14 @@ export function LearnerShell({ children }: LearnerShellProps) {
                       href={item.href}
                       onClick={() => setMobileOpen(false)}
                       className={[
-                        "group flex h-12 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-all duration-200",
+                        "group flex h-12 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors duration-150 select-none",
                         active
-                          ? "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300 shadow-[inset_0_0_12px_rgba(168,85,247,0.12)]"
-                          : "text-slate-500 hover:bg-purple-50/60 hover:text-purple-700 dark:text-slate-400 dark:hover:bg-purple-500/10 dark:hover:text-purple-300",
+                          ? "text-purple-700 font-semibold dark:text-cyan-300"
+                          : "text-slate-600 hover:text-purple-700 dark:text-slate-400 dark:hover:text-purple-300",
                       ].join(" ")}
                     >
-                      <Icon className="h-[18px] w-[18px] transition-all duration-200 group-hover:text-purple-600 group-hover:drop-shadow-[0_0_8px_rgba(168,85,247,0.65)] dark:group-hover:text-purple-300" />
-                      <span className="truncate whitespace-nowrap transition-all duration-200 group-hover:text-purple-600 group-hover:[text-shadow:0_0_12px_rgba(168,85,247,0.7),0_0_22px_rgba(147,51,234,0.45)] dark:group-hover:text-purple-300 dark:group-hover:[text-shadow:0_0_14px_rgba(192,132,252,0.85),0_0_26px_rgba(168,85,247,0.55)]">
+                      <Icon className="h-[18px] w-[18px] transition-colors duration-150 text-slate-400 group-hover:text-purple-700 dark:text-slate-400 dark:group-hover:text-purple-300" />
+                      <span className="truncate whitespace-nowrap transition-colors duration-150 text-slate-600 group-hover:text-purple-700 dark:text-slate-400 dark:group-hover:text-purple-300">
                         {item.label}
                       </span>
                     </Link>
@@ -543,10 +544,10 @@ export function LearnerShell({ children }: LearnerShellProps) {
                 <Link
                   href="/learner/settings"
                   onClick={() => setMobileOpen(false)}
-                  className="group flex h-11 items-center gap-3 rounded-xl px-3 text-sm text-slate-500 transition-all duration-200 hover:bg-purple-50/60 hover:text-purple-700 dark:text-slate-400 dark:hover:bg-purple-500/10 dark:hover:text-purple-300"
+                  className="group flex h-11 items-center gap-3 rounded-xl px-3 text-sm text-slate-600 transition-colors duration-150 hover:text-purple-700 dark:text-slate-400 dark:hover:text-purple-300 select-none"
                 >
-                  <Settings className="h-[18px] w-[18px] text-slate-400 transition-all duration-200 group-hover:text-purple-600 group-hover:drop-shadow-[0_0_8px_rgba(168,85,247,0.65)] dark:group-hover:text-purple-300" />
-                  <span className="transition-all duration-200 group-hover:text-purple-600 group-hover:[text-shadow:0_0_12px_rgba(168,85,247,0.7),0_0_22px_rgba(147,51,234,0.45)] dark:group-hover:text-purple-300 dark:group-hover:[text-shadow:0_0_14px_rgba(192,132,252,0.85),0_0_26px_rgba(168,85,247,0.55)]">
+                  <Settings className="h-[18px] w-[18px] text-slate-400 transition-colors duration-150 group-hover:text-purple-700 dark:text-slate-400 dark:group-hover:text-purple-300" />
+                  <span className="transition-colors duration-150 group-hover:text-purple-700 dark:group-hover:text-purple-300">
                     Settings
                   </span>
                 </Link>

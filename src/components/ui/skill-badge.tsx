@@ -16,6 +16,7 @@ import {
   Hash,
   GraduationCap,
 } from "lucide-react";
+import { GlowingMagicSparkle } from "@/components/ui/vibrant-ai-icons";
 import { cn } from "@/lib/utils/utils";
 import { SkillBadge, useLearnerStore } from "@/lib/store/use-learner-store";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -544,7 +545,7 @@ export function SkillBadgeComponent({
                   }}
                   className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-700 px-4 py-3 font-poppins text-xs font-bold text-white shadow-lg hover:scale-[1.02] active:scale-[0.98] transition"
                 >
-                  <Sparkles className="h-4 w-4" />
+                  <GlowingMagicSparkle size="sm" />
                   <span>Simulate Earning This Badge &amp; Celebrate 🎉</span>
                 </button>
               </div>

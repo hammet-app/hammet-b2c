@@ -20,7 +20,7 @@ import {
   ChevronDown,
   Pin,
   Bell,
-  Sparkles,
+  Rocket,
   ArrowRight,
   Crown,
   Laptop,
@@ -644,7 +644,7 @@ export default function LearnerChatPage() {
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left backdrop-blur-sm">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-300 mb-2">
-              <Sparkles className="h-4 w-4" />
+              <Rocket className="h-4 w-4" />
             </div>
             <h4 className="text-xs font-bold text-white">Project Showcase</h4>
             <p className="mt-1 text-[11px] text-slate-400 leading-normal">

@@ -17,13 +17,13 @@ import {
   BookOpen,
   Award,
   HelpCircle,
-  Sparkles,
   UploadCloud,
   CheckCircle2,
   FileText,
   Image as ImageIcon,
   Check,
 } from "lucide-react";
+import { GlowingMagicSparkle } from "@/components/ui/vibrant-ai-icons";
 import { motion, AnimatePresence } from "motion/react";
 
 export function CreateTicketModal() {
@@ -250,7 +250,7 @@ export function CreateTicketModal() {
                   </button>
 
                   <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-3 py-1 text-[11px] font-bold text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 mb-2 border border-purple-200/60 dark:border-purple-500/30">
-                    <Sparkles className="h-3 w-3" />
+                    <GlowingMagicSparkle size="xs" />
                     Hammet Learner Help Desk
                   </div>
                   <h3 id="ticket-modal-title" className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">

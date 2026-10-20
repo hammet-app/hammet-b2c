@@ -30,10 +30,9 @@ import {
   X,
   FileCode,
   File,
-  Sparkles,
-  ArrowRight,
   RotateCcw,
 } from "lucide-react";
+import { GlowingMagicSparkle } from "@/components/ui/vibrant-ai-icons";
 import { motion, AnimatePresence } from "motion/react";
 
 export function TicketDetailView() {
@@ -471,7 +470,7 @@ export function TicketDetailView() {
 
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-              <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+              <GlowingMagicSparkle size="xs" />
               <span>Assigned staff automatically notified upon reply</span>
             </div>
 

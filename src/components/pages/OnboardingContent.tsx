@@ -5,11 +5,11 @@ import { motion, AnimatePresence } from "motion/react";
 import {
   ArrowRight,
   ArrowLeft,
-  Sparkles,
   Compass,
   Route,
   Check,
 } from "lucide-react";
+import { GlowingMagicSparkle } from "@/components/ui/vibrant-ai-icons";
 import { notFound, useRouter } from "next/navigation";
 import { AuthShell } from "@/components/ui/auth-shell";
 import { learnerApi } from "@/lib/api/learner";
@@ -177,8 +177,8 @@ export default function OnboardingContent() {
                 exit={{ opacity: 0, y: -16 }}
                 transition={{ duration: 0.25 }}
               >
-                <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300">
-                  <Sparkles className="h-6 w-6" />
+                <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/20 via-indigo-500/15 to-cyan-500/20 border border-purple-500/30 shadow-lg shadow-purple-500/10">
+                  <GlowingMagicSparkle size="lg" />
                 </div>
 
                 <p className="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-purple-600 dark:text-purple-400">

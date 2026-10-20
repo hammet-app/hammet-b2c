@@ -40,6 +40,7 @@ import {
   Send,
   ExternalLink,
 } from "lucide-react";
+import { GlowingMagicSparkle } from "@/components/ui/vibrant-ai-icons";
 
 import { useTheme } from "@/lib/use-theme";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -418,7 +419,7 @@ export default function HomePage() {
                   <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.9)]" />
                 </span>
 
-                <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-cyan-300 animate-spin" style={{ animationDuration: "9s" }} />
+                <GlowingMagicSparkle size="xs" className="animate-spin" style={{ animationDuration: "9s" }} />
 
                 {/* Badge typography */}
                 <span className="font-poppins text-xs sm:text-[13px] font-black tracking-widest uppercase bg-gradient-to-r from-purple-700 via-indigo-600 to-violet-800 bg-clip-text text-transparent dark:from-purple-200 dark:via-indigo-200 dark:to-cyan-200 drop-shadow-sm">

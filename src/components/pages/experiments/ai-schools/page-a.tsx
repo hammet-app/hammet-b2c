@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { BookOpen, Sparkles, AlertCircle, ArrowRight } from "lucide-react";
+import { BookOpen, AlertCircle, ArrowRight } from "lucide-react";
+import { GlowingMagicSparkle, SchoolVibrantIcon } from "@/components/ui/vibrant-ai-icons";
 
 import { useAuth } from "@/lib/auth/auth-context";
 import { learnerApi } from "@/lib/api/learner";
@@ -48,7 +49,7 @@ export default function AiSchoolsPage() {
           className="mb-10 max-w-2xl"
         >
           <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-purple-600 dark:text-cyan-400">
-            <Sparkles className="h-3.5 w-3.5" />
+            <GlowingMagicSparkle size="xs" />
             AI Schools
           </div>
 
@@ -92,8 +93,8 @@ export default function AiSchoolsPage() {
                   className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-black/[0.06] bg-white p-6 transition-all hover:-translate-y-1 hover:shadow-lg dark:border-white/[0.06] dark:bg-white/[0.03]"
                 >
                   <div className="mb-4">
-                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-300">
-                      <Sparkles className="h-5 w-5" />
+                    <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/15 via-indigo-500/10 to-cyan-500/10 border border-purple-500/25 shadow-sm">
+                      <SchoolVibrantIcon schoolId={school.id} schoolName={school.name} size="md" />
                     </div>
                     <h2 className="text-lg font-semibold tracking-[-0.03em]">{school.name}</h2>
                   </div>

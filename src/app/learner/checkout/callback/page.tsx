@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { useCart, CartItem } from "@/lib/store/use-cart";
 import { useAuth } from "@/lib/auth/auth-context";
 import { paymentApi } from "@/lib/api/payment";
+import { getCartItemsFromDB } from "@/lib/db";
 
 function PaystackCallbackContent() {
   const searchParams = useSearchParams();
@@ -54,7 +55,7 @@ function PaystackCallbackContent() {
     attemptedRef.current = true;
 
     async function handleSettlement() {
-      // Check if Paystack returned a cancellation or failure
+      // 1. Check if Paystack returned a cancellation or failure
       if (statusParam === "cancelled" || statusParam === "failed") {
         setIsSuccess(false);
         setErrorMessage("The payment session on Paystack was cancelled or declined.");
@@ -69,12 +70,29 @@ function PaystackCallbackContent() {
         return;
       }
 
-      // Verify settlement strictly with the backend API
+      // 2. Verify settlement strictly with the backend API
       try {
         const verifyRes = await paymentApi.verifyPayment(reference, accessToken);
 
         if (verifyRes.success && verifyRes.data && verifyRes.data.status === "success") {
-          const currentItems = [...itemsRef.current];
+          let currentItems = [...itemsRef.current];
+
+          if (currentItems.length === 0 && typeof window !== "undefined") {
+            try {
+              const stored =
+                sessionStorage.getItem("hammet_pending_checkout") ||
+                localStorage.getItem("hammet_pending_checkout");
+              if (stored) {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                  currentItems = parsed;
+                }
+              }
+            } catch (e) {
+              console.warn("Failed to parse stored pending checkout:", e);
+            }
+          }
+
           const enrolledItemIds =
             verifyRes.data.enrolled_items && verifyRes.data.enrolled_items.length > 0
               ? verifyRes.data.enrolled_items
@@ -113,8 +131,17 @@ function PaystackCallbackContent() {
           // Activate courses in local DB now that backend confirmed payment
           if (enrolledItemIds.length > 0) {
             await markAsPaidRef.current(enrolledItemIds);
+            try {
+              const existingPaid = JSON.parse(localStorage.getItem("hammet-paid-items") || "[]");
+              const mergedPaid = Array.from(new Set([...existingPaid, ...enrolledItemIds]));
+              localStorage.setItem("hammet-paid-items", JSON.stringify(mergedPaid));
+            } catch {}
           }
           await clearCartRef.current();
+          try {
+            sessionStorage.removeItem("hammet_pending_checkout");
+            localStorage.removeItem("hammet_pending_checkout");
+          } catch {}
 
           setIsSuccess(true);
         } else {

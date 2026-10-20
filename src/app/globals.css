@@ -40,8 +40,9 @@
   --color-text-muted:     #A1A1AA;
 
   /* ── Fonts ── */
-  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
-  --font-head: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-poppins), sans-serif;
+  --font-head: var(--font-poppins), sans-serif;
+  --font-mono: var(--font-poppins), sans-serif;
 
   /* ── Radius ── */
   --radius-sm:  6px;

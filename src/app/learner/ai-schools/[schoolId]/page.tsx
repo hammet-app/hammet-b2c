@@ -21,6 +21,7 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
   const { accessToken, refreshToken } = useAuth();
   
   const [courses, setCourses] = useState<AiSchoolCourse[]>([]);
+  const [schoolName, setSchoolName] = useState<string>("School of AI Foundations");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -32,8 +33,24 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
 
   const fetchCourses = useCallback(async () => {
     if (!schoolId) return;
+
     try {
       setLoading(true);
+      // Fetch school details to display dynamic name
+      try {
+        const schoolsData = await learnerApi.getAiSchools(accessToken ?? "", refreshToken);
+        const currentSchool = schoolsData.aiSchools.find((s) => s.id === schoolId);
+        if (currentSchool) {
+          setSchoolName(currentSchool.name);
+        } else if (schoolId === "school-ai-safety") {
+          setSchoolName("School of AI Safety, Alignment & Red-Teaming");
+        }
+      } catch {
+        if (schoolId === "school-ai-safety") {
+          setSchoolName("School of AI Safety, Alignment & Red-Teaming");
+        }
+      }
+
       const data = await learnerApi.getAiSchoolCourses(schoolId, accessToken ?? "", refreshToken);
       setCourses(data.courses.sort((a, b) => (a.position || 0) - (b.position || 0)));
       setError(null);
@@ -80,7 +97,7 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
           >
             <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-purple-600 dark:text-cyan-400">
               <BookOpen className="h-3.5 w-3.5" />
-              School of AI foundation
+              {schoolName}
             </div>
 
             <h1 className="text-3xl font-semibold tracking-[-0.045em] text-slate-950 sm:text-4xl dark:text-white">
@@ -114,7 +131,7 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
                       if (isSchoolInCart) {
                         router.push('/learner/checkout');
                       } else {
-                        addItem({ id: schoolId, type: 'ai_school', title: 'School of AI foundation', price: fullSchoolPrice });
+                        addItem({ id: schoolId, type: 'ai_school', title: schoolName, price: fullSchoolPrice });
                       }
                     }}
                   >

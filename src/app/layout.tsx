@@ -49,7 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </Script>
       </head>
 
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col font-poppins">
         <AuthProvider>
           <SmoothScrollProvider>{children}</SmoothScrollProvider>
         </AuthProvider>

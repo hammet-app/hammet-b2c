@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -12,7 +12,7 @@ import {
   Code2,
   Cpu,
   Layers,
-  Sparkles,
+  Lock,
   ArrowUpRight,
   ChevronRight,
   Upload,
@@ -36,6 +36,7 @@ import {
   TerminalDoodleIcon,
 } from "@/components/ui/character-icons";
 import { useLearnerStore, LearnerProject } from "@/lib/store/use-learner-store";
+import { useCart } from "@/lib/store/use-cart";
 import { BadgeCelebrationModal } from "@/components/ui/badge-celebration-modal";
 
 export default function ProjectsPage() {
@@ -47,6 +48,13 @@ export default function ProjectsPage() {
   const triggerCelebration = useLearnerStore((state) => state.triggerCelebration);
   const closeCelebration = useLearnerStore((state) => state.closeCelebration);
   const badges = useLearnerStore((state) => state.badges);
+
+  const { hasPaidItem, paidItems } = useCart();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [statusFilter, setStatusFilter] = useState<"all" | "in-progress" | "completed" | "not-started">("all");
   const [selectedTrack, setSelectedTrack] = useState<string>("All Tracks");
@@ -248,6 +256,7 @@ export default function ProjectsPage() {
             {filteredProjects.map((project, index) => {
               const isDone = project.status === "completed";
               const isInProgress = project.status === "in-progress";
+              const isUnlocked = !mounted || isDone || isInProgress || hasPaidItem(project.courseId) || hasPaidItem("course-llm-foundations") || hasPaidItem("school-ai-foundations") || paidItems.length > 0;
 
               return (
                 <motion.div
@@ -297,9 +306,14 @@ export default function ProjectsPage() {
                           <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
                             In Progress
                           </span>
-                        ) : (
+                        ) : isUnlocked ? (
                           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-white/5 dark:text-slate-400">
                             Not Started
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300 flex items-center gap-1 border border-amber-500/20">
+                            <Lock className="h-3 w-3" />
+                            Prerequisite
                           </span>
                         )}
                       </div>
@@ -404,56 +418,71 @@ export default function ProjectsPage() {
                       />
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2">
-                      {!isInProgress && !isDone && (
-                        <button
-                          onClick={() => startProject(project.id)}
-                          className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-purple-600 transition dark:bg-white dark:text-slate-950 dark:hover:bg-cyan-300"
+                    {!isUnlocked ? (
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-black/[0.05] dark:border-white/[0.05]">
+                        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                          <Lock className="h-4 w-4 text-purple-600 dark:text-cyan-400 shrink-0" />
+                          <span>Complete <strong>{project.courseTitle}</strong> to unlock this capstone workspace</span>
+                        </div>
+                        <Link
+                          href="/learner/ai-schools"
+                          className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-purple-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 shrink-0 shadow-sm transition"
                         >
-                          <Play className="h-3.5 w-3.5 fill-current" />
-                          <span>Start Project & Allocate Workspace</span>
-                        </button>
-                      )}
-
-                      {isInProgress && (
-                        <>
+                          <span>Enroll to Unlock</span>
+                          <ArrowUpRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-2">
+                        {!isInProgress && !isDone && (
                           <button
-                            onClick={() => handleLaunchSandbox(project.id)}
-                            disabled={launchingId === project.id}
-                            className={cn(
-                              "flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all shadow-sm",
-                              sandboxLaunched[project.id]
-                                ? "bg-emerald-50 text-emerald-700 border border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300"
-                                : "bg-purple-600 text-white hover:bg-purple-700 hover:scale-[1.01]"
-                            )}
+                            onClick={() => startProject(project.id)}
+                            className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-purple-600 transition dark:bg-white dark:text-slate-950 dark:hover:bg-cyan-300"
                           >
-                            {launchingId === project.id ? (
-                              <>
-                                <span className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                                Launching Practice Lab...
-                              </>
-                            ) : sandboxLaunched[project.id] ? (
-                              <>
-                                <CheckCircle2 className="h-3.5 w-3.5" />
-                                Practice Lab Active (Port 8080)
-                              </>
-                            ) : (
-                              <>
-                                <Play className="h-3.5 w-3.5 fill-current" />
-                                Launch Practice Lab
-                              </>
-                            )}
+                            <Play className="h-3.5 w-3.5 fill-current" />
+                            <span>Start Project & Allocate Workspace</span>
                           </button>
+                        )}
 
-                          <button
-                            onClick={() => handleOpenSubmitModal(project)}
-                            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 shadow-sm transition"
-                          >
-                            <Send className="h-3.5 w-3.5" />
-                            <span>Submit Project 🚀</span>
-                          </button>
-                        </>
-                      )}
+                        {isInProgress && (
+                          <>
+                            <button
+                              onClick={() => handleLaunchSandbox(project.id)}
+                              disabled={launchingId === project.id}
+                              className={cn(
+                                "flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all shadow-sm",
+                                sandboxLaunched[project.id]
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300"
+                                  : "bg-purple-600 text-white hover:bg-purple-700 hover:scale-[1.01]"
+                              )}
+                            >
+                              {launchingId === project.id ? (
+                                <>
+                                  <span className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                                  Launching Practice Lab...
+                                </>
+                              ) : sandboxLaunched[project.id] ? (
+                                <>
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  Practice Lab Active (Port 8080)
+                                </>
+                              ) : (
+                                <>
+                                  <Play className="h-3.5 w-3.5 fill-current" />
+                                  Launch Practice Lab
+                                </>
+                              )}
+                            </button>
+
+                            <button
+                              onClick={() => handleOpenSubmitModal(project)}
+                              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 shadow-sm transition"
+                            >
+                              <Send className="h-3.5 w-3.5" />
+                              <span>Submit Project 🚀</span>
+                            </button>
+                          </>
+                        )}
 
                       {isDone && (
                         <div className="flex-1 flex items-center justify-between gap-2">
@@ -477,7 +506,8 @@ export default function ProjectsPage() {
                         </div>
                       )}
                     </div>
-                  </div>
+                  )}
+                </div>
                 </motion.div>
               );
             })}

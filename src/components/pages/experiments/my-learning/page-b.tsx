@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Calendar,
@@ -31,10 +32,28 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/store/use-cart";
 import { cn } from "@/lib/utils/utils";
 
-// Exclusively AI Courses from School of AI Foundations
-const MOCK_AI_LEARNING_COURSES = [
+export interface AiLearningCourse {
+  id: string;
+  altIds: string[];
+  schoolId: string;
+  altSchoolIds: string[];
+  title: string;
+  school: string;
+  author: string;
+  progress: number;
+  modulesCompleted: number;
+  totalModules: number;
+  lastAccessed: string;
+  image: string;
+}
+
+// Canonical Curriculum Courses from Hammet AI Schools
+export const ALL_CATALOG_COURSES: AiLearningCourse[] = [
   {
-    id: "ai-course-1",
+    id: "course-llm-foundations",
+    altIds: ["ai-course-1", "intro-modern-llms"],
+    schoolId: "school-ai-foundations",
+    altSchoolIds: ["school-ai-foundation-1", "school-01", "school-1"],
     title: "Introduction to Artificial Intelligence & Modern LLMs",
     school: "School of AI Foundations",
     author: "Hammet AI Faculty • Dr. Sophia Vance",
@@ -45,7 +64,10 @@ const MOCK_AI_LEARNING_COURSES = [
     image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&q=80&w=800",
   },
   {
-    id: "ai-course-2",
+    id: "course-neural-networks",
+    altIds: ["ai-course-2", "neural-networks-deep-learning"],
+    schoolId: "school-ai-foundations",
+    altSchoolIds: ["school-ai-foundation-1", "school-01", "school-1"],
     title: "Neural Networks & Deep Learning Architectures",
     school: "School of AI Foundations",
     author: "Dr. Michael Zhang, AI Research Fellow",
@@ -56,7 +78,10 @@ const MOCK_AI_LEARNING_COURSES = [
     image: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&q=80&w=800",
   },
   {
-    id: "ai-course-3",
+    id: "course-gen-ai",
+    altIds: ["ai-course-3", "generative-ai-systems"],
+    schoolId: "school-ai-foundations",
+    altSchoolIds: ["school-ai-foundation-1", "school-01", "school-1"],
     title: "Generative AI Systems: Prompt Engineering & RAG",
     school: "School of AI Foundations",
     author: "Alex Rivera, Principal AI Architect",
@@ -67,7 +92,10 @@ const MOCK_AI_LEARNING_COURSES = [
     image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800",
   },
   {
-    id: "ai-course-4",
+    id: "course-autonomous-agents",
+    altIds: ["ai-course-4", "autonomous-ai-agents"],
+    schoolId: "school-ai-foundations",
+    altSchoolIds: ["school-ai-foundation-1", "school-01", "school-1"],
     title: "Autonomous AI Agents & Tool-Use Execution",
     school: "School of AI Foundations",
     author: "Elena Rostova, Autonomous Systems Lead",
@@ -76,6 +104,20 @@ const MOCK_AI_LEARNING_COURSES = [
     totalModules: 8,
     lastAccessed: "Not started",
     image: "https://images.unsplash.com/photo-1531746790731-6c087fecd65a?auto=format&fit=crop&q=80&w=800",
+  },
+  {
+    id: "course-ai-safety-alignment",
+    altIds: ["ai-course-5", "school-ai-safety-course-1"],
+    schoolId: "school-ai-safety",
+    altSchoolIds: [],
+    title: "AI Safety, Alignment & RLHF Fundamentals",
+    school: "School of AI Safety & Governance",
+    author: "Dr. Aris Thorne",
+    progress: 0,
+    modulesCompleted: 0,
+    totalModules: 10,
+    lastAccessed: "Not started",
+    image: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&q=80&w=800",
   },
 ];
 
@@ -137,7 +179,7 @@ export default function MyLearningPage() {
   
   // Interactive Schedule state
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
-  const [selectedDays, setSelectedDays] = useState<string[]>(["Mon", "Tue", "Wed", "Thu", "Fri"]);
+  const [selectedDays, setSelectedDays] = useState<string[]>(["Mon", "Wed", "Fri"]);
   const [scheduleTime, setScheduleTime] = useState("19:00");
   const [durationMins, setDurationMins] = useState("30");
   const [remindersEnabled, setRemindersEnabled] = useState(true);
@@ -154,23 +196,48 @@ export default function MyLearningPage() {
   const [isStreakOpen, setIsStreakOpen] = useState(false);
   const [selectedQuizAnswer, setSelectedQuizAnswer] = useState<number | null>(null);
   const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [quizError, setQuizError] = useState<string | null>(null);
 
   useEffect(() => {
+    setMounted(true);
+
+    // 1. Streak activation: ensure daily streak momentum is active
     const savedStreak = localStorage.getItem("hammet-streak-days");
     if (savedStreak) {
       setStreakDays(parseInt(savedStreak, 10));
       setStreakActive(true);
+    } else {
+      setStreakDays(1);
+      setStreakActive(true);
+      localStorage.setItem("hammet-streak-days", "1");
     }
+
+    // 2. Schedule activation: ensure learning schedule is active
     const sched = localStorage.getItem("hammet-learning-schedule");
     if (sched) {
       try {
-        setSavedSchedule(JSON.parse(sched));
+        const parsed = JSON.parse(sched);
+        setSavedSchedule(parsed);
+        if (parsed.days) setSelectedDays(parsed.days);
+        if (parsed.time) setScheduleTime(parsed.time);
+        if (parsed.duration) setDurationMins(parsed.duration);
       } catch {}
+    } else {
+      const defaultSchedule = {
+        days: ["Mon", "Wed", "Fri"],
+        time: "19:00",
+        duration: "30",
+        active: true,
+      };
+      setSavedSchedule(defaultSchedule);
+      setSelectedDays(defaultSchedule.days);
+      localStorage.setItem("hammet-learning-schedule", JSON.stringify(defaultSchedule));
     }
   }, []);
 
   const handleIgniteStreak = () => {
     if (selectedQuizAnswer === 1) {
+      setQuizError(null);
       const next = streakDays > 0 ? streakDays + 1 : 1;
       setStreakDays(next);
       setStreakActive(true);
@@ -179,7 +246,10 @@ export default function MyLearningPage() {
       setTimeout(() => {
         setIsStreakOpen(false);
         setQuizSubmitted(false);
-      }, 1600);
+        setSelectedQuizAnswer(null);
+      }, 1400);
+    } else {
+      setQuizError("That's not quite right. Modern LLMs use Multi-Head Self-Attention (Transformers)! Select option B to ignite your streak.");
     }
   };
 
@@ -241,16 +311,43 @@ export default function MyLearningPage() {
     setIsNewListOpen(false);
   };
 
-  const isDemoAccount = !user || user?.id === "user_learner" || user?.email === "user_learner@gmail.com";
+  // Active Paid Items Collection (from useCart state, Dexie cartMeta, and LocalStorage)
+  const allPaidIds = Array.from(
+    new Set([
+      ...paidItems,
+      ...(typeof window !== "undefined"
+        ? (JSON.parse(localStorage.getItem("hammet-paid-items") || "[]") as string[])
+        : []),
+      ...(typeof window !== "undefined"
+        ? (JSON.parse(localStorage.getItem("hammet_enrolled_courses") || "[]") as string[])
+        : []),
+    ])
+  );
 
-  // Accessible courses:
-  // - Demo account gets all courses
-  // - Real user accounts only get courses they paid for (hasPaidItem) or acquired for free (price === 0)
-  const accessibleCourses = MOCK_AI_LEARNING_COURSES.filter((c) => {
-    if (isDemoAccount) return true;
-    const isFree = (c as unknown as { price?: number }).price === 0;
-    const isPaid = hasPaidItem(c.id) || hasPaidItem("school-ai-foundation-1") || hasPaidItem("school-01") || hasPaidItem("school-1") || paidItems.includes(c.id);
-    return isFree || isPaid;
+  // Accessible courses: ONLY courses or schools that have actually been paid for - no dummy data
+  const accessibleCourses = ALL_CATALOG_COURSES.filter((c) => {
+    // 1. Direct course purchase
+    if (allPaidIds.includes(c.id) || c.altIds.some((id) => allPaidIds.includes(id))) {
+      return true;
+    }
+    // 2. Direct school purchase
+    if (allPaidIds.includes(c.schoolId) || c.altSchoolIds.some((id) => allPaidIds.includes(id))) {
+      return true;
+    }
+    // 3. General school enrollment purchased (e.g. "school-01", "school-1", "school-ai-foundation-1", "school-ai-foundations")
+    const hasAnySchoolPaid = allPaidIds.some(
+      (id) =>
+        id.startsWith("school") ||
+        id === "school-ai-foundations" ||
+        id === "school-ai-foundation-1" ||
+        id === "school-01" ||
+        id === "school-1"
+    );
+    if (hasAnySchoolPaid && (c.schoolId === "school-ai-foundations" || c.altSchoolIds.includes("school-1"))) {
+      return true;
+    }
+
+    return false;
   });
 
   const filteredAiCourses = accessibleCourses.filter(
@@ -531,7 +628,7 @@ export default function MyLearningPage() {
                   </div>
 
                   <Link
-                    href={`/learner/ai-schools/school-1`}
+                    href={`/learner/courses/${course.id}`}
                     className="absolute inset-0 flex items-center justify-center bg-purple-950/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100 backdrop-blur-[2px]"
                   >
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-purple-700 shadow-2xl transition-transform duration-300 group-hover:scale-110">
@@ -572,7 +669,7 @@ export default function MyLearningPage() {
                         {course.lastAccessed}
                       </span>
                       <Link
-                        href={`/learner/ai-schools/school-1`}
+                        href={`/learner/courses/${course.id}`}
                         className="text-xs font-semibold text-purple-600 hover:text-purple-700 dark:text-cyan-400 dark:hover:text-cyan-300 inline-flex items-center gap-1"
                       >
                         Continue
@@ -778,310 +875,331 @@ export default function MyLearningPage() {
       </div>
 
       {/* INTERACTIVE MODAL: SCHEDULE LEARNING TIME */}
-      <AnimatePresence>
-        {isScheduleOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsScheduleOpen(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative z-10 w-full max-w-lg overflow-hidden rounded-3xl border border-black/[0.08] bg-white p-7 shadow-2xl dark:border-white/10 dark:bg-[#161226]"
-            >
-              <div className="flex items-center justify-between pb-4 border-b border-black/[0.06] dark:border-white/[0.06]">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-cyan-500/10 dark:text-cyan-400">
-                    <Clock className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Schedule Learning Time</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Build a steady daily habit with custom reminders</p>
-                  </div>
-                </div>
-                <button
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {isScheduleOpen && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 font-poppins">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   onClick={() => setIsScheduleOpen(false)}
-                  className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-white/10 dark:hover:text-white"
+                  className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+                />
+
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                  className="relative z-10 w-full max-w-lg overflow-hidden rounded-3xl border border-black/[0.08] bg-white p-7 shadow-2xl dark:border-white/10 dark:bg-[#161226]"
                 >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="mt-6 space-y-6">
-                {/* 1. Day of the week selector */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                    Learning Days
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {WEEK_DAYS.map((day) => {
-                      const isSelected = selectedDays.includes(day);
-                      return (
-                        <button
-                          key={day}
-                          onClick={() => {
-                            if (isSelected) {
-                              setSelectedDays(selectedDays.filter((d) => d !== day));
-                            } else {
-                              setSelectedDays([...selectedDays, day]);
-                            }
-                          }}
-                          className={cn(
-                            "flex-1 min-w-[48px] py-2 rounded-xl text-xs font-bold transition-all text-center",
-                            isSelected
-                              ? "bg-purple-600 text-white shadow-sm dark:bg-cyan-400 dark:text-black"
-                              : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/[0.06] dark:text-slate-300 dark:hover:bg-white/10"
-                          )}
-                        >
-                          {day}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* 2. Target Time */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                      Time of Day
-                    </label>
-                    <input
-                      type="time"
-                      value={scheduleTime}
-                      onChange={(e) => setScheduleTime(e.target.value)}
-                      className="w-full rounded-xl border border-black/[0.08] bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-purple-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                      Session Length
-                    </label>
-                    <select
-                      value={durationMins}
-                      onChange={(e) => setDurationMins(e.target.value)}
-                      className="w-full rounded-xl border border-black/[0.08] bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-purple-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
+                  <div className="flex items-center justify-between pb-4 border-b border-black/[0.06] dark:border-white/[0.06]">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-cyan-500/10 dark:text-cyan-400">
+                        <Clock className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Schedule Learning Time</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Build a steady daily habit with custom reminders</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setIsScheduleOpen(false)}
+                      className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-white/10 dark:hover:text-white"
                     >
-                      <option value="15">15 minutes</option>
-                      <option value="30">30 minutes</option>
-                      <option value="45">45 minutes</option>
-                      <option value="60">1 hour</option>
-                    </select>
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
-                </div>
 
-                {/* 3. Notification Reminders */}
-                <div className="flex items-center justify-between rounded-2xl bg-purple-50/70 p-4 dark:bg-purple-500/10 border border-purple-200/50 dark:border-purple-500/20">
-                  <div className="flex items-center gap-3">
-                    <Bell className="h-5 w-5 text-purple-600 dark:text-cyan-400" />
+                  <div className="mt-6 space-y-6">
+                    {/* 1. Day of the week selector */}
                     <div>
-                      <p className="text-xs font-bold text-slate-900 dark:text-white">Push Notifications</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Remind me 10 minutes prior</p>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                        Learning Days
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {WEEK_DAYS.map((day) => {
+                          const isSelected = selectedDays.includes(day);
+                          return (
+                            <button
+                              key={day}
+                              onClick={() => {
+                                if (isSelected) {
+                                  setSelectedDays(selectedDays.filter((d) => d !== day));
+                                } else {
+                                  setSelectedDays([...selectedDays, day]);
+                                }
+                              }}
+                              className={cn(
+                                "flex-1 min-w-[48px] py-2 rounded-xl text-xs font-bold transition-all text-center",
+                                isSelected
+                                  ? "bg-purple-600 text-white shadow-sm dark:bg-cyan-400 dark:text-black"
+                                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/[0.06] dark:text-slate-300 dark:hover:bg-white/10"
+                              )}
+                            >
+                              {day}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={remindersEnabled}
-                    onChange={(e) => setRemindersEnabled(e.target.checked)}
-                    className="h-4 w-4 rounded accent-purple-600"
-                  />
-                </div>
-              </div>
 
-              <div className="mt-8 flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsScheduleOpen(false)}
-                  className="flex-1 rounded-xl"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSaveSchedule}
-                  className="flex-1 rounded-xl bg-purple-600 text-white hover:bg-purple-700 dark:bg-cyan-400 dark:text-black dark:hover:bg-cyan-300 font-bold"
-                >
-                  Save Schedule
-                </Button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+                    {/* 2. Target Time */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                          Time of Day
+                        </label>
+                        <input
+                          type="time"
+                          value={scheduleTime}
+                          onChange={(e) => setScheduleTime(e.target.value)}
+                          className="w-full rounded-xl border border-black/[0.08] bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-purple-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
+                        />
+                      </div>
 
-      {/* STREAK IGNITER MODAL */}
-      <AnimatePresence>
-        {isStreakOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsStreakOpen(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-black/[0.08] bg-white p-7 shadow-2xl dark:border-white/10 dark:bg-[#161226]"
-            >
-              <div className="flex items-center justify-between pb-4 border-b border-black/[0.06] dark:border-white/[0.06]">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white shadow-md shadow-orange-500/20">
-                    <Flame className="h-5 w-5 animate-pulse" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white">Daily Streak Igniter</h3>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Current: {streakDays} day{streakDays > 1 ? "s" : ""}</p>
-                  </div>
-                </div>
-                <button onClick={() => setIsStreakOpen(false)} className="rounded-full p-2 text-slate-400 hover:text-slate-600">
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              {quizSubmitted ? (
-                <div className="py-8 text-center space-y-3">
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300">
-                    <Flame className="h-8 w-8 animate-bounce" />
-                  </div>
-                  <h4 className="text-xl font-extrabold text-slate-900 dark:text-white">
-                    🔥 Streak Ignited!
-                  </h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
-                    You have unlocked today&apos;s daily momentum! Current streak is now <strong>{streakDays} day{streakDays > 1 ? "s" : ""}</strong>.
-                  </p>
-                </div>
-              ) : (
-                <div className="py-4 space-y-4">
-                  <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-                    Answer today&apos;s 1-minute AI micro-challenge to verify your daily learning habit and ignite your streak:
-                  </p>
-
-                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-white/[0.03] border border-black/[0.04] dark:border-white/[0.05]">
-                    <p className="text-xs font-bold text-slate-900 dark:text-white mb-3">
-                      Which architectural mechanism enabled modern Large Language Models (LLMs) to overcome RNN sequence bottlenecks?
-                    </p>
-
-                    <div className="space-y-2">
-                      {[
-                        "Recurrent Hidden Markov Chains",
-                        "Multi-Head Self-Attention (Transformers)",
-                        "Support Vector Margin Hyperplanes",
-                      ].map((opt, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setSelectedQuizAnswer(idx)}
-                          className={cn(
-                            "w-full text-left p-3 rounded-xl text-xs font-semibold transition border",
-                            selectedQuizAnswer === idx
-                              ? "bg-purple-50 text-purple-800 border-purple-400 dark:bg-purple-950/30 dark:text-cyan-300 dark:border-cyan-400"
-                              : "bg-white text-slate-700 border-slate-200/80 hover:bg-slate-100 dark:bg-white/[0.02] dark:text-slate-300 dark:border-white/10"
-                          )}
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                          Session Length
+                        </label>
+                        <select
+                          value={durationMins}
+                          onChange={(e) => setDurationMins(e.target.value)}
+                          className="w-full rounded-xl border border-black/[0.08] bg-slate-50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-purple-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
                         >
-                          <span className="font-mono text-slate-400 mr-2">{String.fromCharCode(65 + idx)}.</span>
-                          {opt}
-                        </button>
-                      ))}
+                          <option value="15">15 minutes</option>
+                          <option value="30">30 minutes</option>
+                          <option value="45">45 minutes</option>
+                          <option value="60">1 hour</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* 3. Notification Reminders */}
+                    <div className="flex items-center justify-between rounded-2xl bg-purple-50/70 p-4 dark:bg-purple-500/10 border border-purple-200/50 dark:border-purple-500/20">
+                      <div className="flex items-center gap-3">
+                        <Bell className="h-5 w-5 text-purple-600 dark:text-cyan-400" />
+                        <div>
+                          <p className="text-xs font-bold text-slate-900 dark:text-white">Push Notifications</p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">Remind me 10 minutes prior</p>
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={remindersEnabled}
+                        onChange={(e) => setRemindersEnabled(e.target.checked)}
+                        className="h-4 w-4 rounded accent-purple-600"
+                      />
                     </div>
                   </div>
 
-                  <div className="flex gap-3 pt-2">
+                  <div className="mt-8 flex gap-3">
                     <Button
                       variant="outline"
-                      onClick={() => setIsStreakOpen(false)}
+                      onClick={() => setIsScheduleOpen(false)}
                       className="flex-1 rounded-xl"
                     >
                       Cancel
                     </Button>
                     <Button
-                      onClick={handleIgniteStreak}
-                      disabled={selectedQuizAnswer === null}
-                      className="flex-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold hover:from-amber-600 hover:to-orange-600 shadow-md shadow-orange-500/20"
+                      onClick={handleSaveSchedule}
+                      className="flex-1 rounded-xl bg-purple-600 text-white hover:bg-purple-700 dark:bg-cyan-400 dark:text-black dark:hover:bg-cyan-300 font-bold"
                     >
-                      Confirm & Ignite 🔥
+                      Save Schedule
                     </Button>
                   </div>
-                </div>
-              )}
-            </motion.div>
-          </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
+
+      {/* STREAK IGNITER MODAL */}
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {isStreakOpen && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 font-poppins">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setIsStreakOpen(false)}
+                  className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+                />
+
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                  className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-black/[0.08] bg-white p-7 shadow-2xl dark:border-white/10 dark:bg-[#161226]"
+                >
+                  <div className="flex items-center justify-between pb-4 border-b border-black/[0.06] dark:border-white/[0.06]">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white shadow-md shadow-orange-500/20">
+                        <Flame className="h-5 w-5 animate-pulse" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-slate-900 dark:text-white">Daily Streak Igniter</h3>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Current: {streakDays} day{streakDays > 1 ? "s" : ""}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setIsStreakOpen(false)} className="rounded-full p-2 text-slate-400 hover:text-slate-600">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {quizSubmitted ? (
+                    <div className="py-8 text-center space-y-3">
+                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300">
+                        <Flame className="h-8 w-8 animate-bounce" />
+                      </div>
+                      <h4 className="text-xl font-extrabold text-slate-900 dark:text-white">
+                        🔥 Streak Ignited!
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+                        You have unlocked today&apos;s daily momentum! Current streak is now <strong>{streakDays} day{streakDays > 1 ? "s" : ""}</strong>.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="py-4 space-y-4">
+                      <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                        Answer today&apos;s 1-minute AI micro-challenge to verify your daily learning habit and ignite your streak:
+                      </p>
+
+                      {quizError && (
+                        <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3 text-xs text-amber-800 dark:text-amber-300 font-medium">
+                          {quizError}
+                        </div>
+                      )}
+
+                      <div className="rounded-2xl bg-slate-50 p-4 dark:bg-white/[0.03] border border-black/[0.04] dark:border-white/[0.05]">
+                        <p className="text-xs font-bold text-slate-900 dark:text-white mb-3">
+                          Which architectural mechanism enabled modern Large Language Models (LLMs) to overcome RNN sequence bottlenecks?
+                        </p>
+
+                        <div className="space-y-2">
+                          {[
+                            "Recurrent Hidden Markov Chains",
+                            "Multi-Head Self-Attention (Transformers)",
+                            "Support Vector Margin Hyperplanes",
+                          ].map((opt, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                setSelectedQuizAnswer(idx);
+                                setQuizError(null);
+                              }}
+                              className={cn(
+                                "w-full text-left p-3 rounded-xl text-xs font-semibold transition border",
+                                selectedQuizAnswer === idx
+                                  ? "bg-purple-50 text-purple-800 border-purple-400 dark:bg-purple-950/30 dark:text-cyan-300 dark:border-cyan-400"
+                                  : "bg-white text-slate-700 border-slate-200/80 hover:bg-slate-100 dark:bg-white/[0.02] dark:text-slate-300 dark:border-white/10"
+                              )}
+                            >
+                              <span className="font-poppins font-bold text-slate-400 mr-2">{String.fromCharCode(65 + idx)}.</span>
+                              {opt}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 pt-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => setIsStreakOpen(false)}
+                          className="flex-1 rounded-xl"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleIgniteStreak}
+                          disabled={selectedQuizAnswer === null}
+                          className="flex-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold hover:from-amber-600 hover:to-orange-600 shadow-md shadow-orange-500/20"
+                        >
+                          Confirm & Ignite 🔥
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
 
       {/* CREATE NEW LIST MODAL */}
-      <AnimatePresence>
-        {isNewListOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsNewListOpen(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {isNewListOpen && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 font-poppins">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setIsNewListOpen(false)}
+                  className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+                />
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-black/[0.08] bg-white p-7 shadow-2xl dark:border-white/10 dark:bg-[#161226]"
-            >
-              <div className="flex items-center justify-between pb-4 border-b border-black/[0.06] dark:border-white/[0.06]">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Create New List</h3>
-                <button onClick={() => setIsNewListOpen(false)} className="rounded-full p-2 text-slate-400">
-                  <X className="h-4 w-4" />
-                </button>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-black/[0.08] bg-white p-7 shadow-2xl dark:border-white/10 dark:bg-[#161226]"
+                >
+                  <div className="flex items-center justify-between pb-4 border-b border-black/[0.06] dark:border-white/[0.06]">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Create New List</h3>
+                    <button onClick={() => setIsNewListOpen(false)} className="rounded-full p-2 text-slate-400">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="mt-5 space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                        List Title
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. LLM Prompt Architecture"
+                        value={newListName}
+                        onChange={(e) => setNewListName(e.target.value)}
+                        className="w-full rounded-xl border border-black/[0.08] bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-purple-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                        Description (optional)
+                      </label>
+                      <textarea
+                        rows={3}
+                        placeholder="Brief description of this custom track..."
+                        value={newListDesc}
+                        onChange={(e) => setNewListDesc(e.target.value)}
+                        className="w-full rounded-xl border border-black/[0.08] bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-purple-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-white resize-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex gap-3">
+                    <Button variant="outline" onClick={() => setIsNewListOpen(false)} className="flex-1 rounded-xl">
+                      Cancel
+                    </Button>
+                    <Button onClick={handleCreateList} className="flex-1 rounded-xl bg-purple-600 text-white dark:bg-cyan-400 dark:text-black">
+                      Create List
+                    </Button>
+                  </div>
+                </motion.div>
               </div>
-
-              <div className="mt-5 space-y-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                    List Title
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. LLM Prompt Architecture"
-                    value={newListName}
-                    onChange={(e) => setNewListName(e.target.value)}
-                    className="w-full rounded-xl border border-black/[0.08] bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-purple-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                    Description (optional)
-                  </label>
-                  <textarea
-                    rows={3}
-                    placeholder="Brief description of this custom track..."
-                    value={newListDesc}
-                    onChange={(e) => setNewListDesc(e.target.value)}
-                    className="w-full rounded-xl border border-black/[0.08] bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-purple-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-white resize-none"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 flex gap-3">
-                <Button variant="outline" onClick={() => setIsNewListOpen(false)} className="flex-1 rounded-xl">
-                  Cancel
-                </Button>
-                <Button onClick={handleCreateList} className="flex-1 rounded-xl bg-purple-600 text-white dark:bg-cyan-400 dark:text-black">
-                  Create List
-                </Button>
-              </div>
-            </motion.div>
-          </div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </div>
   );
 }

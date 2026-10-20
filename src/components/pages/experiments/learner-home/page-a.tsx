@@ -6,8 +6,8 @@ import {
   ArrowUpRight,
   BookOpen,
   FolderKanban,
-  Sparkles,
 } from "lucide-react";
+import { GlowingMagicSparkle } from "@/components/ui/vibrant-ai-icons";
 
 import { useAuth } from "@/lib/auth/auth-context";
 
@@ -57,7 +57,7 @@ export default function LearnerHomePage() {
           <div className="relative grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
             <div className="max-w-2xl">
               <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.07] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-purple-100">
-                <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
+                <GlowingMagicSparkle size="xs" />
                 Your first learning journey
               </div>
 

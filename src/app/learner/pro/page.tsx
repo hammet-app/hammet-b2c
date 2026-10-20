@@ -26,6 +26,7 @@ import {
 import { cn } from "@/lib/utils/utils";
 import { useLearnerStore } from "@/lib/store/use-learner-store";
 import { SkillBadgeComponent } from "@/components/ui/skill-badge";
+import { GlowingMagicSparkle } from "@/components/ui/vibrant-ai-icons";
 
 export default function HammetProPage() {
   const {
@@ -309,7 +310,7 @@ export default function HammetProPage() {
           </div>
 
           {/* Live Preview Box */}
-          <div className="rounded-2xl border border-black/[0.06] bg-slate-50/70 p-6 sm:p-8 dark:border-white/[0.06] dark:bg-[#120E1F] flex flex-col items-center justify-center">
+          <div className="relative rounded-2xl border border-black/[0.06] bg-slate-50/70 p-6 sm:p-8 dark:border-white/[0.06] dark:bg-[#120E1F] flex flex-col items-center justify-center overflow-hidden">
             <div className="mb-4 text-center">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 Live Theme Preview:{" "}
@@ -319,8 +320,29 @@ export default function HammetProPage() {
               </span>
             </div>
 
-            <div className="max-w-xs w-full">
-              <SkillBadgeComponent badge={sampleBadge} />
+            <div className="relative max-w-xs w-full flex items-center justify-center">
+              <div className="filter blur-md select-none pointer-events-none opacity-35 w-full flex justify-center">
+                <SkillBadgeComponent badge={sampleBadge} />
+              </div>
+
+              {/* Frosted Glass Overlay with Coming Soon tag */}
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-4 text-center bg-slate-950/80 dark:bg-slate-950/85 backdrop-blur-md rounded-2xl border border-white/15 shadow-xl">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/20 border border-purple-400/40 text-purple-300 shadow-lg shadow-purple-500/20 mb-2">
+                  <GlowingMagicSparkle size="lg" className="animate-pulse" />
+                </div>
+
+                <span className="rounded-full bg-purple-600/30 border border-purple-400/40 px-3 py-1 text-[10px] font-poppins font-bold tracking-widest text-purple-200 uppercase mb-2 shadow-sm">
+                  COMING SOON • UNDER ACCREDITATION
+                </span>
+
+                <h4 className="text-base font-black tracking-tight text-white font-poppins">
+                  Skill Badges Coming Soon
+                </h4>
+
+                <p className="mt-1 text-[11px] text-slate-200 font-medium font-poppins max-w-xs leading-relaxed">
+                  Pro-tier skill badge minting and dynamic credential themes are undergoing official accreditation.
+                </p>
+              </div>
             </div>
 
             <p className="mt-4 text-center text-xs text-slate-400 max-w-sm">

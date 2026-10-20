@@ -19,7 +19,7 @@ import {
   Copy,
   Check,
   Lock,
-  Sparkles,
+  Smartphone,
   Clock,
   Award,
   Zap,
@@ -82,6 +82,14 @@ export default function CheckoutPage() {
   // Auto-generate payment link whenever proceeding to payment step
   const handleProceedToPayment = async () => {
     setGatewayError(null);
+    try {
+      if (typeof window !== "undefined" && items.length > 0) {
+        sessionStorage.setItem("hammet_pending_checkout", JSON.stringify(items));
+        localStorage.setItem("hammet_pending_checkout", JSON.stringify(items));
+      }
+    } catch (e) {
+      console.warn("Could not save pending checkout:", e);
+    }
     setStep("payment");
     if (!paymentLinkData && items.length > 0) {
       setIsGeneratingLink(true);
@@ -113,6 +121,15 @@ export default function CheckoutPage() {
   // Direct Paystack Redirect
   const handlePaystackRedirect = async () => {
     setGatewayError(null);
+    try {
+      if (typeof window !== "undefined" && items.length > 0) {
+        sessionStorage.setItem("hammet_pending_checkout", JSON.stringify(items));
+        localStorage.setItem("hammet_pending_checkout", JSON.stringify(items));
+      }
+    } catch (e) {
+      console.warn("Could not save pending checkout:", e);
+    }
+
     if (paymentLinkData?.paymentUrl) {
       window.location.href = paymentLinkData.paymentUrl;
       return;
@@ -555,7 +572,7 @@ export default function CheckoutPage() {
                         <span>USSD</span>
                       </div>
                       <div className="flex items-center gap-2 rounded-xl border border-slate-200/70 bg-slate-50/60 p-2.5 text-xs font-medium text-slate-700 dark:border-white/5 dark:bg-white/[0.02] dark:text-slate-300">
-                        <Sparkles className="h-4 w-4 text-purple-600 dark:text-cyan-400 shrink-0" />
+                        <Smartphone className="h-4 w-4 text-purple-600 dark:text-cyan-400 shrink-0" />
                         <span>Apple Pay</span>
                       </div>
                     </div>

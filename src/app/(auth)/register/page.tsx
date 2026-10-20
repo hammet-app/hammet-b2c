@@ -3,7 +3,7 @@
 import { FormEvent, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, ArrowLeft, Check, Loader2, ChevronDown, ShieldCheck, AlertTriangle, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowLeft, Check, Loader2, ChevronDown, ShieldCheck, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 import { cn } from "@/lib/utils/utils";
@@ -490,7 +490,7 @@ export default function RegisterPage() {
                             border: `1px solid ${strength.color}33`,
                           }}
                         >
-                          {strength.isStrong && <Sparkles className="h-3 w-3" />}
+                          {strength.isStrong && <ShieldCheck className="h-3 w-3" />}
                           {strength.label} {strength.isStrong ? "✓ Accepted" : "(Strong required)"}
                         </span>
                       </div>

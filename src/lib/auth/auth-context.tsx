@@ -266,13 +266,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
         }
       } else {
-        setState((prev) => ({
-          ...prev,
-          isLoading: false,
-          isResolved: true,
-          isOffline: false,
-          isSessionExpired: false,
-        }));
+        const mockUserStr = typeof window !== "undefined" ? localStorage.getItem("hammet-user") : null;
+        if (mockUserStr && localStorage.getItem("logged_out") !== "true") {
+          try {
+            const user = JSON.parse(mockUserStr);
+            const fakeToken = "mock-token";
+            await persistSession(user, fakeToken);
+            setState({
+              user,
+              accessToken: fakeToken,
+              isLoading: false,
+              isResolved: true,
+              isOffline: false,
+              isSessionExpired: false,
+            });
+          } catch {
+            setState((prev) => ({
+              ...prev,
+              isLoading: false,
+              isResolved: true,
+              isOffline: false,
+              isSessionExpired: false,
+            }));
+          }
+        } else {
+          setState((prev) => ({
+            ...prev,
+            isLoading: false,
+            isResolved: true,
+            isOffline: false,
+            isSessionExpired: false,
+          }));
+        }
       }
 
       if (!cancelled) {

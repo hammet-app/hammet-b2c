@@ -87,7 +87,7 @@ export default function PortfolioPage() {
               <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
                 Evolving Learner Portfolio
               </span>
-              <span className="rounded-full bg-purple-500/10 border border-purple-400/30 px-2.5 py-0.5 text-[11px] font-mono font-bold text-purple-700 dark:text-cyan-300 flex items-center gap-1.5">
+              <span className="rounded-full bg-purple-500/10 border border-purple-400/30 px-2.5 py-0.5 text-[11px] font-poppins font-bold text-purple-700 dark:text-cyan-300 flex items-center gap-1.5">
                 <Timer className="h-3 w-3 animate-pulse text-purple-500" />
                 Coming Soon // Dynamic Sync Ready
               </span>
@@ -642,29 +642,29 @@ export default function PortfolioPage() {
       </div>
 
       {/* ── ELEGANT FROSTED GLASS COMING SOON OVERLAY (PERMANENT BLUR) ── */}
-      <div className="absolute inset-0 z-30 flex flex-col items-center justify-start pt-24 sm:pt-32 p-6 sm:p-12 text-center bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-md backdrop-brightness-110 rounded-[2.5rem] border border-black/10 dark:border-white/10 shadow-2xl">
-        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-purple-500/20 border border-purple-400/40 text-purple-400 shadow-xl shadow-purple-500/20 mb-4">
-          <Timer className="h-8 w-8 text-purple-300 animate-pulse" />
+      <div className="absolute inset-0 z-30 flex flex-col items-center justify-start pt-20 sm:pt-28 p-6 sm:p-12 text-center bg-slate-950/85 dark:bg-slate-950/90 backdrop-blur-xl rounded-[2.5rem] border border-white/20 shadow-2xl">
+        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-purple-500/30 border border-purple-400/50 text-purple-300 shadow-xl shadow-purple-500/30 mb-4">
+          <Timer className="h-8 w-8 text-purple-200 animate-pulse" />
         </div>
 
-        <span className="rounded-full bg-purple-500/20 border border-purple-400/30 px-3.5 py-1 text-[11px] font-mono font-bold tracking-widest text-purple-200 uppercase mb-3">
+        <span className="rounded-full bg-purple-600/30 border border-purple-400/50 px-4 py-1 text-xs font-poppins font-bold tracking-widest text-purple-200 uppercase mb-3 shadow-sm">
           Portfolio Engine In Progress
         </span>
 
-        <h3 className="text-2xl sm:text-4xl font-black tracking-tight text-white max-w-xl">
+        <h3 className="text-2xl sm:text-4xl font-black tracking-tight text-white max-w-xl font-poppins drop-shadow-md">
           Public Portfolio System Coming Soon
         </h3>
 
-        <p className="mt-3 max-w-lg text-xs sm:text-sm text-slate-300 leading-relaxed font-sans">
+        <p className="mt-3.5 max-w-xl text-sm sm:text-base text-slate-100 font-medium leading-relaxed font-poppins drop-shadow-sm">
           The automated portfolio engine and verified showcase templates (Bento Grid, Terminal Hacker, Silicon Valley, and Academic Lab) are currently being finalized. Your project milestones, test scores, and code submissions are safely tracked and will automatically populate your live portfolio upon launch.
         </p>
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <div className="flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/10 px-4 py-2 text-xs text-slate-200 font-mono">
+          <div className="flex items-center gap-2 rounded-xl bg-white/15 border border-white/25 px-4 py-2.5 text-xs font-poppins font-bold text-white shadow-md backdrop-blur-sm">
             <CheckCircle2 className="h-4 w-4 text-emerald-400" />
             <span>Projects &amp; Test Records Safe</span>
           </div>
-          <div className="flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/10 px-4 py-2 text-xs text-slate-200 font-mono">
+          <div className="flex items-center gap-2 rounded-xl bg-white/15 border border-white/25 px-4 py-2.5 text-xs font-poppins font-bold text-white shadow-md backdrop-blur-sm">
             <ShieldCheck className="h-4 w-4 text-cyan-400" />
             <span>4 Bespoke Themes Prepared</span>
           </div>
