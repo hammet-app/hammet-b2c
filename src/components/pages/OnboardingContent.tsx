@@ -117,18 +117,12 @@ export default function OnboardingContent() {
 
     try {
       if (!accessToken) return;
-      /*
-       * Replace this endpoint with the final onboarding endpoint.
-       *
-       * The frontend payload is intentionally shaped around the
-       * information onboarding owns, rather than the entire profile.
-       
+             
       learnerApi.completeOnboarding(
         { learningMode: learningMode, interests: selectedInterests } satisfies ProfileOnboarding,
         accessToken,
         refreshToken
       )
-        */
 
       router.replace("/learner");
     } catch (err) {
