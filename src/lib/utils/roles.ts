@@ -11,6 +11,8 @@ export type UserAccess =
   | "admins"
   | "disputes"
   | "schools"
+  | "coupons"
+  | "beta_access"
 
 export type UserScope = 
   | "b2b"
