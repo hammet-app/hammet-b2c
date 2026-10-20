@@ -27,16 +27,14 @@ import {
   AlertCircle,
   GraduationCap,
   Link2,
-  ExternalLink,
   QrCode,
   RefreshCw,
-  Info,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils/utils";
 import { paymentApi, type PaymentLinkData } from "@/lib/api/payment";
 
-type CheckoutStep = "review" | "payment" | "processing" | "success";
+type CheckoutStep = "review" | "payment";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -47,7 +45,6 @@ export default function CheckoutPage() {
     updateQuantity,
     getTotal,
     clearCart,
-    markAsPaid,
     couponCode,
     discountPercentage,
     applyCoupon,
@@ -59,24 +56,16 @@ export default function CheckoutPage() {
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<CheckoutStep>("review");
 
-  // Keep track of what was purchased so the success page has full details even after cart is cleared
-  const [purchasedItems, setPurchasedItems] = useState<CartItem[]>([]);
-  const [paidTotal, setPaidTotal] = useState(0);
-  const [transactionRef, setTransactionRef] = useState("");
-  const [paymentDate, setPaymentDate] = useState("");
-
   // Payment Link State
   const [paymentLinkData, setPaymentLinkData] = useState<PaymentLinkData | null>(null);
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   const [copiedPaymentLink, setCopiedPaymentLink] = useState(false);
   const [showQrCode, setShowQrCode] = useState(false);
+  const [gatewayError, setGatewayError] = useState<string | null>(null);
 
   // Coupon code logic
   const [couponInput, setCouponInput] = useState(couponCode || "");
   const [couponFeedback, setCouponFeedback] = useState<{ success: boolean; message: string } | null>(null);
-
-  // Processing stage messages
-  const [processingStage, setProcessingStage] = useState(0);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -92,6 +81,7 @@ export default function CheckoutPage() {
 
   // Auto-generate payment link whenever proceeding to payment step
   const handleProceedToPayment = async () => {
+    setGatewayError(null);
     setStep("payment");
     if (!paymentLinkData && items.length > 0) {
       setIsGeneratingLink(true);
@@ -106,12 +96,14 @@ export default function CheckoutPage() {
           },
           accessToken
         );
-        if (res.data) {
+        if (res.success && res.data) {
           setPaymentLinkData(res.data);
-          setTransactionRef(res.data.reference);
+        } else if (res.error) {
+          setGatewayError(res.error);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error creating payment link:", err);
+        setGatewayError(err?.message || "Failed to initialize payment link with backend.");
       } finally {
         setIsGeneratingLink(false);
       }
@@ -120,6 +112,7 @@ export default function CheckoutPage() {
 
   // Direct Paystack Redirect
   const handlePaystackRedirect = async () => {
+    setGatewayError(null);
     if (paymentLinkData?.paymentUrl) {
       window.location.href = paymentLinkData.paymentUrl;
       return;
@@ -136,20 +129,18 @@ export default function CheckoutPage() {
         },
         accessToken
       );
-      if (res.data?.paymentUrl) {
+      if (res.success && res.data?.paymentUrl) {
         setPaymentLinkData(res.data);
         window.location.href = res.data.paymentUrl;
       } else {
-        // Dev / staging fallback simulation when backend returns reference
-        setStep("processing");
-        setTimeout(() => {
-          router.push(
-            `/learner/checkout/callback?reference=${res.data?.reference || "TXN-PAYSTACK-DEV"}`
-          );
-        }, 900);
+        const errorMsg =
+          res.error ||
+          "Backend checkout failed: Paystack did not return an authorization URL. Please contact support.";
+        setGatewayError(errorMsg);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Paystack redirect error:", err);
+      setGatewayError(err?.message || "Failed to connect to checkout gateway.");
     } finally {
       setIsGeneratingLink(false);
     }
@@ -173,85 +164,6 @@ export default function CheckoutPage() {
     navigator.clipboard.writeText(paymentLinkData.paymentUrl);
     setCopiedPaymentLink(true);
     setTimeout(() => setCopiedPaymentLink(false), 2400);
-  };
-
-  // Execute payment settlement and activation
-  // CRITICAL: Synchronously activates local Dexie DB and store to PREVENT AND AVOID ANY DELAYS
-  const handleExecutePayment = async () => {
-    const currentItems = [...items];
-    const itemIds = currentItems.map((i) => i.id);
-
-    setPurchasedItems(currentItems);
-    setPaidTotal(finalTotal);
-    setStep("processing");
-    setProcessingStage(0);
-
-    // 1. Immediately store in Dexie & Zustand store to eliminate any possible delay!
-    await markAsPaid(itemIds);
-
-    // 2. Also register in localStorage cache for zero-latency cross-tab & page-reload access
-    try {
-      const existingPaid = JSON.parse(localStorage.getItem("hammet-paid-items") || "[]");
-      const mergedPaid = Array.from(new Set([...existingPaid, ...itemIds]));
-      localStorage.setItem("hammet-paid-items", JSON.stringify(mergedPaid));
-
-      const existingEnrolled = JSON.parse(localStorage.getItem("hammet_enrolled_courses") || "[]");
-      const mergedEnrolled = Array.from(new Set([...existingEnrolled, ...itemIds]));
-      localStorage.setItem("hammet_enrolled_courses", JSON.stringify(mergedEnrolled));
-    } catch (e) {
-      console.error("Local storage enrollment cache error", e);
-    }
-
-    // 3. Dispatch broadcast events so all open pages/tabs update instantly
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("cart-updated"));
-      window.dispatchEvent(new Event("enrollment-updated"));
-    }
-
-    // 4. Background verification
-    const refToVerify = paymentLinkData?.reference || transactionRef || `TXN-HMT-${Math.floor(100000 + Math.random() * 900000)}`;
-    paymentApi.verifyPayment(refToVerify).catch(() => {});
-
-    const t1 = setTimeout(() => setProcessingStage(1), 600);
-    const t2 = setTimeout(() => setProcessingStage(2), 1200);
-    const t3 = setTimeout(() => {
-      setTransactionRef(refToVerify);
-      setPaymentDate(
-        new Date().toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      );
-      setStep("success");
-    }, 1900);
-
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-    };
-  };
-
-  // Redirect to learning hub or specific school
-  const handleStartCourse = () => {
-    let target = "/learner/learn";
-    if (purchasedItems.length > 0) {
-      const firstSchool = purchasedItems.find((i) => i.type === "ai_school");
-      if (firstSchool) {
-        target = `/learner/ai-schools/${firstSchool.id}`;
-      } else {
-        const firstCourse = purchasedItems.find((i) => i.type === "course");
-        if (firstCourse && firstCourse.schoolId) {
-          target = `/learner/ai-schools/${firstCourse.schoolId}`;
-        } else if (firstCourse) {
-          target = `/learner/courses/${firstCourse.id}`;
-        }
-      }
-    }
-    window.location.href = target;
   };
 
   if (!mounted) return null;
@@ -649,6 +561,17 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
+                  {/* Gateway Error Notification */}
+                  {gatewayError && (
+                    <div className="mt-6 flex items-start gap-3 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-600 dark:border-red-500/20 dark:text-red-400">
+                      <AlertCircle className="h-5 w-5 shrink-0 text-red-500 mt-0.5" />
+                      <div className="flex-1">
+                        <div className="font-semibold text-slate-900 dark:text-white">Checkout Error</div>
+                        <div className="mt-0.5 text-xs text-red-700 dark:text-red-300 leading-relaxed">{gatewayError}</div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Primary Call to Action Button */}
                   <div className="mt-8 space-y-3">
                     <Button
@@ -820,216 +743,6 @@ export default function CheckoutPage() {
                     </p>
                   </div>
                 </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ── STEP 3: PROCESSING OVERLAY ────────────────────────────────────── */}
-        {step === "processing" && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mx-auto max-w-[500px] rounded-3xl border border-black/[0.06] bg-white p-10 text-center shadow-2xl dark:border-white/[0.08] dark:bg-[#151026]"
-          >
-            <div className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center">
-              <div className="absolute inset-0 rounded-full bg-purple-500/20 animate-ping" />
-              <div className="h-16 w-16 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600 dark:border-cyan-500/20 dark:border-t-cyan-400" />
-              <Lock className="absolute h-6 w-6 text-purple-600 dark:text-cyan-400" />
-            </div>
-
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-              Authorizing Payment
-            </h3>
-
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              Please wait while our financial gateway securely settles the transaction...
-            </p>
-
-            <div className="mt-6 space-y-2 text-xs font-semibold text-purple-700 dark:text-cyan-300">
-              {processingStage === 0 && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  Connecting to banking switch...
-                </motion.div>
-              )}
-              {processingStage === 1 && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  Verifying transaction ledger & settlement...
-                </motion.div>
-              )}
-              {processingStage >= 2 && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  Issuing accredited school licenses...
-                </motion.div>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-        {/* ── STEP 4: CELEBRATORY SUCCESS CONFIRMATION ──────────────────────── */}
-        {step === "success" && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.45, ease: "easeOut" }}
-            className="mx-auto max-w-[620px] rounded-3xl border border-emerald-500/30 bg-white p-8 sm:p-10 shadow-2xl dark:border-emerald-500/20 dark:bg-[#140F24]"
-          >
-            {/* Animated Checkmark Icon */}
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 shadow-lg shadow-emerald-500/20 dark:bg-emerald-500/10">
-              <motion.svg
-                className="h-12 w-12"
-                viewBox="0 0 52 52"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <motion.circle
-                  cx="26"
-                  cy="26"
-                  r="24"
-                  stroke="currentColor"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 0.45, ease: "easeOut" }}
-                />
-                <motion.path
-                  d="M16 26.5L23 33.5L36 18.5"
-                  stroke="currentColor"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 0.35, delay: 0.4, ease: "easeOut" }}
-                />
-              </motion.svg>
-            </div>
-
-            <div className="text-center">
-              <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300">
-                Payment Confirmed
-              </span>
-              <h2 className="mt-3 text-3xl font-extrabold text-slate-900 dark:text-white">
-                Payment Successful! 🎉
-              </h2>
-              <p className="mx-auto mt-2 max-w-md text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                Congratulations! Your payment has been settled and your lifetime curriculum access is officially activated.
-              </p>
-            </div>
-
-            {/* ── INFORMATIVE CLOUD SYNC & REASSURANCE NOTICE ─────────────────── */}
-            <div className="mt-6 rounded-2xl border border-amber-500/25 bg-amber-50/70 p-4.5 text-left dark:border-amber-400/20 dark:bg-amber-400/[0.06]">
-              <div className="flex items-start gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 mt-0.5">
-                  <Clock className="h-4 w-4 animate-pulse" />
-                </div>
-                <div className="flex-1 text-xs">
-                  <div className="flex flex-wrap items-center gap-2 font-bold text-amber-900 dark:text-amber-200">
-                    <span>Curriculum Activation Notice</span>
-                    <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
-                      Instant Access Active
-                    </span>
-                  </div>
-                  <p className="mt-1 leading-relaxed text-amber-800/90 dark:text-amber-300/80 text-[11px] sm:text-xs">
-                    Your course access has been activated immediately on your profile! Please note that cloud ledger and dashboard progress synchronization may take up to 2–3 minutes during peak network periods, but your courses are unlocked and available to study immediately without delay.
-                  </p>
-                  <div className="mt-2.5 flex flex-wrap items-center gap-3 text-[11px] font-medium text-amber-900/80 dark:text-amber-300/70 border-t border-amber-500/20 pt-2">
-                    <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      Local Learning License: Ready (0s delay)
-                    </span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                      <Zap className="h-3.5 w-3.5 text-purple-500" />
-                      Cloud Ledger: Syncing in background
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Official Digital Receipt Card */}
-            <div className="mt-6 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-5 dark:border-white/10 dark:bg-white/[0.03]">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-white/5 text-xs">
-                <span className="text-slate-500 dark:text-slate-400">Transaction Reference</span>
-                <span className="font-mono font-bold text-slate-900 dark:text-white">
-                  {transactionRef || "TXN-HMT-894102"}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between border-b border-slate-200 py-3 dark:border-white/5 text-xs">
-                <span className="text-slate-500 dark:text-slate-400">Payment Gateway</span>
-                <span className="font-semibold text-slate-900 dark:text-white">
-                  Paystack (Cards, Bank Transfer, USSD)
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between border-b border-slate-200 py-3 dark:border-white/5 text-xs">
-                <span className="text-slate-500 dark:text-slate-400">Date & Time</span>
-                <span className="text-slate-700 dark:text-slate-300">{paymentDate}</span>
-              </div>
-
-              <div className="flex items-center justify-between border-b border-slate-200 py-3 dark:border-white/5 text-xs">
-                <span className="text-slate-500 dark:text-slate-400">Total Amount Paid</span>
-                <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
-                  ₦{paidTotal.toLocaleString()}
-                </span>
-              </div>
-
-              {/* Enrolled Courses / Schools List */}
-              <div className="pt-3">
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                  Unlocked Curriculums
-                </div>
-                <div className="space-y-1.5">
-                  {purchasedItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between text-xs font-semibold text-slate-800 dark:text-slate-200"
-                    >
-                      <span className="truncate max-w-[280px]">• {item.title}</span>
-                      <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300">
-                        Paid & Enrolled
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Primary Action Button: "Go to Learning" */}
-            <div className="mt-8 flex flex-col gap-3">
-              <Button
-                onClick={handleStartCourse}
-                size="lg"
-                className="w-full rounded-xl bg-purple-600 py-3.5 font-bold text-white shadow-lg shadow-purple-600/30 hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 text-base transition-all hover:scale-[1.01]"
-              >
-                <span>Go to Learning</span>
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-
-              <div className="flex items-center justify-center gap-4 text-xs font-medium text-slate-500 dark:text-slate-400">
-                <Link
-                  href="/learner/learn"
-                  className="hover:text-purple-600 dark:hover:text-cyan-400 transition underline"
-                >
-                  My Learning
-                </Link>
-                <span>•</span>
-                <Link
-                  href="/learner/passport"
-                  className="hover:text-purple-600 dark:hover:text-cyan-400 transition underline"
-                >
-                  View Skill Passport
-                </Link>
-                <span>•</span>
-                <Link
-                  href="/learner"
-                  className="hover:text-purple-600 dark:hover:text-cyan-400 transition underline"
-                >
-                  Go to Dashboard
-                </Link>
               </div>
             </div>
           </motion.div>

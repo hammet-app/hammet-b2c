@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { ArrowLeft, BookOpen, AlertCircle, ShoppingCart } from "lucide-react";
+import { ArrowLeft, BookOpen, AlertCircle, ShoppingCart, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/lib/auth/auth-context";
@@ -30,28 +30,27 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
     setMounted(true);
   }, []);
 
-  useEffect(() => {
+  const fetchCourses = useCallback(async () => {
     if (!schoolId) return;
-
-    async function fetchCourses() {
-      try {
-        setLoading(true);
-        const data = await learnerApi.getAiSchoolCourses(schoolId, accessToken ?? "", refreshToken);
-        setCourses(data.courses.sort((a, b) => (a.position || 0) - (b.position || 0)));
-        setError(null);
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("Failed to load courses");
-        }
-      } finally {
-        setLoading(false);
+    try {
+      setLoading(true);
+      const data = await learnerApi.getAiSchoolCourses(schoolId, accessToken ?? "", refreshToken);
+      setCourses(data.courses.sort((a, b) => (a.position || 0) - (b.position || 0)));
+      setError(null);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to load courses from backend");
       }
+    } finally {
+      setLoading(false);
     }
-
-    fetchCourses();
   }, [schoolId, accessToken, refreshToken]);
+
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
 
   // Calculate full school price
   const fullSchoolPrice = courses.reduce((total, course) => total + course.price, 0); // 20% discount for full school
@@ -147,9 +146,22 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
             ))}
           </div>
         ) : error ? (
-          <div className="flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50 p-5 dark:border-red-500/10 dark:bg-red-500/[0.05]">
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
-            <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">{error}</p>
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-6 dark:border-red-500/20 dark:bg-red-500/[0.08]">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+              <div className="flex-1">
+                <h4 className="font-semibold text-slate-900 dark:text-white">Unable to Load Courses from Backend</h4>
+                <p className="mt-1 text-sm text-red-700 dark:text-red-300 leading-relaxed">{error}</p>
+                <Button
+                  onClick={() => fetchCourses()}
+                  size="sm"
+                  className="mt-4 rounded-xl bg-purple-600 font-semibold text-white hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400"
+                >
+                  <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                  Retry Fetch
+                </Button>
+              </div>
+            </div>
           </div>
         ) : courses.length === 0 ? (
           <div className="rounded-2xl border border-black/[0.06] bg-white p-12 text-center dark:border-white/[0.06] dark:bg-white/[0.03]">

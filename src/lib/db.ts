@@ -15,7 +15,7 @@ export interface CachedSession {
   cachedAt: string
 }
 
-export type CartItemType = 'ai_school' | 'course' | 'profile';
+export type CartItemType = 'ai_school' | 'school' | 'course' | 'profile';
 export type CartSyncStatus = 'synced' | 'pending' | 'failed';
 
 export interface DexieCartItem {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "motion/react";
@@ -13,6 +13,7 @@ import {
   BookOpen,
   AlertTriangle,
   RotateCcw,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart, CartItem } from "@/lib/store/use-cart";
@@ -22,7 +23,7 @@ import { paymentApi } from "@/lib/api/payment";
 function PaystackCallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user, accessToken } = useAuth();
+  const { accessToken } = useAuth();
   const { items, clearCart, markAsPaid } = useCart();
 
   const reference =
@@ -39,96 +40,104 @@ function PaystackCallbackContent() {
   const [paidTotal, setPaidTotal] = useState(0);
   const [paymentDate, setPaymentDate] = useState("");
 
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+  const clearCartRef = useRef(clearCart);
+  clearCartRef.current = clearCart;
+  const markAsPaidRef = useRef(markAsPaid);
+  markAsPaidRef.current = markAsPaid;
+
+  const attemptedRef = useRef(false);
+
   useEffect(() => {
-    let isMounted = true;
+    if (attemptedRef.current) return;
+    attemptedRef.current = true;
 
     async function handleSettlement() {
-      // 1. Capture current cart items snapshot
-      const currentItems = [...items];
-      const itemIds = currentItems.map((i) => i.id);
-      const totalAmount = currentItems.reduce(
-        (sum, item) => sum + (item.price || 0) * (item.quantity || 1),
-        0
-      );
-
       // Check if Paystack returned a cancellation or failure
       if (statusParam === "cancelled" || statusParam === "failed") {
-        if (isMounted) {
-          setIsSuccess(false);
-          setErrorMessage("The payment session on Paystack was cancelled or declined.");
-          setVerifying(false);
-        }
+        setIsSuccess(false);
+        setErrorMessage("The payment session on Paystack was cancelled or declined.");
+        setVerifying(false);
         return;
       }
 
-      // 2. Set receipt details
-      if (isMounted) {
-        setPurchasedItems(currentItems.length > 0 ? currentItems : [
-          {
-            id: "enrolled-item",
-            type: "ai_school",
-            title: "Hammet Accredited Curriculum",
-            price: totalAmount || 0,
-            quantity: 1,
-          },
-        ]);
-        setPaidTotal(totalAmount);
-        setPaymentDate(
-          new Date().toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-        );
+      if (!reference) {
+        setIsSuccess(false);
+        setErrorMessage("No transaction reference was received from the payment gateway.");
+        setVerifying(false);
+        return;
       }
 
-      // 3. Immediately activate local learning access to eliminate any delay
-      if (itemIds.length > 0) {
-        await markAsPaid(itemIds);
+      // Verify settlement strictly with the backend API
+      try {
+        const verifyRes = await paymentApi.verifyPayment(reference, accessToken);
 
-        try {
-          const existingPaid = JSON.parse(localStorage.getItem("hammet-paid-items") || "[]");
-          const mergedPaid = Array.from(new Set([...existingPaid, ...itemIds]));
-          localStorage.setItem("hammet-paid-items", JSON.stringify(mergedPaid));
+        if (verifyRes.success && verifyRes.data && verifyRes.data.status === "success") {
+          const currentItems = [...itemsRef.current];
+          const enrolledItemIds =
+            verifyRes.data.enrolled_items && verifyRes.data.enrolled_items.length > 0
+              ? verifyRes.data.enrolled_items
+              : currentItems.map((i) => i.id);
 
-          const existingEnrolled = JSON.parse(localStorage.getItem("hammet_enrolled_courses") || "[]");
-          const mergedEnrolled = Array.from(new Set([...existingEnrolled, ...itemIds]));
-          localStorage.setItem("hammet_enrolled_courses", JSON.stringify(mergedEnrolled));
-        } catch (e) {
-          console.error("Local enrollment cache error:", e);
-        }
+          setPurchasedItems(
+            currentItems.length > 0
+              ? currentItems
+              : enrolledItemIds.map((id) => ({
+                  id,
+                  type: "course",
+                  title: `Enrolled Curriculum (${id})`,
+                  price: verifyRes.data?.amount || 0,
+                  quantity: 1,
+                }))
+          );
+          setPaidTotal(verifyRes.data.amount || 0);
+          setPaymentDate(
+            verifyRes.data.paid_at
+              ? new Date(verifyRes.data.paid_at).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : new Date().toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+          );
 
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new Event("cart-updated"));
-          window.dispatchEvent(new Event("enrollment-updated"));
-        }
-      }
+          // Activate courses in local DB now that backend confirmed payment
+          if (enrolledItemIds.length > 0) {
+            await markAsPaidRef.current(enrolledItemIds);
+          }
+          await clearCartRef.current();
 
-      // 4. Background verification with backend ledger
-      if (reference) {
-        paymentApi.verifyPayment(reference, accessToken).catch(() => {});
-      }
-
-      // 5. Clear cart on local store
-      clearCart();
-
-      // Short smooth verification delay for visual feedback
-      setTimeout(() => {
-        if (isMounted) {
-          setVerifying(false);
           setIsSuccess(true);
+        } else {
+          // Backend rejected or could not verify payment
+          setIsSuccess(false);
+          setErrorMessage(
+            verifyRes.error ||
+              `Backend verification failed for reference '${reference}'. Settlement status: '${verifyRes.data?.status || "unverified"}'`
+          );
         }
-      }, 700);
+      } catch (err: any) {
+        setIsSuccess(false);
+        setErrorMessage(
+          err?.message ||
+            `Failed to communicate with the payment verification server for reference ${reference}.`
+        );
+      } finally {
+        setVerifying(false);
+      }
     }
 
     handleSettlement();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [reference, statusParam, accessToken, clearCart, markAsPaid]);
+  }, [reference, statusParam, accessToken]);
 
   const handleStartCourse = () => {
     let target = "/learner/learn";
@@ -178,18 +187,38 @@ function PaystackCallbackContent() {
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
           {errorMessage || "The transaction could not be completed on Paystack."}
         </p>
+
+        {reference && (
+          <div className="my-4 rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs font-mono text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
+            Reference: <span className="font-bold text-slate-900 dark:text-white">{reference}</span>
+          </div>
+        )}
+
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+          {reference && (
+            <Button
+              onClick={() => {
+                setVerifying(true);
+                window.location.reload();
+              }}
+              className="w-full sm:w-auto rounded-xl bg-purple-600 px-6 py-2.5 font-bold text-white shadow-md hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              <span>Retry Verification</span>
+            </Button>
+          )}
           <Button
+            variant="outline"
             onClick={() => router.push("/learner/checkout")}
-            className="w-full sm:w-auto rounded-xl bg-purple-600 px-6 py-2.5 font-bold text-white shadow-md hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400"
+            className="w-full sm:w-auto rounded-xl border border-slate-200 dark:border-white/10"
           >
             <RotateCcw className="mr-2 h-4 w-4" />
             <span>Return to Checkout</span>
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={() => router.push("/learner")}
-            className="w-full sm:w-auto rounded-xl border border-slate-200 dark:border-white/10"
+            className="w-full sm:w-auto rounded-xl"
           >
             Learner Dashboard
           </Button>

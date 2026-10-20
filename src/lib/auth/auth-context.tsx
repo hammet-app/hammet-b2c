@@ -151,23 +151,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     refreshPromiseRef.current = (async () => {
       try {
-        const mockUser = localStorage.getItem("hammet-user");
-        if (mockUser) {
-          const fakeToken = "mock-token";
-          const user = JSON.parse(mockUser);
-          await persistSession(user, fakeToken);
-          setState((prev) => ({
-            ...prev,
-            accessToken: fakeToken,
-            user,
-            isLoading: false,
-            isResolved: true,
-            isOffline: false,
-            isSessionExpired: false,
-          }));
-          return fakeToken;
-        }
-
         const res = await fetch(`${API_BASE}/auth/refresh`, {
           method: "POST",
           credentials: "include",
