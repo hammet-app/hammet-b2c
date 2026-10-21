@@ -23,6 +23,7 @@ import {
   ExternalLink,
   ShieldCheck,
   X,
+  Search,
   Terminal,
   FolderKanban,
   FileQuestion,
@@ -138,6 +139,7 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
 
   // Completed modules tracking
   const [completedModules, setCompletedModules] = useState<string[]>(["m1"]);
+  const [moduleSearchQuery, setModuleSearchQuery] = useState("");
   
   // Interactive Module Studio Modal
   const [activeModule, setActiveModule] = useState<ModuleData | null>(null);
@@ -162,36 +164,40 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
   }, []);
 
   useEffect(() => {
-    if (!accessToken || !courseId) return;
+    if (!mounted || !courseId) return;
 
     async function fetchCourse() {
       try {
         setLoading(true);
-        const schoolsData = await learnerApi.getAiSchools(accessToken!, refreshToken);
-        let foundCourse: AiSchoolCourse | null = null;
-        
-        for (const school of schoolsData.aiSchools) {
-          const courseData = await learnerApi.getAiSchoolCourses(school.id, accessToken!, refreshToken);
-          const match = courseData.courses.find(c => c.id === courseId);
-          if (match) {
-            foundCourse = match;
-            break;
+        if (accessToken) {
+          const schoolsData = await learnerApi.getAiSchools(accessToken, refreshToken);
+          let foundCourse: AiSchoolCourse | null = null;
+          
+          for (const school of schoolsData.aiSchools) {
+            const courseData = await learnerApi.getAiSchoolCourses(school.id, accessToken, refreshToken);
+            const match = courseData.courses.find((c) => c.id === courseId);
+            if (match) {
+              foundCourse = match;
+              break;
+            }
+          }
+
+          if (foundCourse) {
+            setCourse(foundCourse);
+            setError(null);
+            return;
           }
         }
 
-        if (foundCourse) {
-          setCourse(foundCourse);
-        } else {
-          setCourse({
-            id: courseId,
-            title: "Advanced Generative AI & Autonomous Systems",
-            description: "A comprehensive deep dive into attention mechanisms, stateful multi-agent systems, and production engineering with modern LLMs.",
-            price: 25000,
-            aiSchoolId: "school-ai-foundation-1",
-            slug: "advanced-ai",
-            position: 1
-          });
-        }
+        setCourse({
+          id: courseId,
+          title: "Introduction to Artificial Intelligence & Modern LLMs",
+          description: "A comprehensive deep dive into attention mechanisms, stateful multi-agent systems, and production engineering with modern LLMs.",
+          price: 25000,
+          aiSchoolId: "school-ai-foundations",
+          slug: "advanced-ai",
+          position: 1,
+        });
         setError(null);
       } catch {
         setError("Failed to load course details");
@@ -201,7 +207,7 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
     }
 
     fetchCourse();
-  }, [courseId, accessToken, refreshToken]);
+  }, [courseId, accessToken, refreshToken, mounted]);
 
   if (!mounted) return null;
 
@@ -315,16 +321,68 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
 
               {/* Modules List */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                    Course Curriculum & Modules
+                    Course Curriculum &amp; Modules
                   </h2>
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                     {completedModules.length} of {COURSE_MODULES.length} Completed
                   </span>
                 </div>
 
-                {COURSE_MODULES.map((mod, i) => {
+                {/* ── COURSE MODULE SEARCH BAR ───────────────────────── */}
+                <div className="relative mb-4">
+                  <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                  <input
+                    type="text"
+                    placeholder="Search module titles, lecture topics, or code concepts..."
+                    value={moduleSearchQuery}
+                    onChange={(e) => setModuleSearchQuery(e.target.value)}
+                    className="w-full rounded-2xl border border-black/[0.08] bg-white py-2.5 pl-10 pr-9 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 dark:border-white/10 dark:bg-white/[0.03] dark:text-white dark:placeholder:text-slate-500"
+                  />
+                  {moduleSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setModuleSearchQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {COURSE_MODULES.filter((mod) => {
+                  if (!moduleSearchQuery.trim()) return true;
+                  const query = moduleSearchQuery.toLowerCase();
+                  return (
+                    mod.title.toLowerCase().includes(query) ||
+                    mod.description.toLowerCase().includes(query) ||
+                    mod.topics.some((t) => t.toLowerCase().includes(query))
+                  );
+                }).length === 0 ? (
+                  <div className="rounded-2xl border border-black/[0.06] bg-white p-8 text-center dark:border-white/[0.06] dark:bg-white/[0.02]">
+                    <Search className="mx-auto mb-3 h-7 w-7 text-slate-400" />
+                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      No modules matched &ldquo;{moduleSearchQuery}&rdquo;
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setModuleSearchQuery("")}
+                      className="mt-2 text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline"
+                    >
+                      Clear search
+                    </button>
+                  </div>
+                ) : (
+                  COURSE_MODULES.filter((mod) => {
+                    if (!moduleSearchQuery.trim()) return true;
+                    const query = moduleSearchQuery.toLowerCase();
+                    return (
+                      mod.title.toLowerCase().includes(query) ||
+                      mod.description.toLowerCase().includes(query) ||
+                      mod.topics.some((t) => t.toLowerCase().includes(query))
+                    );
+                  }).map((mod, i) => {
                   const isCompleted = completedModules.includes(mod.id);
                   const testResult = moduleTestResults[mod.id];
 
@@ -454,8 +512,9 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
                       </div>
                     </motion.div>
                   );
-                })}
-              </div>
+                })
+              )}
+            </div>
 
               {/* ── ATTACHED COURSE PROJECTS & PORTFOLIO LABS ───────────────────── */}
               <div className="mt-12">

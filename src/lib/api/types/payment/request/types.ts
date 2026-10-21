@@ -9,6 +9,31 @@ export type Interest =
   | "ai_business";
 
 export type ProfileOnboarding = {
-  learningMode: "focus" | "guided"
-  interests: Interest[]
+  learningMode: "focus" | "guided";
+  interests: Interest[];
+};
+
+export type BackendProductType = "course" | "profile" | "ai_school";
+
+export interface AddToCartRequest {
+  productType: BackendProductType;
+  productId: string;
+}
+
+export interface CheckoutItemRequest {
+  id: string;
+  type: string;
+  title: string;
+  price: number;
+  quantity?: number;
+}
+
+export interface CheckoutRequest {
+  items: CheckoutItemRequest[];
+  amount: number;
+  currency?: string;
+  customerEmail: string;
+  customerName?: string | null;
+  reference: string;
+  callbackUrl?: string | null;
 }

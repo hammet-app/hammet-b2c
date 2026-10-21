@@ -25,6 +25,7 @@ import {
   FileCode,
   Award,
   BookOpen,
+  Search,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils/utils";
@@ -58,6 +59,7 @@ export default function ProjectsPage() {
 
   const [statusFilter, setStatusFilter] = useState<"all" | "in-progress" | "completed" | "not-started">("all");
   const [selectedTrack, setSelectedTrack] = useState<string>("All Tracks");
+  const [searchQuery, setSearchQuery] = useState("");
   const [launchingId, setLaunchingId] = useState<string | null>(null);
   const [sandboxLaunched, setSandboxLaunched] = useState<Record<string, boolean>>({});
 
@@ -85,7 +87,14 @@ export default function ProjectsPage() {
       statusFilter === "all" ? true : p.status === statusFilter;
     const matchesTrack =
       selectedTrack === "All Tracks" ? true : p.track === selectedTrack;
-    return matchesStatus && matchesTrack;
+    const q = searchQuery.toLowerCase().trim();
+    const matchesSearch = !q || (
+      p.title.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q) ||
+      p.track.toLowerCase().includes(q) ||
+      p.tags?.some((tag) => tag.toLowerCase().includes(q))
+    );
+    return matchesStatus && matchesTrack && matchesSearch;
   });
 
   const completedCount = projects.filter((p) => p.status === "completed").length;
@@ -202,46 +211,74 @@ export default function ProjectsPage() {
           ))}
         </div>
 
-        {/* Filters Bar: Status Tabs & Track Selector */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-black/[0.06] pb-4 dark:border-white/[0.06]">
-          {/* Status Tabs */}
-          <div className="flex flex-wrap items-center gap-2">
-            {[
-              { id: "all", label: `All Projects (${projects.length})` },
-              { id: "in-progress", label: `In Progress (${inProgressCount})` },
-              { id: "completed", label: `Completed (${completedCount})` },
-              { id: "not-started", label: `Not Started (${projects.length - completedCount - inProgressCount})` },
-            ].map((tab) => (
+        {/* Search & Track Filter Toolbar */}
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          {/* Search Input */}
+          <div className="relative w-full lg:max-w-md">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search projects by title, track, or skill tags..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-2xl border border-black/[0.08] bg-white py-2.5 pl-10 pr-10 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
+            />
+            {searchQuery && (
               <button
-                key={tab.id}
-                onClick={() => setStatusFilter(tab.id as typeof statusFilter)}
-                className={cn(
-                  "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all",
-                  statusFilter === tab.id
-                    ? "bg-[#17131F] text-white shadow-md dark:bg-white dark:text-[#17131F]"
-                    : "border border-black/[0.08] text-slate-600 hover:bg-black/[0.04] dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/[0.04]"
-                )}
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-white/10 dark:hover:text-white"
+                title="Clear search"
               >
-                {tab.label}
+                <X className="h-3.5 w-3.5" />
               </button>
-            ))}
+            )}
           </div>
 
-          {/* Track Selector */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Track:</span>
-            <select
-              value={selectedTrack}
-              onChange={(e) => setSelectedTrack(e.target.value)}
-              className="rounded-xl border border-black/[0.08] bg-white px-3 py-1.5 text-xs font-bold text-slate-700 dark:border-white/10 dark:bg-[#151026] dark:text-slate-200 outline-none"
-            >
-              {tracks.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+          {/* Results count & Track Selector */}
+          <div className="flex flex-wrap items-center gap-3">
+            {searchQuery && (
+              <span className="text-xs font-semibold text-purple-600 dark:text-cyan-400">
+                Found {filteredProjects.length} of {projects.length} projects
+              </span>
+            )}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Track:</span>
+              <select
+                value={selectedTrack}
+                onChange={(e) => setSelectedTrack(e.target.value)}
+                className="rounded-xl border border-black/[0.08] bg-white px-3 py-1.5 text-xs font-bold text-slate-700 dark:border-white/10 dark:bg-[#151026] dark:text-slate-200 outline-none"
+              >
+                {tracks.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
+        </div>
+
+        {/* Filters Bar: Status Tabs */}
+        <div className="mb-8 flex flex-wrap items-center gap-2 border-b border-black/[0.06] pb-4 dark:border-white/[0.06]">
+          {[
+            { id: "all", label: `All Projects (${projects.length})` },
+            { id: "in-progress", label: `In Progress (${inProgressCount})` },
+            { id: "completed", label: `Completed (${completedCount})` },
+            { id: "not-started", label: `Not Started (${projects.length - completedCount - inProgressCount})` },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setStatusFilter(tab.id as typeof statusFilter)}
+              className={cn(
+                "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all",
+                statusFilter === tab.id
+                  ? "bg-[#17131F] text-white shadow-md dark:bg-white dark:text-[#17131F]"
+                  : "border border-black/[0.08] text-slate-600 hover:bg-black/[0.04] dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/[0.04]"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {/* Project Cards Grid */}
@@ -249,7 +286,19 @@ export default function ProjectsPage() {
           <div className="rounded-3xl border border-dashed border-slate-300 p-12 text-center dark:border-white/10">
             <FolderKanban className="mx-auto h-12 w-12 text-slate-400" />
             <h3 className="mt-3 text-lg font-bold text-slate-900 dark:text-white">No projects found</h3>
-            <p className="mt-1 text-xs text-slate-500">Try adjusting your filters or start a project from any course curriculum.</p>
+            <p className="mt-1 text-xs text-slate-500">
+              {searchQuery
+                ? `No projects matching "${searchQuery}". Try a different keyword or clear your search.`
+                : "Try adjusting your filters or start a project from any course curriculum."}
+            </p>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3.5 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-100 dark:border-purple-500/30 dark:bg-purple-500/10 dark:text-purple-300"
+              >
+                Clear search
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2">

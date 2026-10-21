@@ -15,6 +15,8 @@ import {
   Clock,
   Sparkles,
   Check,
+  Search,
+  X,
 } from "lucide-react";
 
 import { useRouter } from "next/navigation";
@@ -36,6 +38,7 @@ export default function AiSchoolsPage() {
   const { accessToken, refreshToken } = useAuth();
 
   const [schools, setSchools] = useState<AiSchool[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -102,10 +105,54 @@ export default function AiSchoolsPage() {
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Check back later for new offerings.</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-8">
-            {schools.map((school, index) => {
-              const isPaid = mounted && hasPaidItem(school.id);
-              const inCart = mounted && hasItem(school.id);
+          <>
+            {/* School Search Toolbar */}
+            <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="relative w-full sm:max-w-md">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search AI Schools by name or description..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-2xl border border-black/[0.08] bg-white py-2.5 pl-10 pr-10 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-white/10 dark:hover:text-white"
+                    title="Clear search"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+              {searchQuery && (
+                <span className="text-xs font-semibold text-purple-600 dark:text-cyan-400">
+                  Showing {schools.filter((s) => !searchQuery.trim() || s.name?.toLowerCase().includes(searchQuery.toLowerCase().trim()) || s.description?.toLowerCase().includes(searchQuery.toLowerCase().trim())).length} of {schools.length} schools
+                </span>
+              )}
+            </div>
+
+            {schools.filter((s) => !searchQuery.trim() || s.name?.toLowerCase().includes(searchQuery.toLowerCase().trim()) || s.description?.toLowerCase().includes(searchQuery.toLowerCase().trim())).length === 0 ? (
+              <div className="rounded-3xl border border-dashed border-slate-300 p-12 text-center dark:border-white/10">
+                <BookOpen className="mx-auto mb-4 h-10 w-10 text-slate-400" />
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">No schools match &quot;{searchQuery}&quot;</h3>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Try searching with a different term or clear your search.</p>
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3.5 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-100 dark:border-purple-500/30 dark:bg-purple-500/10 dark:text-purple-300"
+                >
+                  Clear search
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-8">
+                {schools
+                  .filter((s) => !searchQuery.trim() || s.name?.toLowerCase().includes(searchQuery.toLowerCase().trim()) || s.description?.toLowerCase().includes(searchQuery.toLowerCase().trim()))
+                  .map((school, index) => {
+                    const isPaid = mounted && hasPaidItem(school.id);
+                    const inCart = mounted && hasItem(school.id);
 
               return (
                 <motion.div
@@ -298,7 +345,9 @@ export default function AiSchoolsPage() {
                 </motion.div>
               );
             })}
-          </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

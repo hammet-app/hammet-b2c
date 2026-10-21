@@ -305,7 +305,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
               const active =
                 item.href === "/learner"
                   ? pathname === "/learner"
-                  : pathname.startsWith(item.href);
+                  : pathname === item.href || pathname.startsWith(item.href + "/");
 
               return (
                 <Link
@@ -494,7 +494,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
                   const active =
                     item.href === "/learner"
                       ? pathname === "/learner"
-                      : pathname.startsWith(item.href);
+                      : pathname === item.href || pathname.startsWith(item.href + "/");
 
                   return (
                     <Link

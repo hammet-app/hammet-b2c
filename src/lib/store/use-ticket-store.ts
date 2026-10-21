@@ -46,7 +46,9 @@ export interface TicketComment {
 
 export interface SupportTicket {
   id: string;
+  subject: string;
   title: string;
+  message: string;
   description: string;
   category: TicketCategory;
   priority: TicketPriority;
@@ -55,8 +57,8 @@ export interface SupportTicket {
   createdAt: string;
   updatedAt: string;
   resolvedAt?: string;
-  attachments: TicketAttachment[];
-  comments: TicketComment[];
+  attachments?: TicketAttachment[];
+  comments?: TicketComment[];
   environment?: {
     os: string;
     browser: string;
@@ -84,12 +86,17 @@ interface TicketStoreState {
   setSearchQuery: (query: string) => void;
   setIsCreateModalOpen: (open: boolean) => void;
 
+  addTicket: (ticket: SupportTicket) => void;
+
   createTicket: (data: {
-    title: string;
-    description: string;
+    subject?: string;
+    title?: string;
+    message?: string;
+    description?: string;
     category: TicketCategory;
-    priority: TicketPriority;
+    priority?: TicketPriority;
     attachments?: TicketAttachment[];
+    id?: string;
   }) => string;
 
   addComment: (
@@ -123,8 +130,11 @@ export const SUPPORT_AGENTS: Record<TicketCategory, TicketAgent> = {
 
 export const INITIAL_TICKETS: SupportTicket[] = [
   {
-    id: "HMT-SUP-1012",
+    id: "HMT-1001",
+    subject: "Hammet Support & Direct Help Desk",
     title: "Hammet Support & Direct Help Desk",
+    message:
+      "Welcome to Hammet Support! We handle all learner questions, courseware inquiries, and account assistance directly through our dedicated team email at support@hammetedu.com. Submit a ticket here anytime and our staff will reply directly to your email address.",
     description:
       "Welcome to Hammet Support! We handle all learner questions, courseware inquiries, and account assistance directly through our dedicated team email at support@hammetedu.com. Submit a ticket here anytime and our staff will reply directly to your email address.",
     category: "general",
@@ -155,7 +165,7 @@ export const useTicketStore = create<TicketStoreState>()(
   persist(
     (set, get) => ({
       tickets: INITIAL_TICKETS,
-      selectedTicketId: "HMT-SUP-1012",
+      selectedTicketId: "HMT-1001",
       filterStatus: "all",
       filterCategory: "all",
       filterPriority: "all",
@@ -169,8 +179,26 @@ export const useTicketStore = create<TicketStoreState>()(
       setSearchQuery: (query) => set({ searchQuery: query }),
       setIsCreateModalOpen: (open) => set({ isCreateModalOpen: open }),
 
-      createTicket: ({ title, description, category, priority, attachments = [] }) => {
-        const ticketId = `HMT-SUP-${Math.floor(100000 + Math.random() * 900000)}`;
+      addTicket: (ticket: SupportTicket) => {
+        set((state) => ({
+          tickets: [ticket, ...state.tickets.filter((t) => t.id !== ticket.id)],
+          selectedTicketId: ticket.id,
+        }));
+      },
+
+      createTicket: ({
+        subject,
+        title,
+        message,
+        description,
+        category,
+        priority = "medium",
+        attachments = [],
+        id,
+      }) => {
+        const effectiveSubject = (subject || title || "Support Inquiry").trim();
+        const effectiveMessage = (message || description || "").trim();
+        const ticketId = id || `HMT-${Math.floor(1000 + Math.random() * 9000)}`;
         const now = new Date().toISOString();
 
         const slaMap: Record<TicketPriority, string> = {
@@ -182,8 +210,10 @@ export const useTicketStore = create<TicketStoreState>()(
 
         const newTicket: SupportTicket = {
           id: ticketId,
-          title,
-          description,
+          subject: effectiveSubject,
+          title: effectiveSubject,
+          message: effectiveMessage,
+          description: effectiveMessage,
           category,
           priority,
           status: "open",
@@ -200,9 +230,8 @@ export const useTicketStore = create<TicketStoreState>()(
                 role: "user",
                 title: "Sent via Email",
               },
-              content: description,
+              content: effectiveMessage,
               timestamp: now,
-              attachments: attachments.length > 0 ? attachments : undefined,
             },
           ],
           environment: {
@@ -243,7 +272,7 @@ export const useTicketStore = create<TicketStoreState>()(
               ? {
                   ...t,
                   updatedAt: now,
-                  comments: [...t.comments, newComment],
+                  comments: [...(t.comments || []), newComment],
                 }
               : t
           ),

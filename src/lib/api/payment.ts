@@ -1,25 +1,14 @@
 import { apiClient } from "@/lib/api/api-client";
+import { getPersistedSession } from "@/lib/db";
 import type { CartItem } from "@/lib/store/use-cart";
+import type {
+  AddToCartRequestDto,
+  BackendProductTypeDto,
+  CheckoutRequestDto as CheckoutRequest,
+  CheckoutItemRequestDto as CheckoutItemDto,
+} from "@/lib/api/types/payment";
 
-// ── OpenAPI Types (Strictly Matching Backend Schema) ──────────────────────────
-
-export interface CheckoutItemDto {
-  id: string;
-  type: string;
-  title: string;
-  price: number;
-  quantity?: number;
-}
-
-export interface CheckoutRequest {
-  items: CheckoutItemDto[];
-  amount: number;
-  currency?: string;
-  customer_email: string;
-  customer_name?: string | null;
-  reference: string;
-  callback_url?: string | null;
-}
+export type { CheckoutItemDto, CheckoutRequest };
 
 export interface CheckoutResponse {
   authorization_url: string;
@@ -82,6 +71,8 @@ export const paymentApi = {
     }
 
     try {
+      const authToken = token || (await getPersistedSession())?.accessToken;
+
       const checkoutPayload: CheckoutRequest = {
         items: payload.items.map((i) => ({
           id: i.id,
@@ -100,10 +91,30 @@ export const paymentApi = {
           `${typeof window !== "undefined" ? window.location.origin : ""}/learner/checkout/callback`,
       };
 
+      // Ensure all checkout items are persisted in the backend database cart table
+      for (const item of payload.items) {
+        try {
+          const product_type: BackendProductTypeDto =
+            item.type === "school" ? "ai_school" : (item.type as BackendProductTypeDto);
+          const addPayload: AddToCartRequestDto = {
+            product_type,
+            product_id: item.id,
+          };
+          await apiClient.patch(
+            "/learner/cart/add",
+            addPayload,
+            authToken,
+            { skipSessionExpired: true }
+          );
+        } catch {
+          // Item already in backend database cart or duplicate key - proceed
+        }
+      }
+
       const response = await apiClient.post<CheckoutResponse>(
         "/learner/checkout",
         checkoutPayload,
-        token,
+        authToken,
         { skipSessionExpired: true }
       );
 
@@ -156,9 +167,10 @@ export const paymentApi = {
     token?: string | null
   ): Promise<PaymentApiResponse<VerifyPaymentResponse>> => {
     try {
+      const authToken = token || (await getPersistedSession())?.accessToken;
       const response = await apiClient.get<VerifyPaymentResponse>(
         `/learner/payment/verify/${reference}`,
-        token,
+        authToken,
         { skipSessionExpired: true }
       );
 

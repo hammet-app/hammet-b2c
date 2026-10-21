@@ -194,16 +194,6 @@ export default function CheckoutPage() {
             <ShieldCheck className="h-4 w-4" />
             <span>Secure Checkout</span>
           </div>
-
-          {step === "payment" && (
-            <button
-              onClick={() => setStep("review")}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              <span>Back to Cart</span>
-            </button>
-          )}
         </div>
 
         {/* ── STEP 1: REVIEW CART ────────────────────────────────────────────── */}

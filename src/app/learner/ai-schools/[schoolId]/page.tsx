@@ -3,7 +3,7 @@
 import { useEffect, useState, use, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { ArrowLeft, BookOpen, AlertCircle, ShoppingCart, RefreshCw } from "lucide-react";
+import { ArrowLeft, BookOpen, AlertCircle, ShoppingCart, RefreshCw, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/lib/auth/auth-context";
@@ -21,6 +21,7 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
   const { accessToken, refreshToken } = useAuth();
   
   const [courses, setCourses] = useState<AiSchoolCourse[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [schoolName, setSchoolName] = useState<string>("School of AI Foundations");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,12 +37,20 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
 
     try {
       setLoading(true);
-      // Fetch school details to display dynamic name
+      let targetId = schoolId;
+
+      // Fetch school details to display dynamic name and map human slugs to backend UUIDs
       try {
         const schoolsData = await learnerApi.getAiSchools(accessToken ?? "", refreshToken);
-        const currentSchool = schoolsData.aiSchools.find((s) => s.id === schoolId);
+        const currentSchool = schoolsData.aiSchools.find(
+          (s) =>
+            s.id === schoolId ||
+            (schoolId === "school-ai-foundations" && s.name.toLowerCase().includes("foundation")) ||
+            (schoolId === "school-ai-safety" && s.name.toLowerCase().includes("safety"))
+        );
         if (currentSchool) {
           setSchoolName(currentSchool.name);
+          targetId = currentSchool.id;
         } else if (schoolId === "school-ai-safety") {
           setSchoolName("School of AI Safety, Alignment & Red-Teaming");
         }
@@ -51,7 +60,7 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
         }
       }
 
-      const data = await learnerApi.getAiSchoolCourses(schoolId, accessToken ?? "", refreshToken);
+      const data = await learnerApi.getAiSchoolCourses(targetId, accessToken ?? "", refreshToken);
       setCourses(data.courses.sort((a, b) => (a.position || 0) - (b.position || 0)));
       setError(null);
     } catch (err: unknown) {
@@ -74,8 +83,17 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
   const isSchoolPaid = hasPaidItem(schoolId);
   const isSchoolInCart = hasItem(schoolId);
 
+  const filteredCourses = courses.filter((course) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      course.title.toLowerCase().includes(query) ||
+      (course.description && course.description.toLowerCase().includes(query))
+    );
+  });
+
   return (
-    <div className="min-h-screen px-5 pb-28 pt-8 sm:px-7 sm:pt-10 lg:px-10 lg:pb-12 lg:pt-10 relative overflow-hidden bg-[#F8F7FF] dark:bg-[#0B0813] transition-colors duration-500">
+    <div className="min-h-screen px-5 pb-28 pt-8 sm:px-7 sm:pt-10 lg:px-10 lg:pb-12 lg:pt-10 relative overflow-hidden bg-[#F8F7FF] dark:bg-[#0B0813] transition-colors duration-500 font-poppins">
       <div className="pointer-events-none absolute right-0 top-10 -z-10 h-[450px] w-[450px] rounded-full bg-purple-500/10 blur-3xl" />
       <div className="mx-auto max-w-[1280px]">
         {/* Back navigation */}
@@ -88,7 +106,7 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
         </Link>
 
         {/* Page heading */}
-        <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+        <div className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
           <motion.header
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -100,7 +118,7 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
               {schoolName}
             </div>
 
-            <h1 className="text-3xl font-semibold tracking-[-0.045em] text-slate-950 sm:text-4xl dark:text-white">
+            <h1 className="text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl dark:text-white">
               Available Courses
             </h1>
 
@@ -125,7 +143,7 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
                     ₦{fullSchoolPrice.toLocaleString()}
                   </div>
                   <Button 
-                    className="bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                    className="bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-600/20 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400"
                     onClick={() => {
                       trackEvent("checkout_started", { properties: { schoolId, price: fullSchoolPrice } });
                       if (isSchoolInCart) {
@@ -155,6 +173,34 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
             )}
           </motion.div>
         </div>
+
+        {/* ── SEARCH BAR ────────────────────────────────────────────── */}
+        {!loading && !error && courses.length > 0 && (
+          <div className="mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="relative flex-1 max-w-md">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+              <input
+                type="text"
+                placeholder={`Search ${schoolName} courses...`}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-2xl border border-black/[0.08] bg-white py-2.5 pl-10 pr-9 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 dark:border-white/10 dark:bg-white/[0.03] dark:text-white dark:placeholder:text-slate-500"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              Showing <strong className="text-slate-900 dark:text-white">{filteredCourses.length}</strong> of {courses.length} courses
+            </span>
+          </div>
+        )}
 
         {loading ? (
           <div className="space-y-4">
@@ -186,9 +232,23 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
             <h3 className="text-lg font-semibold tracking-[-0.025em]">No courses available</h3>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">This school currently has no courses published.</p>
           </div>
+        ) : filteredCourses.length === 0 ? (
+          <div className="rounded-2xl border border-black/[0.06] bg-white p-12 text-center dark:border-white/[0.06] dark:bg-white/[0.03]">
+            <Search className="mx-auto mb-4 h-8 w-8 text-slate-400" />
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">No matching courses found</h3>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              No courses matched &ldquo;{searchQuery}&rdquo;. Try another keyword or clear your search.
+            </p>
+            <button
+              onClick={() => setSearchQuery("")}
+              className="mt-4 text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline"
+            >
+              Clear search
+            </button>
+          </div>
         ) : (
           <div className="space-y-4 relative">
-            {courses.map((course, index) => (
+            {filteredCourses.map((course, index) => (
               <CourseCard 
                 key={course.id} 
                 course={course} 

@@ -559,22 +559,38 @@ export default function MyLearningPage() {
 
           {/* Search bar inside courses tab */}
           {activeTab === "all" && (
-            <div className="relative w-full sm:w-64">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search your AI courses..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-full border border-black/[0.08] bg-white py-1.5 pl-9 pr-4 text-xs text-slate-900 outline-none transition-all focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white"
-              />
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              {searchQuery && (
+                <span className="hidden sm:inline text-xs font-semibold text-purple-600 dark:text-cyan-400">
+                  {filteredAiCourses.length} of {accessibleCourses.length} courses
+                </span>
+              )}
+              <div className="relative w-full sm:w-72">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search your AI courses..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-full border border-black/[0.08] bg-white py-1.5 pl-9 pr-8 text-xs text-slate-900 outline-none transition-all focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                    title="Clear search"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
 
         {/* TAB 1: ALL AI COURSES */}
         {activeTab === "all" && (
-          filteredAiCourses.length === 0 ? (
+          accessibleCourses.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -597,6 +613,27 @@ export default function MyLearningPage() {
                   </Button>
                 </Link>
               </div>
+            </motion.div>
+          ) : filteredAiCourses.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35 }}
+              className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 p-12 text-center dark:border-white/10"
+            >
+              <Search className="h-10 w-10 text-slate-400 mb-3" />
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                No courses match &quot;{searchQuery}&quot;
+              </h3>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Try searching with different keywords or clear your query.
+              </p>
+              <button
+                onClick={() => setSearchQuery("")}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3.5 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-100 dark:border-purple-500/30 dark:bg-purple-500/10 dark:text-purple-300"
+              >
+                Clear search
+              </button>
             </motion.div>
           ) : (
             <motion.div

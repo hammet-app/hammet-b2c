@@ -90,7 +90,7 @@ export function TicketList() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-900/60 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-sm overflow-hidden">
+    <div className="flex flex-col bg-white dark:bg-slate-900/60 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-sm overflow-hidden">
       {/* ── Search & Filter Controls ───────────────────────────── */}
       <div className="p-3 sm:p-3.5 border-b border-slate-200/70 dark:border-white/10 space-y-2.5 bg-slate-50/50 dark:bg-white/[0.02]">
         <div className="flex items-center gap-2">
@@ -209,19 +209,19 @@ export function TicketList() {
       </div>
 
       {/* ── Ticket List Scrollable Container ───────────────────── */}
-      <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-white/5">
+      <div className="overflow-y-auto divide-y divide-slate-100 dark:divide-white/5 max-h-[580px]">
         <AnimatePresence mode="popLayout">
           {filteredTickets.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center p-8 sm:p-12 text-center"
+              className="flex flex-col items-center justify-center p-6 sm:p-8 text-center"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-white/5 mb-3">
-                <AlertCircle className="h-6 w-6" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-white/5 mb-2.5">
+                <AlertCircle className="h-5 w-5" />
               </div>
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
                 No support tickets found
               </h4>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-xs">
@@ -235,7 +235,7 @@ export function TicketList() {
                   setFilterStatus("all");
                   setSearchQuery("");
                 }}
-                className="mt-4 rounded-xl bg-purple-50 px-4 py-2 text-xs font-bold text-purple-700 hover:bg-purple-100 dark:bg-purple-950/40 dark:text-purple-300 dark:border dark:border-purple-500/20"
+                className="mt-3.5 rounded-xl bg-purple-50 px-3.5 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-100 dark:bg-purple-950/40 dark:text-purple-300 dark:border dark:border-purple-500/20"
               >
                 Clear all filters
               </button>
@@ -243,8 +243,10 @@ export function TicketList() {
           ) : (
             filteredTickets.map((ticket) => {
               const isSelected = selectedTicketId === ticket.id;
-              const hasAttachments = ticket.attachments && ticket.attachments.length > 0;
-              const commentCount = ticket.comments.length;
+              const hasAttachments = Boolean(ticket.attachments && ticket.attachments.length > 0);
+              const commentCount = ticket.comments?.length || 0;
+              const displaySubject = ticket.subject || ticket.title || "Support Inquiry";
+              const displayMessage = ticket.message || ticket.description || "";
 
               return (
                 <motion.button
@@ -255,7 +257,7 @@ export function TicketList() {
                   exit={{ opacity: 0, scale: 0.98 }}
                   transition={{ duration: 0.2 }}
                   onClick={() => setSelectedTicketId(ticket.id)}
-                  className={`w-full text-left p-3 sm:p-3.5 transition flex flex-col gap-2 relative group ${
+                  className={`w-full text-left p-3 sm:p-3.5 transition flex flex-col gap-2 relative group cursor-pointer ${
                     isSelected
                       ? "bg-purple-50/70 dark:bg-purple-950/25"
                       : "hover:bg-slate-50/80 dark:hover:bg-white/[0.03]"
@@ -283,12 +285,12 @@ export function TicketList() {
 
                   {/* Title */}
                   <h4 className="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
-                    {ticket.title}
+                    {displaySubject}
                   </h4>
 
                   {/* Excerpt */}
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                    {ticket.description}
+                    {displayMessage}
                   </p>
 
                   {/* Bottom Row: Category, Assigned Agent, Time, Badges */}
@@ -300,26 +302,28 @@ export function TicketList() {
                       {hasAttachments && (
                         <span
                           className="flex items-center gap-0.5"
-                          title={`${ticket.attachments.length} attachment(s)`}
+                          title={`${ticket.attachments?.length || 0} attachment(s)`}
                         >
                           <Paperclip className="h-3 w-3" />
-                          <span>{ticket.attachments.length}</span>
+                          <span>{ticket.attachments?.length || 0}</span>
                         </span>
                       )}
 
                       {/* Comments indicator */}
-                      <span
-                        className="flex items-center gap-0.5"
-                        title={`${commentCount} update(s)`}
-                      >
-                        <MessageSquare className="h-3 w-3" />
-                        <span>{commentCount}</span>
-                      </span>
+                      {commentCount > 0 && (
+                        <span
+                          className="flex items-center gap-0.5"
+                          title={`${commentCount} update(s)`}
+                        >
+                          <MessageSquare className="h-3 w-3" />
+                          <span>{commentCount}</span>
+                        </span>
+                      )}
 
                       {/* Timestamp */}
                       <span className="flex items-center gap-0.5 font-mono text-[10px]">
                         <Clock className="h-2.5 w-2.5" />
-                        {formatRelativeTime(ticket.updatedAt)}
+                        {formatRelativeTime(ticket.updatedAt || ticket.createdAt)}
                       </span>
                     </div>
                   </div>
