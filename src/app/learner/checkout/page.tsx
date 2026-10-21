@@ -502,16 +502,25 @@ export default function CheckoutPage() {
                 <div className="rounded-3xl border border-black/[0.06] bg-white p-6 sm:p-8 shadow-sm dark:border-white/[0.06] dark:bg-[#140F24]">
                   {/* Gateway Status Header */}
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-5 dark:border-white/5">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300 shadow-xs">
                         <Lock className="h-5 w-5" />
                       </div>
                       <div>
-                        <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                          Paystack Secure Gateway
-                        </h2>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          Complete payment on Paystack's official verified checkout
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                            Paystack Secure Gateway
+                          </h2>
+                          <div className="flex items-center bg-white px-2 py-0.5 rounded-lg border border-slate-200/80 shadow-xs dark:bg-white/10 dark:border-white/10">
+                            <img
+                              src="https://upload.wikimedia.org/wikipedia/commons/0/0b/Paystack_Logo.png"
+                              alt="Paystack Logo"
+                              className="h-3.5 w-auto object-contain dark:brightness-125"
+                            />
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          Complete payment on Paystack&apos;s official verified checkout
                         </p>
                       </div>
                     </div>
@@ -524,22 +533,65 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  {/* Summary Breakdown in Main Card */}
-                  <div className="mt-6 rounded-2xl bg-[#F5F3FF]/70 p-5 border border-purple-100 dark:bg-white/[0.02] dark:border-white/5">
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                        Total Payable
-                      </span>
-                      <span className="font-mono text-2xl sm:text-3xl font-extrabold tracking-tight text-purple-700 dark:text-cyan-400">
-                        ₦{finalTotal.toLocaleString()}
-                      </span>
-                    </div>
+                  {/* Summary Breakdown in Main Card with POS / Card Terminal Background Watermark */}
+                  <div className="mt-6 rounded-2xl bg-[#F5F3FF]/70 p-5 border border-purple-100 dark:bg-white/[0.02] dark:border-white/5 relative overflow-hidden">
+                    {/* POS Terminal & Contactless Wave Watermark Graphic in Background */}
+                    <svg
+                      className="absolute -right-3 -bottom-5 h-36 w-36 text-purple-600/[0.08] dark:text-cyan-400/[0.08] pointer-events-none select-none rotate-6"
+                      viewBox="0 0 100 100"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      {/* POS Terminal Body */}
+                      <rect x="25" y="10" width="50" height="80" rx="8" />
+                      {/* Screen */}
+                      <rect x="33" y="18" width="34" height="22" rx="3" fill="currentColor" fillOpacity="0.1" />
+                      {/* Screen status lines */}
+                      <line x1="38" y1="26" x2="52" y2="26" strokeWidth="2" />
+                      <line x1="38" y1="32" x2="62" y2="32" strokeWidth="2" />
+                      {/* Keypad dots */}
+                      <circle cx="39" cy="50" r="2.5" fill="currentColor" />
+                      <circle cx="50" cy="50" r="2.5" fill="currentColor" />
+                      <circle cx="61" cy="50" r="2.5" fill="currentColor" />
+                      <circle cx="39" cy="60" r="2.5" fill="currentColor" />
+                      <circle cx="50" cy="60" r="2.5" fill="currentColor" />
+                      <circle cx="61" cy="60" r="2.5" fill="currentColor" />
+                      <circle cx="39" cy="70" r="2.5" fill="currentColor" />
+                      <circle cx="50" cy="70" r="2.5" fill="currentColor" />
+                      <circle cx="61" cy="70" r="2.5" fill="currentColor" />
+                      {/* Card Slot at bottom */}
+                      <line x1="35" y1="82" x2="65" y2="82" strokeWidth="3" />
+                      {/* Contactless waves above terminal */}
+                      <path d="M42 6 C47 3 53 3 58 6" strokeWidth="2" />
+                      <path d="M37 2 C45 -2 55 -2 63 2" strokeWidth="2" />
+                    </svg>
 
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-purple-100/70 pt-3 dark:border-white/5 text-xs">
-                      <span className="text-slate-500 dark:text-slate-400">Paying account:</span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">
-                        {user?.email || "learner@hammetedu.com"}
-                      </span>
+                    <div className="relative z-10">
+                      <div className="flex items-baseline justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                            Total Payable
+                          </span>
+                          <span className="inline-flex items-center gap-1 rounded-md bg-purple-100/90 px-2 py-0.5 text-[10px] font-bold text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">
+                            <span className="h-1.5 w-1.5 rounded-full bg-purple-600 dark:bg-cyan-400" />
+                            Paystack Checkout
+                          </span>
+                        </div>
+                        <span className="font-mono text-2xl sm:text-3xl font-extrabold tracking-tight text-purple-700 dark:text-cyan-400">
+                          ₦{finalTotal.toLocaleString()}
+                        </span>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-purple-100/70 pt-3 dark:border-white/5 text-xs">
+                        <span className="text-slate-500 dark:text-slate-400">Paying account:</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">
+                          {user?.email || "learner@hammetedu.com"}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -585,7 +637,7 @@ export default function CheckoutPage() {
                       onClick={handlePaystackRedirect}
                       disabled={isGeneratingLink}
                       size="lg"
-                      className="w-full h-13 rounded-2xl bg-purple-600 py-3.5 text-base font-bold text-white shadow-lg shadow-purple-600/25 hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full h-13 rounded-2xl bg-purple-600 py-3.5 text-base font-bold text-white shadow-lg shadow-purple-600/25 hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2.5 cursor-pointer"
                     >
                       {isGeneratingLink ? (
                         <>
@@ -594,6 +646,11 @@ export default function CheckoutPage() {
                         </>
                       ) : (
                         <>
+                          <img
+                            src="https://upload.wikimedia.org/wikipedia/commons/0/0b/Paystack_Logo.png"
+                            alt="Paystack"
+                            className="h-4 w-auto brightness-0 invert object-contain"
+                          />
                           <span>Pay ₦{finalTotal.toLocaleString()} with Paystack</span>
                           <ArrowRight className="h-4 w-4" />
                         </>
