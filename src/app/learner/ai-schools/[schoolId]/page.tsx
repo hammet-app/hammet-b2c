@@ -3,30 +3,43 @@
 import { useEffect, useState, use, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { ArrowLeft, BookOpen, AlertCircle, ShoppingCart, RefreshCw, Search, X } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  AlertCircle,
+  ShoppingCart,
+  RefreshCw,
+  Search,
+  X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/lib/auth/auth-context";
 import { learnerApi } from "@/lib/api/learner";
-import { AiSchoolCourse } from "@/lib/api/types";
+import { AiSchool, AiSchoolCourse } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { useCart } from "@/lib/store/use-cart";
 import { CourseCard } from "./course-card";
+import { ApiError } from "@/lib/api/api-client";
+import { cartApi } from "@/lib/api/cart";
 
-export default function AiSchoolDetailsPage({ params }: { params: Promise<{ schoolId: string }> }) {
+export default function AiSchoolDetailsPage({
+  params,
+}: {
+  params: Promise<{ schoolId: string }>;
+}) {
   const { schoolId } = use(params);
   const router = useRouter();
   const { trackEvent } = useAnalytics();
   const { accessToken, refreshToken } = useAuth();
-  
+
+  const [school, setSchool] = useState<AiSchool | null>(null);
   const [courses, setCourses] = useState<AiSchoolCourse[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [schoolName, setSchoolName] = useState<string>("School of AI Foundations");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
-  const { addItem, hasItem, hasPaidItem } = useCart();
 
   useEffect(() => {
     setMounted(true);
@@ -36,32 +49,36 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
     if (!schoolId) return;
 
     try {
-      setLoading(true);
+      if (!accessToken) return;
       let targetId = schoolId;
 
       // Fetch school details to display dynamic name and map human slugs to backend UUIDs
       try {
-        const schoolsData = await learnerApi.getAiSchools(accessToken ?? "", refreshToken);
+        const schoolsData = await learnerApi.getAiSchools(
+          accessToken,
+          refreshToken,
+        );
         const currentSchool = schoolsData.aiSchools.find(
           (s) =>
             s.id === schoolId ||
-            (schoolId === "school-ai-foundations" && s.name.toLowerCase().includes("foundation")) ||
-            (schoolId === "school-ai-safety" && s.name.toLowerCase().includes("safety"))
+            (schoolId === "school-ai-foundations" &&
+              s.name.toLowerCase().includes("foundation")) ||
+            (schoolId === "school-ai-safety" &&
+              s.name.toLowerCase().includes("safety")),
         );
         if (currentSchool) {
-          setSchoolName(currentSchool.name);
-          targetId = currentSchool.id;
-        } else if (schoolId === "school-ai-safety") {
-          setSchoolName("School of AI Safety, Alignment & Red-Teaming");
+          setSchool(currentSchool);
         }
-      } catch {
-        if (schoolId === "school-ai-safety") {
-          setSchoolName("School of AI Safety, Alignment & Red-Teaming");
-        }
-      }
+      } catch (err) {}
 
-      const data = await learnerApi.getAiSchoolCourses(targetId, accessToken ?? "", refreshToken);
-      setCourses(data.courses.sort((a, b) => (a.position || 0) - (b.position || 0)));
+      const data = await learnerApi.getAiSchoolCourses(
+        targetId,
+        accessToken ?? "",
+        refreshToken,
+      );
+      setCourses(
+        data.courses.sort((a, b) => (a.position || 0) - (b.position || 0)),
+      );
       setError(null);
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -79,9 +96,12 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
   }, [fetchCourses]);
 
   // Calculate full school price
-  const fullSchoolPrice = courses.reduce((total, course) => total + course.price, 0); // 20% discount for full school
-  const isSchoolPaid = hasPaidItem(schoolId);
-  const isSchoolInCart = hasItem(schoolId);
+  const fullSchoolPrice = courses.reduce(
+    (total, course) => total + course.price,
+    0,
+  ); // 20% discount for full school
+  const isSchoolPaid = school?.isEntitled;
+  const isInCart = school?.isEntitled;
 
   const filteredCourses = courses.filter((course) => {
     if (!searchQuery.trim()) return true;
@@ -97,7 +117,7 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
       <div className="pointer-events-none absolute right-0 top-10 -z-10 h-[450px] w-[450px] rounded-full bg-purple-500/10 blur-3xl" />
       <div className="mx-auto max-w-[1280px]">
         {/* Back navigation */}
-        <Link 
+        <Link
           href="/learner/ai-schools"
           className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
         >
@@ -115,7 +135,7 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
           >
             <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-purple-600 dark:text-cyan-400">
               <BookOpen className="h-3.5 w-3.5" />
-              {schoolName}
+              {school?.name}
             </div>
 
             <h1 className="text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl dark:text-white">
@@ -123,7 +143,8 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
             </h1>
 
             <p className="mt-3 text-sm leading-6 text-slate-500 sm:text-base dark:text-slate-400">
-              Select and enroll in the courses that match your learning goals, or purchase the entire school.
+              Select and enroll in the courses that match your learning goals,
+              or purchase the entire school.
             </p>
           </motion.header>
 
@@ -135,25 +156,36 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
             {courses.length > 0 && mounted && !isSchoolPaid && (
               <div className="rounded-2xl border border-black/[0.06] bg-slate-50 p-5 dark:border-white/[0.06] dark:bg-white/[0.02]">
                 <div className="mb-3">
-                  <h3 className="font-semibold text-slate-900 dark:text-white">Buy Full School</h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Get access to all courses</p>
+                  <h3 className="font-semibold text-slate-900 dark:text-white">
+                    Buy Full School
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Get access to all courses
+                  </p>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <div className="text-lg font-bold text-slate-900 dark:text-white">
                     ₦{fullSchoolPrice.toLocaleString()}
                   </div>
-                  <Button 
+                  <Button
                     className="bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-600/20 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400"
                     onClick={() => {
-                      trackEvent("checkout_started", { properties: { schoolId, price: fullSchoolPrice } });
-                      if (isSchoolInCart) {
-                        router.push('/learner/checkout');
+                      trackEvent("checkout_started", {
+                        properties: { schoolId, price: fullSchoolPrice },
+                      });
+                      if (isInCart) {
+                        router.push("/learner/checkout");
                       } else {
-                        addItem({ id: schoolId, type: 'ai_school', title: schoolName, price: fullSchoolPrice });
+                        cartApi.addItem({
+                          title: school?.name ?? "",
+                          price: school?.price ?? 0,
+                          type: "ai_school",
+                          productId: school?.id ?? "",
+                        });
                       }
                     }}
                   >
-                    {isSchoolInCart ? "Checkout" : "Add to cart"}
+                    {isInCart ? "Checkout" : "Add to cart"}
                   </Button>
                 </div>
               </div>
@@ -165,8 +197,12 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
                     <BookOpen className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-emerald-900 dark:text-emerald-100">School Purchased</h3>
-                    <p className="text-sm text-emerald-700 dark:text-emerald-300">You have access to all courses</p>
+                    <h3 className="font-semibold text-emerald-900 dark:text-emerald-100">
+                      School Purchased
+                    </h3>
+                    <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                      You have access to all courses
+                    </p>
                   </div>
                 </div>
               </div>
@@ -181,7 +217,7 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
               <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
               <input
                 type="text"
-                placeholder={`Search ${schoolName} courses...`}
+                placeholder={`Search ${school?.name} courses...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-2xl border border-black/[0.08] bg-white py-2.5 pl-10 pr-9 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 dark:border-white/10 dark:bg-white/[0.03] dark:text-white dark:placeholder:text-slate-500"
@@ -197,7 +233,11 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
               )}
             </div>
             <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              Showing <strong className="text-slate-900 dark:text-white">{filteredCourses.length}</strong> of {courses.length} courses
+              Showing{" "}
+              <strong className="text-slate-900 dark:text-white">
+                {filteredCourses.length}
+              </strong>{" "}
+              of {courses.length} courses
             </span>
           </div>
         )}
@@ -205,7 +245,10 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-[140px] animate-pulse rounded-2xl bg-slate-100 dark:bg-white/[0.03]" />
+              <div
+                key={i}
+                className="h-[140px] animate-pulse rounded-2xl bg-slate-100 dark:bg-white/[0.03]"
+              />
             ))}
           </div>
         ) : error ? (
@@ -213,8 +256,12 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
             <div className="flex items-start gap-3">
               <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
               <div className="flex-1">
-                <h4 className="font-semibold text-slate-900 dark:text-white">Unable to Load Courses from Backend</h4>
-                <p className="mt-1 text-sm text-red-700 dark:text-red-300 leading-relaxed">{error}</p>
+                <h4 className="font-semibold text-slate-900 dark:text-white">
+                  Unable to Load Courses from Backend
+                </h4>
+                <p className="mt-1 text-sm text-red-700 dark:text-red-300 leading-relaxed">
+                  {error}
+                </p>
                 <Button
                   onClick={() => fetchCourses()}
                   size="sm"
@@ -229,15 +276,22 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
         ) : courses.length === 0 ? (
           <div className="rounded-2xl border border-black/[0.06] bg-white p-12 text-center dark:border-white/[0.06] dark:bg-white/[0.03]">
             <BookOpen className="mx-auto mb-4 h-8 w-8 text-slate-400" />
-            <h3 className="text-lg font-semibold tracking-[-0.025em]">No courses available</h3>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">This school currently has no courses published.</p>
+            <h3 className="text-lg font-semibold tracking-[-0.025em]">
+              No courses available
+            </h3>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              This school currently has no courses published.
+            </p>
           </div>
         ) : filteredCourses.length === 0 ? (
           <div className="rounded-2xl border border-black/[0.06] bg-white p-12 text-center dark:border-white/[0.06] dark:bg-white/[0.03]">
             <Search className="mx-auto mb-4 h-8 w-8 text-slate-400" />
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">No matching courses found</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+              No matching courses found
+            </h3>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              No courses matched &ldquo;{searchQuery}&rdquo;. Try another keyword or clear your search.
+              No courses matched &ldquo;{searchQuery}&rdquo;. Try another
+              keyword or clear your search.
             </p>
             <button
               onClick={() => setSearchQuery("")}
@@ -249,12 +303,12 @@ export default function AiSchoolDetailsPage({ params }: { params: Promise<{ scho
         ) : (
           <div className="space-y-4 relative">
             {filteredCourses.map((course, index) => (
-              <CourseCard 
-                key={course.id} 
-                course={course} 
-                schoolId={schoolId} 
-                index={index} 
-                mounted={mounted} 
+              <CourseCard
+                key={course.id}
+                course={course}
+                school={school || undefined}
+                index={index}
+                mounted={mounted}
               />
             ))}
           </div>

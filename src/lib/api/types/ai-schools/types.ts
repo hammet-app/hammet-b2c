@@ -8,6 +8,9 @@ import { Pagination } from "../support";
 export type AiSchool = {
   id: string;
   name: string;
+  isEntitled: boolean;
+  isEnrolled: boolean;
+  hasFinished: boolean;
   description: string;
   price: number;
 };
@@ -26,6 +29,9 @@ export type AiSchoolCourse = {
   id: string;
   title: string;
   slug: string;
+  isEntitled: boolean;
+  isEnrolled: boolean;
+  hasFinished: boolean;
   description: string;
   aiSchoolId: string;
   position: number;

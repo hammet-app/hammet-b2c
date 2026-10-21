@@ -55,9 +55,15 @@ const COURSE_MODULES: ModuleData[] = [
     id: "m1",
     number: "01",
     title: "Introduction to AI & Vector Latent Spaces",
-    description: "Learn the core foundations of modern Artificial Intelligence, token embeddings, and how latent vector spaces represent human knowledge.",
+    description:
+      "Learn the core foundations of modern Artificial Intelligence, token embeddings, and how latent vector spaces represent human knowledge.",
     duration: "45 mins",
-    topics: ["Tokens & Vocabulary", "Embedding Geometries", "Cosine Similarity", "Vector Indexing"],
+    topics: [
+      "Tokens & Vocabulary",
+      "Embedding Geometries",
+      "Cosine Similarity",
+      "Vector Indexing",
+    ],
     codeSample: `# Token vector similarity calculation in PyTorch
 import torch
 import torch.nn.functional as F
@@ -68,15 +74,22 @@ vec_b = torch.tensor([0.42, 0.85, -0.09])
 similarity = F.cosine_similarity(vec_a.unsqueeze(0), vec_b.unsqueeze(0))
 print(f"Latent Semantic Alignment: {similarity.item():.4f}")
 # Output: Latent Semantic Alignment: 0.9982`,
-    notes: "Neural representations compress high-dimensional tokens into continuous geometric vectors. The closer two thoughts align in cosine distance, the stronger their semantic association.",
+    notes:
+      "Neural representations compress high-dimensional tokens into continuous geometric vectors. The closer two thoughts align in cosine distance, the stronger their semantic association.",
   },
   {
     id: "m2",
     number: "02",
     title: "Transformer Architectures & Self-Attention Math",
-    description: "Deconstruct Multi-Head Self-Attention, Query-Key-Value matrices, Positional Encoding, and Feed-Forward layer dynamics.",
+    description:
+      "Deconstruct Multi-Head Self-Attention, Query-Key-Value matrices, Positional Encoding, and Feed-Forward layer dynamics.",
     duration: "1h 15m",
-    topics: ["Scaled Dot-Product", "Q, K, V Projections", "Causal Masking", "Layer Normalization"],
+    topics: [
+      "Scaled Dot-Product",
+      "Q, K, V Projections",
+      "Causal Masking",
+      "Layer Normalization",
+    ],
     codeSample: `# Scaled Dot-Product Attention in Python
 import numpy as np
 
@@ -87,15 +100,22 @@ def scaled_dot_product_attention(Q, K, V):
     return np.matmul(attention_weights, V), attention_weights
 
 print("Multi-head attention weights computed across sequence context.")`,
-    notes: "Self-attention enables tokens to dynamically weigh relevance across the entire sequence context simultaneously without recurrent state bottlenecks.",
+    notes:
+      "Self-attention enables tokens to dynamically weigh relevance across the entire sequence context simultaneously without recurrent state bottlenecks.",
   },
   {
     id: "m3",
     number: "03",
     title: "Generative Systems & Retrieval-Augmented Generation (RAG)",
-    description: "Architect production retrieval pipelines using chunking algorithms, hybrid keyword-vector search, re-ranking models, and hallucination audits.",
+    description:
+      "Architect production retrieval pipelines using chunking algorithms, hybrid keyword-vector search, re-ranking models, and hallucination audits.",
     duration: "2h 30m",
-    topics: ["Document Chunking", "Hybrid Retrieval", "Cross-Encoder Re-Ranking", "Context Guardrails"],
+    topics: [
+      "Document Chunking",
+      "Hybrid Retrieval",
+      "Cross-Encoder Re-Ranking",
+      "Context Guardrails",
+    ],
     codeSample: `# Production Hybrid RAG Pipeline Orchestrator
 async def retrieve_and_synthesize(query: str, top_k: int = 5):
     dense_hits = await vector_store.similarity_search(query, k=top_k)
@@ -104,15 +124,22 @@ async def retrieve_and_synthesize(query: str, top_k: int = 5):
     return await llm_generate_with_citations(query, contexts=merged_contexts)
 
 print("Synthesized verified grounding with zero-hallucination guardrail.")`,
-    notes: "RAG grounds probabilistic generation onto deterministic external knowledge bases, transforming LLMs from isolated calculators into factual enterprise advisors.",
+    notes:
+      "RAG grounds probabilistic generation onto deterministic external knowledge bases, transforming LLMs from isolated calculators into factual enterprise advisors.",
   },
   {
     id: "m4",
     number: "04",
     title: "Autonomous Agents & Multi-Tool Execution",
-    description: "Design stateful AI agent loops with LangGraph, deterministic checkpointing, external API execution, and human-in-the-loop safety switches.",
+    description:
+      "Design stateful AI agent loops with LangGraph, deterministic checkpointing, external API execution, and human-in-the-loop safety switches.",
     duration: "1h 45m",
-    topics: ["Agent State Graphs", "Tool Schema Reflection", "Error Recovery Cycles", "Subagent Delegations"],
+    topics: [
+      "Agent State Graphs",
+      "Tool Schema Reflection",
+      "Error Recovery Cycles",
+      "Subagent Delegations",
+    ],
     codeSample: `# Autonomous Multi-Tool Agent Execution Loop
 while agent_state.is_active and iteration < MAX_TURNS:
     next_action = model.decide_next_step(agent_state.history)
@@ -122,16 +149,21 @@ while agent_state.is_active and iteration < MAX_TURNS:
     agent_state.append_observation(result)
 
 print("Agent loop concluded successfully with deterministic checkpoints.")`,
-    notes: "Agents elevate LLMs from conversational chatbots into autonomous actors capable of inspecting codebases, executing tests, and safely verifying real-world tasks.",
+    notes:
+      "Agents elevate LLMs from conversational chatbots into autonomous actors capable of inspecting codebases, executing tests, and safely verifying real-world tasks.",
   },
 ];
 
-export default function CourseDetailsPage({ params }: { params: Promise<{ courseId: string }> }) {
+export default function CourseDetailsPage({
+  params,
+}: {
+  params: Promise<{ courseId: string }>;
+}) {
   const { courseId } = use(params);
   const router = useRouter();
   const { accessToken, refreshToken } = useAuth();
   const { addItem, hasItem, hasPaidItem } = useCart();
-  
+
   const [course, setCourse] = useState<AiSchoolCourse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -140,18 +172,24 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
   // Completed modules tracking
   const [completedModules, setCompletedModules] = useState<string[]>(["m1"]);
   const [moduleSearchQuery, setModuleSearchQuery] = useState("");
-  
+
   // Interactive Module Studio Modal
   const [activeModule, setActiveModule] = useState<ModuleData | null>(null);
-  const [studioTab, setStudioTab] = useState<"video" | "code" | "notes">("video");
+  const [studioTab, setStudioTab] = useState<"video" | "code" | "notes">(
+    "video",
+  );
   const [isPlaying, setIsPlaying] = useState(false);
 
   // Locked Course Prompt Modal
   const [showLockedModal, setShowLockedModal] = useState(false);
 
   // Module Test Questions Modal
-  const [activeTestModule, setActiveTestModule] = useState<ModuleData | null>(null);
-  const [projectActionNotice, setProjectActionNotice] = useState<string | null>(null);
+  const [activeTestModule, setActiveTestModule] = useState<ModuleData | null>(
+    null,
+  );
+  const [projectActionNotice, setProjectActionNotice] = useState<string | null>(
+    null,
+  );
 
   // Learner Store
   const storeProjects = useLearnerStore((state) => state.projects);
@@ -170,11 +208,18 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
       try {
         setLoading(true);
         if (accessToken) {
-          const schoolsData = await learnerApi.getAiSchools(accessToken, refreshToken);
+          const schoolsData = await learnerApi.getAiSchools(
+            accessToken,
+            refreshToken,
+          );
           let foundCourse: AiSchoolCourse | null = null;
-          
+
           for (const school of schoolsData.aiSchools) {
-            const courseData = await learnerApi.getAiSchoolCourses(school.id, accessToken, refreshToken);
+            const courseData = await learnerApi.getAiSchoolCourses(
+              school.id,
+              accessToken,
+              refreshToken,
+            );
             const match = courseData.courses.find((c) => c.id === courseId);
             if (match) {
               foundCourse = match;
@@ -192,7 +237,8 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
         setCourse({
           id: courseId,
           title: "Introduction to Artificial Intelligence & Modern LLMs",
-          description: "A comprehensive deep dive into attention mechanisms, stateful multi-agent systems, and production engineering with modern LLMs.",
+          description:
+            "A comprehensive deep dive into attention mechanisms, stateful multi-agent systems, and production engineering with modern LLMs.",
           price: 25000,
           aiSchoolId: "school-ai-foundations",
           slug: "advanced-ai",
@@ -213,7 +259,9 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
 
   // Strict payment gating: Free or Paid
   const isFree = course ? (course.price || 0) === 0 : false;
-  const isPaid = course ? (hasPaidItem(course.id) || hasPaidItem(course.aiSchoolId)) : false;
+  const isPaid = course
+    ? hasPaidItem(course.id) || hasPaidItem(course.aiSchoolId)
+    : false;
   const isEnrolled = isFree || isPaid;
   const inCart = course ? hasItem(course.id) : false;
 
@@ -231,7 +279,9 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
     if (!completedModules.includes(activeModule.id)) {
       setCompletedModules((prev) => [...prev, activeModule.id]);
     }
-    const currentIndex = COURSE_MODULES.findIndex((m) => m.id === activeModule.id);
+    const currentIndex = COURSE_MODULES.findIndex(
+      (m) => m.id === activeModule.id,
+    );
     if (currentIndex < COURSE_MODULES.length - 1) {
       setActiveModule(COURSE_MODULES[currentIndex + 1]);
     } else {
@@ -243,7 +293,7 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
     <div className="min-h-screen px-4 pb-28 pt-6 sm:px-7 sm:pt-10 lg:px-10 lg:pb-16 bg-[#F5F3FF] dark:bg-[#0D0A17] font-poppins transition-colors duration-300">
       <div className="mx-auto max-w-[1080px]">
         {/* Back Link */}
-        <button 
+        <button
           onClick={() => router.back()}
           className="mb-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
         >
@@ -255,15 +305,24 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
           <div className="animate-pulse space-y-6">
             <div className="h-48 rounded-3xl bg-white/[0.6] dark:bg-white/[0.03]" />
             <div className="space-y-4">
-              {[1, 2, 3, 4].map(i => <div key={i} className="h-24 rounded-2xl bg-white/[0.6] dark:bg-white/[0.03]" />)}
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="h-24 rounded-2xl bg-white/[0.6] dark:bg-white/[0.03]"
+                />
+              ))}
             </div>
           </div>
         ) : error || !course ? (
           <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-6 dark:border-red-500/20 dark:bg-red-500/[0.05]">
             <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
             <div>
-              <h3 className="font-bold text-red-900 dark:text-red-200">Unable to load course</h3>
-              <p className="mt-1 text-sm text-red-700 dark:text-red-300">{error || "Course details not found."}</p>
+              <h3 className="font-bold text-red-900 dark:text-red-200">
+                Unable to load course
+              </h3>
+              <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                {error || "Course details not found."}
+              </p>
             </div>
           </div>
         ) : (
@@ -326,7 +385,8 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
                     Course Curriculum &amp; Modules
                   </h2>
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    {completedModules.length} of {COURSE_MODULES.length} Completed
+                    {completedModules.length} of {COURSE_MODULES.length}{" "}
+                    Completed
                   </span>
                 </div>
 
@@ -383,138 +443,139 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
                       mod.topics.some((t) => t.toLowerCase().includes(query))
                     );
                   }).map((mod, i) => {
-                  const isCompleted = completedModules.includes(mod.id);
-                  const testResult = moduleTestResults[mod.id];
+                    const isCompleted = completedModules.includes(mod.id);
+                    const testResult = moduleTestResults[mod.id];
 
-                  return (
-                    <motion.div
-                      key={mod.id}
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.08 }}
-                      className={cn(
-                        "group relative overflow-hidden rounded-2xl border p-5 sm:p-6 transition-all duration-200",
-                        isEnrolled
-                          ? "border-black/[0.06] bg-white hover:border-purple-300 hover:shadow-md dark:border-white/[0.06] dark:bg-white/[0.02] dark:hover:border-purple-500/40"
-                          : "border-black/[0.05] bg-slate-50/60 opacity-85 hover:opacity-100 dark:border-white/[0.04] dark:bg-white/[0.01]"
-                      )}
-                    >
-                      <div className="flex items-start gap-4">
-                        <div
-                          onClick={() => handleStartOrModuleClick(mod)}
-                          className={cn(
-                            "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-sm font-bold shadow-sm transition cursor-pointer",
-                            isCompleted
-                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
-                              : isEnrolled
-                              ? "bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 group-hover:scale-105"
-                              : "bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
-                          )}
-                        >
-                          {isCompleted ? (
-                            <Check className="h-5 w-5" />
-                          ) : isEnrolled ? (
-                            <PlayCircle className="h-5 w-5" />
-                          ) : (
-                            <Lock className="h-5 w-5" />
-                          )}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-purple-600 dark:text-cyan-400">
-                                MODULE {mod.number}
-                              </span>
-                              {isCompleted && (
-                                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-                                  Completed
-                                </span>
-                              )}
-                              {testResult?.passed && (
-                                <span className="rounded-full bg-cyan-50 px-2 py-0.5 text-[10px] font-bold text-cyan-800 dark:bg-cyan-500/10 dark:text-cyan-300 flex items-center gap-1">
-                                  <CheckCheck className="h-3 w-3" />
-                                  Test Passed ({testResult.score}/{testResult.totalQuestions})
-                                </span>
-                              )}
-                            </div>
-                            <span className="text-xs font-semibold text-slate-400">
-                              {mod.duration}
-                            </span>
-                          </div>
-
-                          <h3 
+                    return (
+                      <motion.div
+                        key={mod.id}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.08 }}
+                        className={cn(
+                          "group relative overflow-hidden rounded-2xl border p-5 sm:p-6 transition-all duration-200",
+                          isEnrolled
+                            ? "border-black/[0.06] bg-white hover:border-purple-300 hover:shadow-md dark:border-white/[0.06] dark:bg-white/[0.02] dark:hover:border-purple-500/40"
+                            : "border-black/[0.05] bg-slate-50/60 opacity-85 hover:opacity-100 dark:border-white/[0.04] dark:bg-white/[0.01]",
+                        )}
+                      >
+                        <div className="flex items-start gap-4">
+                          <div
                             onClick={() => handleStartOrModuleClick(mod)}
-                            className="text-base font-bold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-cyan-400 transition-colors cursor-pointer"
+                            className={cn(
+                              "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-sm font-bold shadow-sm transition cursor-pointer",
+                              isCompleted
+                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+                                : isEnrolled
+                                  ? "bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 group-hover:scale-105"
+                                  : "bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+                            )}
                           >
-                            {mod.title}
-                          </h3>
-
-                          <p className="mt-1.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                            {mod.description}
-                          </p>
-
-                          {/* Topic tags */}
-                          <div className="mt-3 flex flex-wrap gap-1.5">
-                            {mod.topics.map((t, idx) => (
-                              <span
-                                key={idx}
-                                className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-white/5 dark:text-slate-300"
-                              >
-                                {t}
-                              </span>
-                            ))}
+                            {isCompleted ? (
+                              <Check className="h-5 w-5" />
+                            ) : isEnrolled ? (
+                              <PlayCircle className="h-5 w-5" />
+                            ) : (
+                              <Lock className="h-5 w-5" />
+                            )}
                           </div>
 
-                          {/* Interactive Action Pills */}
-                          <div className="mt-4 flex flex-wrap items-center gap-2 pt-3 border-t border-black/[0.04] dark:border-white/[0.05]">
-                            <button
-                              type="button"
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-purple-600 dark:text-cyan-400">
+                                  MODULE {mod.number}
+                                </span>
+                                {isCompleted && (
+                                  <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                                    Completed
+                                  </span>
+                                )}
+                                {testResult?.passed && (
+                                  <span className="rounded-full bg-cyan-50 px-2 py-0.5 text-[10px] font-bold text-cyan-800 dark:bg-cyan-500/10 dark:text-cyan-300 flex items-center gap-1">
+                                    <CheckCheck className="h-3 w-3" />
+                                    Test Passed ({testResult.score}/
+                                    {testResult.totalQuestions})
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-xs font-semibold text-slate-400">
+                                {mod.duration}
+                              </span>
+                            </div>
+
+                            <h3
                               onClick={() => handleStartOrModuleClick(mod)}
-                              className="inline-flex items-center gap-1.5 rounded-xl bg-purple-50 px-3 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-100 dark:bg-purple-500/10 dark:text-purple-300 transition"
+                              className="text-base font-bold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-cyan-400 transition-colors cursor-pointer"
                             >
-                              <PlayCircle className="h-3.5 w-3.5" />
-                              <span>Lecture & Sandbox</span>
-                            </button>
+                              {mod.title}
+                            </h3>
 
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (!isEnrolled) {
-                                  setShowLockedModal(true);
-                                  return;
-                                }
-                                setActiveTestModule(mod);
-                              }}
-                              className={cn(
-                                "inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition",
-                                testResult?.passed
-                                  ? "border border-emerald-500/30 bg-emerald-50/80 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300 hover:bg-emerald-100"
-                                  : "border border-purple-200 bg-white text-purple-700 hover:bg-purple-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-cyan-300 dark:hover:bg-white/[0.06]"
-                              )}
-                            >
-                              <FileQuestion className="h-3.5 w-3.5" />
-                              <span>
-                                {testResult?.passed
-                                  ? `Retake Knowledge Test (${testResult.score}/${testResult.totalQuestions})`
-                                  : "Take Knowledge Test 📝"}
-                              </span>
-                            </button>
+                            <p className="mt-1.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                              {mod.description}
+                            </p>
+
+                            {/* Topic tags */}
+                            <div className="mt-3 flex flex-wrap gap-1.5">
+                              {mod.topics.map((t, idx) => (
+                                <span
+                                  key={idx}
+                                  className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-white/5 dark:text-slate-300"
+                                >
+                                  {t}
+                                </span>
+                              ))}
+                            </div>
+
+                            {/* Interactive Action Pills */}
+                            <div className="mt-4 flex flex-wrap items-center gap-2 pt-3 border-t border-black/[0.04] dark:border-white/[0.05]">
+                              <button
+                                type="button"
+                                onClick={() => handleStartOrModuleClick(mod)}
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-purple-50 px-3 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-100 dark:bg-purple-500/10 dark:text-purple-300 transition"
+                              >
+                                <PlayCircle className="h-3.5 w-3.5" />
+                                <span>Lecture & Sandbox</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (!isEnrolled) {
+                                    setShowLockedModal(true);
+                                    return;
+                                  }
+                                  setActiveTestModule(mod);
+                                }}
+                                className={cn(
+                                  "inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition",
+                                  testResult?.passed
+                                    ? "border border-emerald-500/30 bg-emerald-50/80 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300 hover:bg-emerald-100"
+                                    : "border border-purple-200 bg-white text-purple-700 hover:bg-purple-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-cyan-300 dark:hover:bg-white/[0.06]",
+                                )}
+                              >
+                                <FileQuestion className="h-3.5 w-3.5" />
+                                <span>
+                                  {testResult?.passed
+                                    ? `Retake Knowledge Test (${testResult.score}/${testResult.totalQuestions})`
+                                    : "Take Knowledge Test 📝"}
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+
+                          <div
+                            onClick={() => handleStartOrModuleClick(mod)}
+                            className="hidden sm:flex items-center self-center text-slate-300 group-hover:text-purple-600 dark:text-slate-600 dark:group-hover:text-cyan-400 transition cursor-pointer"
+                          >
+                            <ChevronRight className="h-5 w-5" />
                           </div>
                         </div>
-
-                        <div 
-                          onClick={() => handleStartOrModuleClick(mod)}
-                          className="hidden sm:flex items-center self-center text-slate-300 group-hover:text-purple-600 dark:text-slate-600 dark:group-hover:text-cyan-400 transition cursor-pointer"
-                        >
-                          <ChevronRight className="h-5 w-5" />
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })
-              )}
-            </div>
+                      </motion.div>
+                    );
+                  })
+                )}
+              </div>
 
               {/* ── ATTACHED COURSE PROJECTS & PORTFOLIO LABS ───────────────────── */}
               <div className="mt-12">
@@ -522,13 +583,26 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
                   <div>
                     <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
                       <FolderKanban className="h-3.5 w-3.5" />
-                      Course Projects ({storeProjects.length >= 5 ? 5 : storeProjects.length} Available)
+                      Course Projects (
+                      {storeProjects.length >= 5
+                        ? 5
+                        : storeProjects.length}{" "}
+                      Available)
                     </div>
                     <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                       Attached Hands-On Projects
                     </h2>
                     <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl">
-                      Each course includes 5+ projects that test your mastery. Starting a project automatically adds it to your <Link href="/learner/projects" className="underline font-semibold text-purple-600 dark:text-cyan-400 hover:opacity-80">Projects Workspace</Link> where you can launch cloud GPU sandboxes and submit for verifiable badges.
+                      Each course includes 5+ projects that test your mastery.
+                      Starting a project automatically adds it to your{" "}
+                      <Link
+                        href="/learner/projects"
+                        className="underline font-semibold text-purple-600 dark:text-cyan-400 hover:opacity-80"
+                      >
+                        Projects Workspace
+                      </Link>{" "}
+                      where you can launch cloud GPU sandboxes and submit for
+                      verifiable badges.
                     </p>
                   </div>
 
@@ -582,10 +656,10 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
                                   project.level === "Production"
                                     ? "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300"
                                     : project.level === "Advanced"
-                                    ? "bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300"
-                                    : project.level === "Intermediate"
-                                    ? "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
-                                    : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
+                                      ? "bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300"
+                                      : project.level === "Intermediate"
+                                        ? "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
+                                        : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
                                 )}
                               >
                                 {project.level}
@@ -654,7 +728,9 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
                                     return;
                                   }
                                   startProject(project.id);
-                                  setProjectActionNotice(`"${project.title}" has been started and added to your Projects Workspace at /learner/projects!`);
+                                  setProjectActionNotice(
+                                    `"${project.title}" has been started and added to your Projects Workspace at /learner/projects!`,
+                                  );
                                 }}
                                 className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-purple-600 dark:bg-white dark:text-slate-950 dark:hover:bg-cyan-300 shadow-sm transition"
                               >
@@ -698,7 +774,8 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
                         </span>
                       </div>
                       <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        Full access to all 4 modules, coding labs, and certified badge.
+                        Full access to all 4 modules, coding labs, and certified
+                        badge.
                       </p>
                     </div>
                   )}
@@ -736,7 +813,10 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
                     size="lg"
                     className="w-full rounded-xl bg-purple-600 font-bold text-white shadow-md shadow-purple-600/25 hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400"
                   >
-                    <span>Unlock Course • Pay ₦{(course.price || 0).toLocaleString()}</span>
+                    <span>
+                      Unlock Course • Pay ₦
+                      {(course.price || 0).toLocaleString()}
+                    </span>
                   </Button>
                 )}
 
@@ -789,9 +869,11 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
                 Course Enrollment Required
               </h3>
               <p className="mt-2 text-center text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                You cannot start this course until payment is completed. Enroll to unlock all 4 modules, runnable PyTorch sandboxes, and your official credential.
+                You cannot start this course until payment is completed. Enroll
+                to unlock all 4 modules, runnable PyTorch sandboxes, and your
+                official credential.
               </p>
-              
+
               <div className="mt-6 flex flex-col gap-3">
                 <Button
                   onClick={() => {
@@ -867,7 +949,7 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
                     "flex items-center gap-2 border-b-2 py-3 px-3 text-xs font-bold transition",
                     studioTab === "video"
                       ? "border-purple-600 text-purple-700 dark:border-cyan-400 dark:text-cyan-300"
-                      : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                      : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white",
                   )}
                 >
                   <PlayCircle className="h-4 w-4" />
@@ -879,7 +961,7 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
                     "flex items-center gap-2 border-b-2 py-3 px-3 text-xs font-bold transition",
                     studioTab === "code"
                       ? "border-purple-600 text-purple-700 dark:border-cyan-400 dark:text-cyan-300"
-                      : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                      : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white",
                   )}
                 >
                   <Code2 className="h-4 w-4" />
@@ -891,7 +973,7 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
                     "flex items-center gap-2 border-b-2 py-3 px-3 text-xs font-bold transition",
                     studioTab === "notes"
                       ? "border-purple-600 text-purple-700 dark:border-cyan-400 dark:text-cyan-300"
-                      : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                      : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white",
                   )}
                 >
                   <BookOpen className="h-4 w-4" />
@@ -910,20 +992,34 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
                         onClick={() => setIsPlaying(!isPlaying)}
                         className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full bg-purple-600/90 text-white shadow-2xl hover:scale-105 transition hover:bg-purple-500"
                       >
-                        {isPlaying ? <Pause className="h-7 w-7" /> : <Play className="ml-1 h-7 w-7" />}
+                        {isPlaying ? (
+                          <Pause className="h-7 w-7" />
+                        ) : (
+                          <Play className="ml-1 h-7 w-7" />
+                        )}
                       </button>
 
                       <div className="absolute bottom-4 left-4 right-4 z-10 flex items-center justify-between text-xs text-white">
-                        <span className="font-mono">14:28 / {activeModule.duration}</span>
+                        <span className="font-mono">
+                          14:28 / {activeModule.duration}
+                        </span>
                         <div className="flex items-center gap-2">
-                          <span className="rounded bg-white/20 px-2 py-0.5 text-[10px] font-bold">1080p 60fps</span>
-                          <span className="rounded bg-purple-500/40 px-2 py-0.5 text-[10px] font-bold text-cyan-300">Speed: 1.0x</span>
+                          <span className="rounded bg-white/20 px-2 py-0.5 text-[10px] font-bold">
+                            1080p 60fps
+                          </span>
+                          <span className="rounded bg-purple-500/40 px-2 py-0.5 text-[10px] font-bold text-cyan-300">
+                            Speed: 1.0x
+                          </span>
                         </div>
                       </div>
                     </div>
                     <div>
-                      <h4 className="text-lg font-bold text-slate-900 dark:text-white">{activeModule.title}</h4>
-                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{activeModule.description}</p>
+                      <h4 className="text-lg font-bold text-slate-900 dark:text-white">
+                        {activeModule.title}
+                      </h4>
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        {activeModule.description}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -934,7 +1030,9 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
                       <span className="text-xs font-mono font-bold text-purple-600 dark:text-cyan-400">
                         Interactive Python Sandbox
                       </span>
-                      <span className="text-xs text-slate-400">Python 3.11 • PyTorch 2.3</span>
+                      <span className="text-xs text-slate-400">
+                        Python 3.11 • PyTorch 2.3
+                      </span>
                     </div>
                     <pre className="overflow-x-auto rounded-2xl bg-[#0B0813] p-5 font-mono text-xs leading-relaxed text-emerald-400 border border-white/10 shadow-inner">
                       <code>{activeModule.codeSample}</code>

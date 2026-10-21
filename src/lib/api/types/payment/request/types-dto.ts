@@ -1,5 +1,3 @@
-
-
 export type InterestDto =
   | "generative_ai"
   | "ai_agents"
@@ -38,4 +36,3 @@ export interface CheckoutRequestDto {
   reference: string;
   callback_url?: string | null;
 }
-

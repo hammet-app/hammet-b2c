@@ -1,4 +1,3 @@
-
 export type Interest =
   | "generative_ai"
   | "ai_agents"

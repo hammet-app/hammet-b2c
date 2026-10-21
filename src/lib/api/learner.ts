@@ -12,18 +12,23 @@ import {
   CartResponseDto,
   toCartResponse,
 } from "@/lib/api/types";
+import {
+  EntitlementResponse,
+  EntitlementResponseDto,
+  toEntitlementResponse,
+} from "./types/learner";
 
 export const learnerApi = {
   completeOnboarding: async (
     body: ProfileOnboarding,
     token: string,
-    onRefresh: () => Promise<string | null>
+    onRefresh: () => Promise<string | null>,
   ): Promise<boolean> => {
     const response = await apiClient.patch<boolean>(
       "/learner/onboarding",
       fromProfileOnboarding(body),
       token,
-      { onRefresh }
+      { onRefresh },
     );
 
     return response;
@@ -37,7 +42,7 @@ export const learnerApi = {
     token: string,
     onRefresh: () => Promise<string | null>,
     page: number = 1,
-    pageSize: number = 50
+    pageSize: number = 50,
   ): Promise<AiSchoolsResponse> => {
     const params = new URLSearchParams({
       page: String(page),
@@ -47,7 +52,7 @@ export const learnerApi = {
     const response = await apiClient.get<AiSchoolsResponseDto>(
       `/learner/ai-schools?${params.toString()}`,
       token,
-      { onRefresh, skipSessionExpired: true }
+      { onRefresh, skipSessionExpired: true },
     );
     return toAiSchoolsResponse(response);
   },
@@ -59,12 +64,12 @@ export const learnerApi = {
   getAiSchoolCourses: async (
     schoolId: string,
     token: string,
-    onRefresh: () => Promise<string | null>
+    onRefresh: () => Promise<string | null>,
   ): Promise<AiSchoolCoursesResponse> => {
     const response = await apiClient.get<AiSchoolCoursesResponseDto>(
       `/learner/ai-schools/${schoolId}/courses`,
       token,
-      { onRefresh, skipSessionExpired: true }
+      { onRefresh, skipSessionExpired: true },
     );
     return toAiSchoolCoursesResponse(response);
   },
@@ -75,13 +80,29 @@ export const learnerApi = {
    */
   getCart: async (
     token: string,
-    onRefresh: () => Promise<string | null>
+    onRefresh: () => Promise<string | null>,
   ): Promise<CartResponse> => {
     const response = await apiClient.get<CartResponseDto>(
       "/learner/cart",
       token,
-      { onRefresh, skipSessionExpired: true }
+      { onRefresh, skipSessionExpired: true },
     );
     return toCartResponse(response);
+  },
+
+  /**
+   * Fetches the ai_schools and courses a learner is entitled to.
+   */
+  getEntitlements: async (
+    token: string,
+    onRefresh: () => Promise<string | null>,
+  ): Promise<EntitlementResponse> => {
+    const response = await apiClient.get<EntitlementResponseDto>(
+      "/learner/entitlements",
+      token,
+      { onRefresh },
+    );
+
+    return toEntitlementResponse(response);
   },
 };

@@ -52,110 +52,17 @@ export interface PaymentApiResponse<T> {
 }
 
 export const paymentApi = {
-  /**
-   * Request an authorized Paystack checkout payment link from the backend.
-   * Transparently surfaces backend validation or network errors.
-   */
-  createPaymentLink: async (
-    payload: CreatePaymentLinkPayload,
-    token?: string | null
-  ): Promise<PaymentApiResponse<PaymentLinkData>> => {
-    const reference = `TXN-HMT-${Math.floor(100000 + Math.random() * 900000)}`;
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-
-    if (!payload.email) {
-      return {
-        success: false,
-        error: "Learner email is required to initialize checkout.",
-      };
-    }
-
-    try {
-      const authToken = token || (await getPersistedSession())?.accessToken;
-
-      const checkoutPayload: CheckoutRequest = {
-        items: payload.items.map((i) => ({
-          id: i.id,
-          type: i.type,
-          title: i.title,
-          price: i.price,
-          quantity: i.quantity || 1,
-        })),
-        amount: payload.amount,
-        currency: payload.currency || "NGN",
-        customer_email: payload.email,
-        customer_name: payload.customerName || null,
-        reference,
-        callback_url:
-          payload.callbackUrl ||
-          `${typeof window !== "undefined" ? window.location.origin : ""}/learner/checkout/callback`,
-      };
-
-      // Ensure all checkout items are persisted in the backend database cart table
-      for (const item of payload.items) {
-        try {
-          const product_type: BackendProductTypeDto =
-            item.type === "school" ? "ai_school" : (item.type as BackendProductTypeDto);
-          const addPayload: AddToCartRequestDto = {
-            product_type,
-            product_id: item.id,
-          };
-          await apiClient.patch(
-            "/learner/cart/add",
-            addPayload,
-            authToken,
-            { skipSessionExpired: true }
-          );
-        } catch {
-          // Item already in backend database cart or duplicate key - proceed
-        }
-      }
-
-      const response = await apiClient.post<CheckoutResponse>(
-        "/learner/checkout",
-        checkoutPayload,
-        authToken,
-        { skipSessionExpired: true }
-      );
-
-      const url =
-        response?.authorization_url ||
-        (response as any)?.data?.authorization_url ||
-        "";
-
-      const finalRef =
-        response?.reference ||
-        (response as any)?.data?.reference ||
-        reference;
-
-      if (!url) {
-        return {
-          success: false,
-          error:
-            "The backend did not return a valid Paystack authorization URL. Please contact support.",
-        };
-      }
-
-      return {
-        success: true,
-        data: {
-          paymentUrl: url,
-          reference: finalRef,
-          amount: payload.amount,
-          currency: payload.currency || "NGN",
-          expiresAt,
-          provider: "paystack",
-        },
-      };
-    } catch (err: any) {
-      console.error("[paymentApi.createPaymentLink] Backend error:", err);
-      return {
-        success: false,
-        error:
-          err?.message ||
-          "Failed to connect to backend checkout service. Please check your network and try again.",
-      };
-    }
+  initPayment: async (
+    orderId: string,
+    token: string,
+    onRefresh?: () => Promise<string | null>,
+  ): Promise<string> => {
+    return apiClient.post<string>(
+      "/payment/init",
+      { order_id: orderId },
+      token,
+      onRefresh ? { onRefresh } : { skipSessionExpired: true },
+    );
   },
 
   /**
@@ -164,14 +71,14 @@ export const paymentApi = {
    */
   verifyPayment: async (
     reference: string,
-    token?: string | null
+    token?: string | null,
   ): Promise<PaymentApiResponse<VerifyPaymentResponse>> => {
     try {
       const authToken = token || (await getPersistedSession())?.accessToken;
       const response = await apiClient.get<VerifyPaymentResponse>(
         `/learner/payment/verify/${reference}`,
         authToken,
-        { skipSessionExpired: true }
+        { skipSessionExpired: true },
       );
 
       if (!response) {

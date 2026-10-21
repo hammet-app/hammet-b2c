@@ -136,7 +136,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { theme, toggle } = useTheme();
-  
+
   const cartItems = useCart((state) => state.items);
   const syncAccountState = useLearnerStore((state) => state.syncAccountState);
   const isPro = useLearnerStore((state) => state.isPro);
@@ -295,7 +295,11 @@ export function LearnerShell({ children }: LearnerShellProps) {
               <TypewriterWord collapsed={collapsed} />
               <motion.span
                 animate={{ opacity: [1, 0, 1] }}
-                transition={{ duration: 0.65, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: 0.65,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
                 className="ml-1 inline-block h-3.5 w-[2.5px] rounded-full bg-[#06B6D4] shadow-[0_0_8px_#06B6D4]"
               />
             </motion.div>
@@ -305,7 +309,8 @@ export function LearnerShell({ children }: LearnerShellProps) {
               const active =
                 item.href === "/learner"
                   ? pathname === "/learner"
-                  : pathname === item.href || pathname.startsWith(item.href + "/");
+                  : pathname === item.href ||
+                    pathname.startsWith(item.href + "/");
 
               return (
                 <Link
@@ -494,7 +499,8 @@ export function LearnerShell({ children }: LearnerShellProps) {
                   const active =
                     item.href === "/learner"
                       ? pathname === "/learner"
-                      : pathname === item.href || pathname.startsWith(item.href + "/");
+                      : pathname === item.href ||
+                        pathname.startsWith(item.href + "/");
 
                   return (
                     <Link
@@ -675,8 +681,12 @@ export function LearnerShell({ children }: LearnerShellProps) {
                     : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200",
                 ].join(" ")}
               >
-                <Icon className={`h-[18px] w-[18px] transition-transform ${active ? "scale-110 text-purple-600 dark:text-cyan-400" : ""}`} />
-                <span className="truncate max-w-[70px] whitespace-nowrap">{item.label}</span>
+                <Icon
+                  className={`h-[18px] w-[18px] transition-transform ${active ? "scale-110 text-purple-600 dark:text-cyan-400" : ""}`}
+                />
+                <span className="truncate max-w-[70px] whitespace-nowrap">
+                  {item.label}
+                </span>
               </Link>
             );
           })}

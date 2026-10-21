@@ -13,51 +13,34 @@ import {
   ArrowLeft,
   BookOpen,
   ShieldCheck,
-  CreditCard,
-  Building2,
   CheckCircle2,
-  Copy,
-  Check,
   Lock,
-  Smartphone,
-  Clock,
   Award,
   Zap,
   Tag,
   AlertCircle,
   GraduationCap,
-  Link2,
-  QrCode,
-  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils/utils";
-import { paymentApi, type PaymentLinkData } from "@/lib/api/payment";
+import { cartApi } from "@/lib/api/cart";
+import { paymentApi } from "@/lib/api/payment";
+import { OrderResponse } from "@/lib/api/types";
 
 type CheckoutStep = "review" | "payment";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { user, accessToken } = useAuth();
-  const {
-    items,
-    removeItem,
-    updateQuantity,
-    getTotal,
-    clearCart,
-    couponCode,
-    discountPercentage,
-    applyCoupon,
-    removeCoupon,
-    getDiscountAmount,
-    getFinalTotal,
-  } = useCart();
+  const { accessToken, refreshToken } = useAuth();
+  const { items, couponCode, discountPercentage, applyCoupon, removeCoupon } =
+    useCart();
 
+  const [order, setOrder] = useState<OrderResponse | null>(null);
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<CheckoutStep>("review");
 
   // Payment Link State
-  const [paymentLinkData, setPaymentLinkData] = useState<PaymentLinkData | null>(null);
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   const [copiedPaymentLink, setCopiedPaymentLink] = useState(false);
   const [showQrCode, setShowQrCode] = useState(false);
@@ -65,7 +48,10 @@ export default function CheckoutPage() {
 
   // Coupon code logic
   const [couponInput, setCouponInput] = useState(couponCode || "");
-  const [couponFeedback, setCouponFeedback] = useState<{ success: boolean; message: string } | null>(null);
+  const [couponFeedback, setCouponFeedback] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -74,113 +60,137 @@ export default function CheckoutPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  const rawTotal = getTotal();
-  const discountAmount = getDiscountAmount();
-  const finalTotal = getFinalTotal();
+  useEffect(() => {
+    const savedOrder = sessionStorage.getItem("checkoutOrder");
+
+    if (!savedOrder) {
+      return;
+    }
+
+    try {
+      const parsedOrder = JSON.parse(savedOrder) as OrderResponse;
+      setOrder(parsedOrder);
+      setStep("payment");
+    } catch (error) {
+      console.error("Failed to load checkout order:", error);
+      sessionStorage.removeItem("checkoutOrder");
+    }
+  }, []);
+
+  const rawTotal = order?.subtotal ?? 0;
+  const discountAmount = order ? Math.max(0, order.subtotal - order.total) : 0;
+  const finalTotal = order?.total ?? 0;
+
+  const orderItems = order?.orders ?? [];
+  const invalidItems = order?.invalid ?? [];
   const couponApplied = !!couponCode;
 
-  // Auto-generate payment link whenever proceeding to payment step
+  // Creating order for checkout
   const handleProceedToPayment = async () => {
-    setGatewayError(null);
-    try {
-      if (typeof window !== "undefined" && items.length > 0) {
-        sessionStorage.setItem("hammet_pending_checkout", JSON.stringify(items));
-        localStorage.setItem("hammet_pending_checkout", JSON.stringify(items));
-      }
-    } catch (e) {
-      console.warn("Could not save pending checkout:", e);
+    if (!accessToken) {
+      setGatewayError("Please sign in again before checking out.");
+      return;
     }
-    setStep("payment");
-    if (!paymentLinkData && items.length > 0) {
-      setIsGeneratingLink(true);
-      try {
-        const res = await paymentApi.createPaymentLink(
-          {
-            items,
-            amount: finalTotal,
-            currency: "NGN",
-            email: user?.email,
-            customerName: user?.fullName,
-          },
-          accessToken
-        );
-        if (res.success && res.data) {
-          setPaymentLinkData(res.data);
-        } else if (res.error) {
-          setGatewayError(res.error);
-        }
-      } catch (err: any) {
-        console.error("Error creating payment link:", err);
-        setGatewayError(err?.message || "Failed to initialize payment link with backend.");
-      } finally {
-        setIsGeneratingLink(false);
+
+    // Reuse the order created by CartDropdown.
+    if (order) {
+      const response = await paymentApi.initPayment(
+        order.id,
+        accessToken,
+        refreshToken,
+      );
+      if (typeof response == "string") {
+        window.location.assign(response);
+        setStep("payment");
+        return;
+      } else {
+        router.push("/learner/learn");
       }
     }
+
+    if (isCreatingOrder) return;
+
+    setGatewayError(
+      "No checkout order was found. Please return to your cart and try again.",
+    );
   };
 
   // Direct Paystack Redirect
-  const handlePaystackRedirect = async () => {
-    setGatewayError(null);
-    try {
-      if (typeof window !== "undefined" && items.length > 0) {
-        sessionStorage.setItem("hammet_pending_checkout", JSON.stringify(items));
-        localStorage.setItem("hammet_pending_checkout", JSON.stringify(items));
-      }
-    } catch (e) {
-      console.warn("Could not save pending checkout:", e);
-    }
-
-    if (paymentLinkData?.paymentUrl) {
-      window.location.href = paymentLinkData.paymentUrl;
+  {
+    /*const handlePaystackRedirect = async () => {
+    if (!accessToken) {
+      setGatewayError("Please sign in again before making payment.");
       return;
     }
+
+    if (!order?.id) {
+      setGatewayError("Your order has not been created yet.");
+      return;
+    }
+
+    setGatewayError(null);
     setIsGeneratingLink(true);
+
     try {
-      const res = await paymentApi.createPaymentLink(
-        {
-          items,
-          amount: finalTotal,
-          currency: "NGN",
-          email: user?.email,
-          customerName: user?.fullName,
-        },
-        accessToken
+      const paymentUrl = await paymentApi.initPayment(
+        order.id,
+        accessToken,
+        refreshToken,
       );
-      if (res.success && res.data?.paymentUrl) {
-        setPaymentLinkData(res.data);
-        window.location.href = res.data.paymentUrl;
-      } else {
-        const errorMsg =
-          res.error ||
-          "Backend checkout failed: Paystack did not return an authorization URL. Please contact support.";
-        setGatewayError(errorMsg);
+
+      if (!paymentUrl || !/^https?:\/\//i.test(paymentUrl)) {
+        throw new Error("The payment service returned an invalid link.");
       }
-    } catch (err: any) {
-      console.error("Paystack redirect error:", err);
-      setGatewayError(err?.message || "Failed to connect to checkout gateway.");
+
+      window.location.assign(paymentUrl);
+    } catch (err: unknown) {
+      setGatewayError(
+        err instanceof Error
+          ? err.message
+          : "Failed to initialize payment. Please try again.",
+      );
     } finally {
       setIsGeneratingLink(false);
     }
-  };
+  };*/
+  }
 
-  const handleApplyCoupon = (e: React.FormEvent) => {
+  const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!couponInput.trim()) return;
-    const res = applyCoupon(couponInput);
-    setCouponFeedback({ success: res.success, message: res.message });
+
+    if (!couponInput.trim() || !accessToken) return;
+
+    setCouponFeedback(null);
+    setGatewayError(null);
+
+    try {
+      // Your coupon API should return the updated OrderResponse.
+      const updatedOrder = await cartApi.applyCoupon(
+        order!.id,
+        couponInput.trim(),
+        accessToken,
+        refreshToken,
+      );
+
+      setOrder(updatedOrder);
+
+      // Keep the updated order available if the page is refreshed.
+      sessionStorage.setItem("checkoutOrder", JSON.stringify(updatedOrder));
+    } catch (error) {
+      setCouponFeedback({
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Unable to apply coupon. Please try again.",
+      });
+    }
   };
 
   const handleRemoveCoupon = () => {
     removeCoupon();
     setCouponInput("");
     setCouponFeedback(null);
-  };
-
-  const handleCopyPaymentLink = () => {
-    if (!paymentLinkData?.paymentUrl) return;
-    navigator.clipboard.writeText(paymentLinkData.paymentUrl);
-    setCopiedPaymentLink(true);
-    setTimeout(() => setCopiedPaymentLink(false), 2400);
   };
 
   if (!mounted) return null;
@@ -209,58 +219,86 @@ export default function CheckoutPage() {
                 Review Your Learning Cart
               </h1>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                Confirm your selected curriculum tracks and proceed to secure checkout.
+                Confirm your selected curriculum tracks and proceed to secure
+                checkout.
               </p>
             </div>
-
-            {items.length === 0 ? (
-              <div className="rounded-3xl border border-black/[0.06] bg-white p-12 text-center shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02]">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-300">
-                  <ShoppingCart className="h-8 w-8" />
+            {invalidItems.length > 0 && (
+              <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/20 dark:bg-amber-500/10">
+                <div className="flex items-center gap-2 font-semibold text-amber-800 dark:text-amber-300">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>Some items are unavailable</span>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                  Your cart is currently empty
-                </h3>
-                <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500 dark:text-slate-400">
-                  Explore our AI schools and specialized masterclasses to unlock hands-on AI engineering tracks.
-                </p>
-                <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-                  <Link href="/learner/ai-schools">
-                    <Button className="rounded-xl bg-purple-600 px-6 font-semibold text-white hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400">
-                      Explore AI Schools
-                    </Button>
-                  </Link>
-                  <Link href="/learner/learn">
-                    <Button variant="outline" className="rounded-xl">
-                      My Learning Hub
-                    </Button>
-                  </Link>
+
+                <div className="mt-3 space-y-2">
+                  {invalidItems.map((item, index) => (
+                    <div
+                      key={`${item.productName}-${index}`}
+                      className="flex justify-between gap-3 text-sm text-amber-900 dark:text-amber-200"
+                    >
+                      <span>{item.productName}</span>
+                      <span className="shrink-0">
+                        ₦{item.productPrice.toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
+            )}
+
+            {!order ? (
+              <div className="rounded-3xl border border-black/[0.06] bg-white p-12 text-center shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02]">
+                <ShoppingCart className="mx-auto mb-4 h-8 w-8 text-purple-600" />
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                  No checkout order found
+                </h3>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  Please return to your cart and start checkout again.
+                </p>
+                <Link href="/learner/ai-schools">
+                  <Button className="mt-5 rounded-xl bg-purple-600 text-white hover:bg-purple-700">
+                    Return to AI Schools
+                  </Button>
+                </Link>
+              </div>
+            ) : orderItems.length === 0 ? (
+              // Keep your existing empty-cart design here.
+              <div className="rounded-3xl border border-black/[0.06] bg-white p-12 text-center shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02]">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                  No valid items available
+                </h3>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  The items in your cart may no longer be available.
+                </p>
+              </div>
             ) : (
+              // Keep your existing grid and order-summary layout here.
               <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
                 {/* Left: Cart Items List */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between pb-2">
                     <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-                      {items.length} {items.length === 1 ? "Curriculum Track" : "Curriculum Tracks"}
+                      {orderItems.length}{" "}
+                      {orderItems.length === 1
+                        ? "Curriculum Track"
+                        : "Curriculum Tracks"}
                     </span>
-                    <button
+                    {/*<button
                       onClick={clearCart}
                       className="text-xs font-medium text-red-500 hover:text-red-600 dark:hover:text-red-400 transition"
                     >
                       Clear Cart
-                    </button>
+                    </button>*/}
                   </div>
 
-                  {items.map((item) => (
+                  {orderItems.map((item) => (
                     <div
-                      key={item.id}
+                      key={item.productId}
                       className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-black/[0.06] bg-white p-5 shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02] transition hover:shadow-md"
                     >
                       <div className="flex items-start gap-4">
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-300">
-                          {item.type === "ai_school" ? (
+                          {item.productType === "ai_school" ? (
                             <GraduationCap className="h-6 w-6" />
                           ) : (
                             <BookOpen className="h-6 w-6" />
@@ -269,12 +307,16 @@ export default function CheckoutPage() {
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
-                              {item.type === "ai_school" ? "Diploma School" : "Specialized Course"}
+                              {item.productType === "ai_school"
+                                ? "Diploma School"
+                                : "Specialized Course"}
                             </span>
-                            <span className="text-[11px] text-slate-400">• Lifetime Access</span>
+                            <span className="text-[11px] text-slate-400">
+                              • Lifetime Access
+                            </span>
                           </div>
                           <h3 className="mt-1 font-bold text-slate-900 dark:text-white sm:text-base">
-                            {item.title}
+                            {item.productName}
                           </h3>
                           <div className="mt-1 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                             <Award className="h-3.5 w-3.5 text-amber-500" />
@@ -290,33 +332,22 @@ export default function CheckoutPage() {
                       <div className="flex items-center justify-between sm:flex-col sm:items-end sm:justify-center gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-white/5">
                         <div className="flex items-center gap-2">
                           {/* Quantity selector */}
-                          <div className="flex items-center border border-slate-200 dark:border-white/10 rounded-lg overflow-hidden bg-slate-50 dark:bg-white/[0.03]">
-                            <button
-                              onClick={() => updateQuantity(item.id, Math.max(1, (item.quantity ?? 1) - 1))}
-                              className="px-2.5 py-1 text-xs font-bold text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-white/10 transition"
-                              title="Decrease quantity"
-                              aria-label="Decrease quantity"
-                            >
-                              -
-                            </button>
-                            <span className="px-2 text-xs font-mono font-semibold text-slate-900 dark:text-white">
-                              {item.quantity ?? 1}
-                            </span>
-                            <button
-                              onClick={() => updateQuantity(item.id, (item.quantity ?? 1) + 1)}
-                              className="px-2.5 py-1 text-xs font-bold text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-white/10 transition"
-                              title="Increase quantity"
-                              aria-label="Increase quantity"
-                            >
-                              +
-                            </button>
-                          </div>
 
                           <button
-                            onClick={() => removeItem(item.id)}
+                            onClick={() => {
+                              if (!accessToken) return;
+                              cartApi.editOrder(
+                                {
+                                  product_id: item.productId,
+                                  product_type: item.productType,
+                                },
+                                accessToken,
+                                refreshToken,
+                              );
+                            }}
                             className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 transition"
                             title="Remove item"
-                            aria-label={`Remove ${item.title}`}
+                            aria-label={`Remove ${item.productName}`}
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -324,15 +355,10 @@ export default function CheckoutPage() {
 
                         <div className="text-right">
                           <span className="text-lg font-bold text-slate-900 dark:text-white">
-                            {item.price === 0
+                            {item.productPrice === 0
                               ? "Free"
-                              : `₦${(item.price * (item.quantity ?? 1)).toLocaleString()}`}
+                              : `₦${item.productPrice.toLocaleString()}`}
                           </span>
-                          {(item.quantity ?? 1) > 1 && (
-                            <div className="text-[10px] text-slate-400">
-                              ₦{item.price.toLocaleString()} each
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -351,7 +377,9 @@ export default function CheckoutPage() {
                       <div className="flex items-center justify-between rounded-xl bg-emerald-50 px-3.5 py-2.5 border border-emerald-200 text-xs text-emerald-800 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-300">
                         <div className="flex items-center gap-2">
                           <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                          <span className="font-mono font-bold tracking-wider">{couponCode}</span>
+                          <span className="font-mono font-bold tracking-wider">
+                            {couponCode}
+                          </span>
                           <span>applied ({discountPercentage}% off)</span>
                         </div>
                         <button
@@ -386,7 +414,7 @@ export default function CheckoutPage() {
                           "mt-2 text-xs flex items-center gap-1.5",
                           couponFeedback.success
                             ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-red-500 dark:text-red-400"
+                            : "text-red-500 dark:text-red-400",
                         )}
                       >
                         {couponFeedback.success ? (
@@ -439,19 +467,28 @@ export default function CheckoutPage() {
                       </span>
                       <div className="text-right">
                         <span className="text-2xl font-extrabold text-purple-600 dark:text-cyan-400">
-                          {finalTotal === 0 ? "Free" : `₦${finalTotal.toLocaleString()}`}
+                          {finalTotal === 0
+                            ? "Free"
+                            : `₦${finalTotal.toLocaleString()}`}
                         </span>
-                        <div className="text-[11px] text-slate-400">Taxes & certificate fee included</div>
+                        <div className="text-[11px] text-slate-400">
+                          Taxes & certificate fee included
+                        </div>
                       </div>
                     </div>
 
                     <Button
                       onClick={handleProceedToPayment}
-                      className="mt-2 w-full rounded-xl bg-purple-600 py-3 font-bold text-white shadow-md shadow-purple-600/20 hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400"
+                      disabled={isCreatingOrder || orderItems.length === 0}
+                      className="mt-2 w-full rounded-xl bg-purple-600 py-3 font-bold text-white"
                       size="lg"
                     >
-                      <span>Proceed to Payment</span>
-                      <ArrowRight className="ml-2 h-4 w-4" />
+                      {isCreatingOrder
+                        ? "Creating order..."
+                        : "Proceed to Payment"}
+                      {!isCreatingOrder && (
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      )}
                     </Button>
 
                     <div className="mt-5 space-y-2 text-center text-xs text-slate-500 dark:text-slate-400">
@@ -460,7 +497,8 @@ export default function CheckoutPage() {
                         <span>Secured via Paystack</span>
                       </div>
                       <div className="text-[10px] text-slate-400">
-                        Supported: Payment Link • Mastercard • Visa • Verve • Bank Transfer
+                        Supported: Payment Link • Mastercard • Visa • Verve •
+                        Bank Transfer
                       </div>
                     </div>
                   </div>
@@ -481,10 +519,11 @@ export default function CheckoutPage() {
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl dark:text-white">
-                  Checkout with Paystack
+                  Continue to Payment
                 </h1>
                 <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-400">
-                  You will be securely redirected to Paystack to complete your curriculum enrollment.
+                  You will be securely redirected to Paystack to complete your
+                  curriculum enrollment.
                 </p>
               </div>
               <button
@@ -496,11 +535,11 @@ export default function CheckoutPage() {
               </button>
             </div>
             {/* ── UNIFIED PAYSTACK REDIRECT INTERFACE ────────────────────────────── */}
-            <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
-              {/* Left: Paystack Checkout Gateway Card */}
+            {/**<div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+              {/* Left: Paystack Checkout Gateway Card 
               <div className="space-y-6">
                 <div className="rounded-3xl border border-black/[0.06] bg-white p-6 sm:p-8 shadow-sm dark:border-white/[0.06] dark:bg-[#140F24]">
-                  {/* Gateway Status Header */}
+                  {/* Gateway Status Header *
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-5 dark:border-white/5">
                     <div className="flex items-center gap-3">
                       <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300 shadow-xs">
@@ -516,7 +555,8 @@ export default function CheckoutPage() {
                           </div>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                          Complete payment on Paystack&apos;s official verified checkout
+                          Complete payment on Paystack&apos;s official verified
+                          checkout
                         </p>
                       </div>
                     </div>
@@ -529,9 +569,9 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  {/* Summary Breakdown in Main Card with POS / Card Terminal Background Watermark */}
+                  {/* Summary Breakdown in Main Card with POS / Card Terminal Background Watermark 
                   <div className="mt-6 rounded-2xl bg-[#F5F3FF]/70 p-5 border border-purple-100 dark:bg-white/[0.02] dark:border-white/5 relative overflow-hidden">
-                    {/* POS Terminal & Contactless Wave Watermark Graphic in Background */}
+                    {/* POS Terminal & Contactless Wave Watermark Graphic in Background 
                     <svg
                       className="absolute -right-3 -bottom-5 h-36 w-36 text-purple-600/[0.08] dark:text-cyan-400/[0.08] pointer-events-none select-none rotate-6"
                       viewBox="0 0 100 100"
@@ -542,14 +582,22 @@ export default function CheckoutPage() {
                       strokeLinejoin="round"
                       aria-hidden="true"
                     >
-                      {/* POS Terminal Body */}
+                      {/* POS Terminal Body 
                       <rect x="25" y="10" width="50" height="80" rx="8" />
-                      {/* Screen */}
-                      <rect x="33" y="18" width="34" height="22" rx="3" fill="currentColor" fillOpacity="0.1" />
-                      {/* Screen status lines */}
+                      {/* Screen 
+                      <rect
+                        x="33"
+                        y="18"
+                        width="34"
+                        height="22"
+                        rx="3"
+                        fill="currentColor"
+                        fillOpacity="0.1"
+                      />
+                      {/* Screen status lines 
                       <line x1="38" y1="26" x2="52" y2="26" strokeWidth="2" />
                       <line x1="38" y1="32" x2="62" y2="32" strokeWidth="2" />
-                      {/* Keypad dots */}
+                      {/* Keypad dots 
                       <circle cx="39" cy="50" r="2.5" fill="currentColor" />
                       <circle cx="50" cy="50" r="2.5" fill="currentColor" />
                       <circle cx="61" cy="50" r="2.5" fill="currentColor" />
@@ -559,9 +607,9 @@ export default function CheckoutPage() {
                       <circle cx="39" cy="70" r="2.5" fill="currentColor" />
                       <circle cx="50" cy="70" r="2.5" fill="currentColor" />
                       <circle cx="61" cy="70" r="2.5" fill="currentColor" />
-                      {/* Card Slot at bottom */}
+                      {/* Card Slot at bottom 
                       <line x1="35" y1="82" x2="65" y2="82" strokeWidth="3" />
-                      {/* Contactless waves above terminal */}
+                      {/* Contactless waves above terminal 
                       <path d="M42 6 C47 3 53 3 58 6" strokeWidth="2" />
                       <path d="M37 2 C45 -2 55 -2 63 2" strokeWidth="2" />
                     </svg>
@@ -583,7 +631,9 @@ export default function CheckoutPage() {
                       </div>
 
                       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-purple-100/70 pt-3 dark:border-white/5 text-xs">
-                        <span className="text-slate-500 dark:text-slate-400">Paying account:</span>
+                        <span className="text-slate-500 dark:text-slate-400">
+                          Paying account:
+                        </span>
                         <span className="font-semibold text-slate-800 dark:text-slate-200">
                           {user?.email || "learner@hammetedu.com"}
                         </span>
@@ -591,7 +641,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  {/* Supported Payment Channels */}
+                  {/* Supported Payment Channels 
                   <div className="mt-6 space-y-3">
                     <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       Accepted Payment Channels on Paystack
@@ -616,18 +666,22 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  {/* Gateway Error Notification */}
+                  {/* Gateway Error Notification 
                   {gatewayError && (
                     <div className="mt-6 flex items-start gap-3 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-600 dark:border-red-500/20 dark:text-red-400">
                       <AlertCircle className="h-5 w-5 shrink-0 text-red-500 mt-0.5" />
                       <div className="flex-1">
-                        <div className="font-semibold text-slate-900 dark:text-white">Checkout Error</div>
-                        <div className="mt-0.5 text-xs text-red-700 dark:text-red-300 leading-relaxed">{gatewayError}</div>
+                        <div className="font-semibold text-slate-900 dark:text-white">
+                          Checkout Error
+                        </div>
+                        <div className="mt-0.5 text-xs text-red-700 dark:text-red-300 leading-relaxed">
+                          {gatewayError}
+                        </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Primary Call to Action Button */}
+                  {/* Primary Call to Action Button 
                   <div className="mt-8 space-y-3">
                     <Button
                       onClick={handlePaystackRedirect}
@@ -643,7 +697,9 @@ export default function CheckoutPage() {
                       ) : (
                         <>
                           <PaystackLogo className="h-4 w-auto" monochrome />
-                          <span>Pay ₦{finalTotal.toLocaleString()} with Paystack</span>
+                          <span>
+                            Pay ₦{finalTotal.toLocaleString()} with Paystack
+                          </span>
                           <ArrowRight className="h-4 w-4" />
                         </>
                       )}
@@ -651,11 +707,14 @@ export default function CheckoutPage() {
 
                     <div className="flex items-center justify-center gap-2 text-center text-xs text-slate-400 dark:text-slate-500">
                       <Clock className="h-3.5 w-3.5" />
-                      <span>Immediate local curriculum unlock upon payment confirmation</span>
+                      <span>
+                        Immediate local curriculum unlock upon payment
+                        confirmation
+                      </span>
                     </div>
                   </div>
 
-                  {/* Alternate Device / Cross-Device Option */}
+                  {/* Alternate Device / Cross-Device Option 
                   <div className="mt-8 border-t border-slate-100 pt-6 dark:border-white/5">
                     <div className="flex items-center justify-between">
                       <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
@@ -709,7 +768,7 @@ export default function CheckoutPage() {
                       </div>
                     </div>
 
-                    {/* QR Code expansion */}
+                    {/* QR Code expansion 
                     <AnimatePresence>
                       {showQrCode && (
                         <motion.div
@@ -725,7 +784,9 @@ export default function CheckoutPage() {
                                   key={i}
                                   className={cn(
                                     "rounded-xs",
-                                    i % 2 === 0 || i % 5 === 0 ? "bg-white" : "bg-purple-400"
+                                    i % 2 === 0 || i % 5 === 0
+                                      ? "bg-white"
+                                      : "bg-purple-400",
                                   )}
                                 />
                               ))}
@@ -740,7 +801,7 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                {/* Trust and reassurance footer */}
+                {/* Trust and reassurance footer 
                 <div className="flex flex-wrap items-center justify-between gap-3 px-2 text-xs text-slate-500 dark:text-slate-400">
                   <div className="flex items-center gap-1.5">
                     <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
@@ -753,7 +814,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* Right: Order Summary Sidebar */}
+              {/* Right: Order Summary Sidebar 
               <div>
                 <div className="sticky top-24 rounded-3xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/[0.06] dark:bg-[#140F24]">
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
@@ -761,13 +822,19 @@ export default function CheckoutPage() {
                   </h3>
 
                   <div className="space-y-3 border-b border-slate-100 pb-4 text-xs dark:border-white/5">
-                    {items.map((item) => (
-                      <div key={item.id} className="flex justify-between text-slate-600 dark:text-slate-300">
-                        <span className="truncate max-w-[200px]" title={item.title}>
+                    {orderItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex justify-between text-slate-600 dark:text-slate-300"
+                      >
+                        <span
+                          className="truncate max-w-[200px]"
+                          title={item.title}
+                        >
                           {item.title}
                         </span>
                         <span className="font-semibold text-slate-900 dark:text-white">
-                          ₦{((item.price) * (item.quantity ?? 1)).toLocaleString()}
+                          ₦{item.price.toLocaleString()}
                         </span>
                       </div>
                     ))}
@@ -795,12 +862,15 @@ export default function CheckoutPage() {
                       <span>Instant Access Guarantee</span>
                     </div>
                     <p className="text-[11px] leading-relaxed">
-                      Upon confirmation, your curriculum licenses and Skill Passport are immediately unlocked in your account with zero delay.
+                      Upon confirmation, your curriculum licenses and Skill
+                      Passport are immediately unlocked in your account with
+                      zero delay.
                     </p>
                   </div>
                 </div>
               </div>
             </div>
+            */}
           </motion.div>
         )}
       </div>

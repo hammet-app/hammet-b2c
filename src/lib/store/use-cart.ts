@@ -1,31 +1,31 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 import {
   type CartItemType,
   type CartSyncStatus,
   type DexieCartItem,
   getCartItemsFromDB,
   getCartMetaFromDB,
-  putCartItemToDB,
-  updateCartItemQuantityInDB,
+  //putCartItemToDB,
+  //updateCartItemQuantityInDB,
   removeCartItemFromDB,
   clearCartInDB,
   saveCartMetaToDB,
   markItemsPaidInDB,
-  getUnsyncedCartItemsFromDB,
-  updateCartItemSyncStatusInDB,
+  //getUnsyncedCartItemsFromDB,
+  //updateCartItemSyncStatusInDB,
   db,
-} from '@/lib/db';
-import { cartApi } from '@/lib/api/cart';
+} from "@/lib/db";
+import { cartApi } from "@/lib/api/cart";
 
 export type { CartItemType, CartSyncStatus };
 
 export interface CartItem {
-  id: string; // schoolId or courseId
+  id?: string;
   type: CartItemType;
   title: string;
   price: number;
   quantity?: number;
-  schoolId?: string;
+  productId: string;
   syncStatus?: CartSyncStatus;
   createdAt?: string;
   updatedAt?: string;
@@ -37,7 +37,10 @@ export interface Coupon {
   description: string;
 }
 
-export const VALID_COUPONS: Record<string, { discountPercentage: number; description: string }> = {
+export const VALID_COUPONS: Record<
+  string,
+  { discountPercentage: number; description: string }
+> = {
   HAMMET20: { discountPercentage: 20, description: "20% Team Lead Special" },
   HAMMETAI: { discountPercentage: 20, description: "20% AI Scholar Promo" },
   HAMMET50: { discountPercentage: 50, description: "50% Community Special" },
@@ -55,41 +58,51 @@ interface CartStore {
   isSyncing: boolean;
 
   // Cart operations (all routed through Dexie)
-  addItem: (item: Omit<CartItem, 'syncStatus'>) => Promise<void>;
-  removeItem: (id: string) => Promise<void>;
-  updateQuantity: (id: string, quantity: number) => Promise<void>;
-  clearCart: () => Promise<void>;
-  hydrateFromDB: () => Promise<void>;
+  //addItem: (item: Omit<CartItem, "syncStatus">) => Promise<void>;
+  //removeItem: (id: string) => Promise<void>;
+  //updateQuantity: (id: string, quantity: number) => Promise<void>;
+  //clearCart: () => Promise<void>;
+  /*hydrateFromDB: (
+    token: string,
+    onRefresh: () => Promise<string | null>,
+  ) => Promise<void>;
   retryFailedSync: () => Promise<void>;
 
   // Queries & calculations
   getTotal: () => number;
   hasItem: (id: string) => boolean;
   hasPaidItem: (id: string) => boolean;
-  getItemQuantity: (id: string) => number;
+  getItemQuantity: (id: string) => number;*/
 
-  // Payment simulation & coupon management
-  markAsPaid: (specificIds?: string[]) => Promise<void>;
-  applyCoupon: (code: string) => { success: boolean; message: string; discountPercentage: number; savePromise?: Promise<unknown> };
+  applyCoupon: (code: string) => {
+    success: boolean;
+    message: string;
+    discountPercentage: number;
+    savePromise?: Promise<unknown>;
+  };
   removeCoupon: () => Promise<void>;
-  getDiscountAmount: () => number;
-  getFinalTotal: () => number;
+  //getDiscountAmount: () => number;
+  //getFinalTotal: () => number;
 }
 
 // ── Background Sync Helpers ──────────────────────────────────────────────────
 
-async function backgroundSyncAddItem(item: DexieCartItem) {
+/*async function backgroundSyncAddItem(item: DexieCartItem) {
   try {
     const res = await cartApi.addItem(item);
-    const newStatus: CartSyncStatus = res.success ? 'synced' : 'failed';
+    const newStatus: CartSyncStatus = res.success ? "synced" : "failed";
     await updateCartItemSyncStatusInDB(item.id, newStatus);
     useCart.setState((state) => ({
-      items: state.items.map((i) => (i.id === item.id ? { ...i, syncStatus: newStatus } : i)),
+      items: state.items.map((i) =>
+        i.id === item.id ? { ...i, syncStatus: newStatus } : i,
+      ),
     }));
   } catch {
-    await updateCartItemSyncStatusInDB(item.id, 'failed');
+    await updateCartItemSyncStatusInDB(item.id, "failed");
     useCart.setState((state) => ({
-      items: state.items.map((i) => (i.id === item.id ? { ...i, syncStatus: 'failed' } : i)),
+      items: state.items.map((i) =>
+        i.id === item.id ? { ...i, syncStatus: "failed" } : i,
+      ),
     }));
   }
 }
@@ -97,19 +110,21 @@ async function backgroundSyncAddItem(item: DexieCartItem) {
 async function backgroundSyncUpdateQuantity(id: string, quantity: number) {
   try {
     const res = await cartApi.updateQuantity(id, quantity);
-    const newStatus: CartSyncStatus = res.success ? 'synced' : 'failed';
+    const newStatus: CartSyncStatus = res.success ? "synced" : "failed";
     await updateCartItemSyncStatusInDB(id, newStatus);
     useCart.setState((state) => ({
-      items: state.items.map((i) => (i.id === id ? { ...i, syncStatus: newStatus } : i)),
+      items: state.items.map((i) =>
+        i.id === id ? { ...i, syncStatus: newStatus } : i,
+      ),
     }));
   } catch {
-    await updateCartItemSyncStatusInDB(id, 'failed');
+    await updateCartItemSyncStatusInDB(id, "failed");
   }
 }
 
 async function backgroundSyncRemoveItem(id: string) {
   try {
-    await cartApi.removeItem(id);
+    //await cartApi.removeItem(id);
   } catch {
     // Non-blocking best effort for delete
   }
@@ -121,18 +136,18 @@ async function backgroundSyncClearCart() {
   } catch {
     // Non-blocking best effort for clear
   }
-}
+}*/
 
 // ── Migration from Legacy localStorage ───────────────────────────────────────
 
 let migrationRan = false;
 
-async function migrateLegacyLocalStorage() {
-  if (typeof window === 'undefined' || migrationRan) return;
+/*async function migrateLegacyLocalStorage() {
+  if (typeof window === "undefined" || migrationRan) return;
   migrationRan = true;
 
   try {
-    const raw = localStorage.getItem('hammet-cart');
+    const raw = localStorage.getItem("hammet-cart");
     if (!raw) return;
 
     const parsed = JSON.parse(raw);
@@ -147,29 +162,38 @@ async function migrateLegacyLocalStorage() {
             title: item.title,
             price: item.price,
             quantity: item.quantity ?? 1,
-            schoolId: item.schoolId,
-            syncStatus: 'pending',
+            productId: item.productId,
+            syncStatus: "pending",
           });
         }
       }
 
-      if (Array.isArray(legacyState.paidItems) && legacyState.paidItems.length > 0) {
+      if (
+        Array.isArray(legacyState.paidItems) &&
+        legacyState.paidItems.length > 0
+      ) {
         const meta = await getCartMetaFromDB();
-        const merged = Array.from(new Set([...meta.paidItems, ...legacyState.paidItems]));
+        const merged = Array.from(
+          new Set([...meta.paidItems, ...legacyState.paidItems]),
+        );
         await saveCartMetaToDB({
           paidItems: merged,
           couponCode: legacyState.couponCode ?? meta.couponCode,
-          discountPercentage: legacyState.discountPercentage ?? meta.discountPercentage,
+          discountPercentage:
+            legacyState.discountPercentage ?? meta.discountPercentage,
         });
       }
     }
 
     // Clean up old localStorage entry once migrated to Dexie
-    localStorage.removeItem('hammet-cart');
+    localStorage.removeItem("hammet-cart");
   } catch (err) {
-    console.warn('[Cart Migration] Warning migrating legacy localStorage cart:', err);
+    console.warn(
+      "[Cart Migration] Warning migrating legacy localStorage cart:",
+      err,
+    );
   }
-}
+}*/
 
 // ── Store Definition ─────────────────────────────────────────────────────────
 
@@ -181,8 +205,11 @@ export const useCart = create<CartStore>((set, get) => ({
   isHydrated: false,
   isSyncing: false,
 
-  hydrateFromDB: async () => {
-    if (typeof window === 'undefined') return;
+  /*hydrateFromDB: async (
+    token: string,
+    onRefresh: () => Promise<string | null>,
+  ) => {
+    if (typeof window === "undefined") return;
 
     try {
       // 1. Migrate legacy localStorage if present
@@ -196,12 +223,12 @@ export const useCart = create<CartStore>((set, get) => ({
 
       set({
         items: dbItems.map((item) => ({
-          id: item.id,
+          id: item.id ?? item.productId,
           type: item.type,
           title: item.title,
           price: item.price,
           quantity: item.quantity,
-          schoolId: item.schoolId,
+          productId: item.productId,
           syncStatus: item.syncStatus,
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
@@ -215,13 +242,14 @@ export const useCart = create<CartStore>((set, get) => ({
       // 3. Attempt background sync if there are pending items
       get().retryFailedSync();
     } catch (err) {
-      console.warn('[useCart] Failed to hydrate cart from Dexie:', err);
+      console.warn("[useCart] Failed to hydrate cart from Dexie:", err);
       set({ isHydrated: true });
     }
   },
 
   addItem: async (item) => {
     const state = get();
+    if (!item.id) return;
     if (state.items.some((i) => i.id === item.id)) return;
     if (state.paidItems.includes(item.id)) return;
 
@@ -229,7 +257,7 @@ export const useCart = create<CartStore>((set, get) => ({
     const optimisticItem: CartItem = {
       ...item,
       quantity,
-      syncStatus: 'pending',
+      syncStatus: "pending",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -244,12 +272,12 @@ export const useCart = create<CartStore>((set, get) => ({
       title: item.title,
       price: item.price,
       quantity,
-      schoolId: item.schoolId,
-      syncStatus: 'pending',
+      productId: item.productId,
+      syncStatus: "pending",
     });
 
     // 3. Background sync with backend
-    backgroundSyncAddItem(persisted);
+    //backgroundSyncAddItem(persisted);
   },
 
   removeItem: async (id: string) => {
@@ -260,7 +288,7 @@ export const useCart = create<CartStore>((set, get) => ({
     await removeCartItemFromDB(id);
 
     // 3. Background sync with backend
-    backgroundSyncRemoveItem(id);
+    //backgroundSyncRemoveItem(id);
   },
 
   updateQuantity: async (id: string, quantity: number) => {
@@ -272,7 +300,7 @@ export const useCart = create<CartStore>((set, get) => ({
     // 1. Reactive UI update
     set((state) => ({
       items: state.items.map((i) =>
-        i.id === id ? { ...i, quantity, syncStatus: 'pending' } : i
+        i.id === id ? { ...i, quantity, syncStatus: "pending" } : i,
       ),
     }));
 
@@ -280,7 +308,7 @@ export const useCart = create<CartStore>((set, get) => ({
     await updateCartItemQuantityInDB(id, quantity);
 
     // 3. Background sync with backend
-    backgroundSyncUpdateQuantity(id, quantity);
+    //backgroundSyncUpdateQuantity(id, quantity);
   },
 
   clearCart: async () => {
@@ -291,11 +319,11 @@ export const useCart = create<CartStore>((set, get) => ({
     await clearCartInDB();
 
     // 3. Background sync with backend
-    backgroundSyncClearCart();
+    //backgroundSyncClearCart();
   },
 
-  retryFailedSync: async () => {
-    if (typeof window === 'undefined') return;
+  /*retryFailedSync: async () => {
+    if (typeof window === "undefined") return;
 
     try {
       const unsynced = await getUnsyncedCartItemsFromDB();
@@ -307,11 +335,11 @@ export const useCart = create<CartStore>((set, get) => ({
 
       if (res.success) {
         for (const item of unsynced) {
-          await updateCartItemSyncStatusInDB(item.id, 'synced');
+          await updateCartItemSyncStatusInDB(item.id, "synced");
         }
         set((state) => ({
           isSyncing: false,
-          items: state.items.map((i) => ({ ...i, syncStatus: 'synced' })),
+          items: state.items.map((i) => ({ ...i, syncStatus: "synced" })),
         }));
       } else {
         set({ isSyncing: false });
@@ -322,7 +350,10 @@ export const useCart = create<CartStore>((set, get) => ({
   },
 
   getTotal: () =>
-    get().items.reduce((total, item) => total + item.price * (item.quantity ?? 1), 0),
+    get().items.reduce(
+      (total, item) => total + item.price * (item.quantity ?? 1),
+      0,
+    ),
 
   hasItem: (id: string) => get().items.some((i) => i.id === id),
 
@@ -331,22 +362,7 @@ export const useCart = create<CartStore>((set, get) => ({
   getItemQuantity: (id: string) => {
     const item = get().items.find((i) => i.id === id);
     return item?.quantity ?? 0;
-  },
-
-  markAsPaid: async (specificIds?: string[]) => {
-    const state = get();
-    const itemIds = specificIds ?? state.items.map((i) => i.id);
-    const updatedPaid = Array.from(new Set([...state.paidItems, ...itemIds]));
-
-    // 1. Reactive UI update
-    set({
-      items: state.items.filter((i) => !itemIds.includes(i.id)),
-      paidItems: updatedPaid,
-    });
-
-    // 2. Primary local persistence in Dexie
-    await markItemsPaidInDB(itemIds);
-  },
+  },*/
 
   applyCoupon: (code: string) => {
     const clean = code.trim().toUpperCase();
@@ -361,7 +377,10 @@ export const useCart = create<CartStore>((set, get) => ({
     }
 
     set({ couponCode: clean, discountPercentage: found.discountPercentage });
-    const savePromise = saveCartMetaToDB({ couponCode: clean, discountPercentage: found.discountPercentage });
+    const savePromise = saveCartMetaToDB({
+      couponCode: clean,
+      discountPercentage: found.discountPercentage,
+    });
 
     return {
       success: true,
@@ -376,7 +395,7 @@ export const useCart = create<CartStore>((set, get) => ({
     await saveCartMetaToDB({ couponCode: null, discountPercentage: 0 });
   },
 
-  getDiscountAmount: () => {
+  /*getDiscountAmount: () => {
     const total = get().getTotal();
     const pct = get().discountPercentage;
     return Math.round((total * pct) / 100);
@@ -386,21 +405,28 @@ export const useCart = create<CartStore>((set, get) => ({
     const total = get().getTotal();
     const discount = get().getDiscountAmount();
     return Math.max(0, total - discount);
-  },
+  },*/
 }));
 
 // ── Auto-Hydration & Browser Event Listeners ─────────────────────────────────
 
-if (typeof window !== 'undefined') {
+/*if (typeof window !== "undefined") {
   // Attach for test automation and client debugging
-  (window as unknown as { __HAMMET_DB__: typeof db; __USE_CART__: typeof useCart }).__HAMMET_DB__ = db;
-  (window as unknown as { __USE_CART__: typeof useCart }).__USE_CART__ = useCart;
+  (
+    window as unknown as {
+      __HAMMET_DB__: typeof db;
+      __USE_CART__: typeof useCart;
+    }
+  ).__HAMMET_DB__ = db;
+  (window as unknown as { __USE_CART__: typeof useCart }).__USE_CART__ =
+    useCart;
 
   // Hydrate immediately on module load in browser
   useCart.getState().hydrateFromDB();
 
   // Re-sync on network reconnect
-  window.addEventListener('online', () => {
+  window.addEventListener("online", () => {
     useCart.getState().retryFailedSync();
   });
 }
+*/

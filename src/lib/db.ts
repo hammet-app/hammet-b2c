@@ -3,35 +3,31 @@
 // This is where all student work lives on the device.
 // Everything here is available offline, 100% of the time.
 
-import Dexie, { type Table } from 'dexie'
-import { AuthUser } from '@/lib/utils/roles'
+import Dexie, { type Table } from "dexie";
+import { AuthUser } from "@/lib/utils/roles";
+import { apiClient } from "./api/api-client";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface CachedSession {
-  id: 'current'                // singleton row
-  user: AuthUser
-  accessToken: string
-  cachedAt: string
+  id: "current"; // singleton row
+  user: AuthUser;
+  accessToken: string;
+  cachedAt: string;
 }
 
-export type CartItemType = 'ai_school' | 'school' | 'course' | 'profile';
-export type CartSyncStatus = 'synced' | 'pending' | 'failed';
+export type CartItemType = "ai_school" | "course" | "profile";
+export type CartSyncStatus = "synced" | "pending" | "failed";
 
 export interface DexieCartItem {
-  id: string; // schoolId or courseId
   type: CartItemType;
   title: string;
   price: number;
-  quantity: number;
-  schoolId?: string;
-  syncStatus: CartSyncStatus;
-  createdAt: string;
-  updatedAt: string;
+  productId: string;
 }
 
 export interface DexieCartMeta {
-  id: 'cart-meta';
+  id: "cart-meta";
   paidItems: string[];
   couponCode: string | null;
   discountPercentage: number;
@@ -41,28 +37,28 @@ export interface DexieCartMeta {
 // ── Database ─────────────────────────────────────────────────────────────────
 
 class HammetDB extends Dexie {
-  session!:  Table<CachedSession>;
-  cart!:     Table<DexieCartItem>;
+  session!: Table<CachedSession>;
+  cart!: Table<DexieCartItem>;
   cartMeta!: Table<DexieCartMeta>;
 
   constructor() {
-    super('hammet-db');
+    super("hammet-db");
 
     // Version 1: Original session cache
     this.version(1).stores({
-      session: 'id',
+      session: "id",
     });
 
     // Version 2: Local-first Cart with indexed properties and cart metadata
     this.version(2).stores({
-      session: 'id',
-      cart: 'id, type, schoolId, syncStatus, createdAt, updatedAt',
-      cartMeta: 'id',
+      session: "id",
+      cart: "id, type, schoolId, syncStatus, createdAt, updatedAt",
+      cartMeta: "id",
     });
   }
 }
 
-export const db = new HammetDB()
+export const db = new HammetDB();
 
 // ── Session cache helpers ─────────────────────────────────────────────────────
 
@@ -71,14 +67,17 @@ export const db = new HammetDB()
  * Call this after every successful refresh or login so the student
  * can be recognised offline without a network round-trip.
  */
-export async function persistSession(user: AuthUser, accessToken: string): Promise<void> {
+export async function persistSession(
+  user: AuthUser,
+  accessToken: string,
+): Promise<void> {
   try {
     await db.session.put({
-      id: 'current',
+      id: "current",
       user,
       accessToken,
       cachedAt: new Date().toISOString(),
-    })
+    });
   } catch {
     // best-effort — never throw
   }
@@ -90,9 +89,9 @@ export async function persistSession(user: AuthUser, accessToken: string): Promi
  */
 export async function getPersistedSession(): Promise<CachedSession | null> {
   try {
-    return (await db.session.get('current')) ?? null
+    return (await db.session.get("current")) ?? null;
   } catch {
-    return null
+    return null;
   }
 }
 
@@ -101,7 +100,7 @@ export async function getPersistedSession(): Promise<CachedSession | null> {
  */
 export async function clearPersistedSession(): Promise<void> {
   try {
-    await db.session.delete('current')
+    await db.session.delete("current");
   } catch {
     // best-effort
   }
@@ -110,7 +109,7 @@ export async function clearPersistedSession(): Promise<void> {
 // ── Cart Dexie helpers ────────────────────────────────────────────────────────
 
 const DEFAULT_CART_META: DexieCartMeta = {
-  id: 'cart-meta',
+  id: "cart-meta",
   paidItems: [],
   couponCode: null,
   discountPercentage: 0,
@@ -122,9 +121,9 @@ const DEFAULT_CART_META: DexieCartMeta = {
  */
 export async function getCartItemsFromDB(): Promise<DexieCartItem[]> {
   try {
-    return await db.cart.orderBy('createdAt').toArray();
+    return await db.cart.orderBy("createdAt").toArray();
   } catch (err) {
-    console.warn('[Dexie] Failed to fetch cart items from IndexedDB:', err);
+    console.warn("[Dexie] Failed to fetch cart items from IndexedDB:", err);
     return [];
   }
 }
@@ -132,7 +131,9 @@ export async function getCartItemsFromDB(): Promise<DexieCartItem[]> {
 /**
  * Fetch a single cart item by ID.
  */
-export async function getCartItemFromDB(id: string): Promise<DexieCartItem | undefined> {
+export async function getCartItemFromDB(
+  id: string,
+): Promise<DexieCartItem | undefined> {
   try {
     return await db.cart.get(id);
   } catch (err) {
@@ -147,15 +148,17 @@ export interface PutCartItemInput {
   title: string;
   price: number;
   quantity?: number;
-  schoolId?: string;
+  productId: string;
   syncStatus?: CartSyncStatus;
 }
 
 /**
  * Insert or update a cart item in Dexie.
  * If the item already exists, updates its quantity and timestamp.
- */
-export async function putCartItemToDB(input: PutCartItemInput): Promise<DexieCartItem> {
+ *
+export async function putCartItemToDB(
+  input: PutCartItemInput,
+): Promise<DexieCartItem> {
   const now = new Date().toISOString();
   try {
     const existing = await db.cart.get(input.id);
@@ -165,8 +168,8 @@ export async function putCartItemToDB(input: PutCartItemInput): Promise<DexieCar
       title: input.title,
       price: input.price,
       quantity: Math.max(1, input.quantity ?? existing?.quantity ?? 1),
-      schoolId: input.schoolId ?? existing?.schoolId,
-      syncStatus: input.syncStatus ?? 'pending',
+      productId: input.productId ?? existing?.productId,
+      syncStatus: input.syncStatus ?? "pending",
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     };
@@ -180,19 +183,22 @@ export async function putCartItemToDB(input: PutCartItemInput): Promise<DexieCar
       title: input.title,
       price: input.price,
       quantity: Math.max(1, input.quantity ?? 1),
-      schoolId: input.schoolId,
-      syncStatus: 'failed',
+      productId: input.productId,
+      syncStatus: "failed",
       createdAt: now,
       updatedAt: now,
     };
   }
-}
+}/
 
 /**
  * Update quantity of a cart item in Dexie.
  * If quantity <= 0, the item is removed.
- */
-export async function updateCartItemQuantityInDB(id: string, quantity: number): Promise<void> {
+ *
+export async function updateCartItemQuantityInDB(
+  id: string,
+  quantity: number,
+): Promise<void> {
   try {
     if (quantity <= 0) {
       await removeCartItemFromDB(id);
@@ -203,7 +209,7 @@ export async function updateCartItemQuantityInDB(id: string, quantity: number): 
 
     await db.cart.update(id, {
       quantity,
-      syncStatus: 'pending',
+      syncStatus: "pending",
       updatedAt: new Date().toISOString(),
     });
   } catch (err) {
@@ -229,7 +235,7 @@ export async function clearCartInDB(): Promise<void> {
   try {
     await db.cart.clear();
   } catch (err) {
-    console.warn('[Dexie] Failed to clear cart:', err);
+    console.warn("[Dexie] Failed to clear cart:", err);
   }
 }
 
@@ -238,10 +244,12 @@ export async function clearCartInDB(): Promise<void> {
  */
 export async function getCartMetaFromDB(): Promise<DexieCartMeta> {
   try {
-    const meta = await db.cartMeta.get('cart-meta');
-    return meta ?? { ...DEFAULT_CART_META, updatedAt: new Date().toISOString() };
+    const meta = await db.cartMeta.get("cart-meta");
+    return (
+      meta ?? { ...DEFAULT_CART_META, updatedAt: new Date().toISOString() }
+    );
   } catch (err) {
-    console.warn('[Dexie] Failed to get cart metadata:', err);
+    console.warn("[Dexie] Failed to get cart metadata:", err);
     return { ...DEFAULT_CART_META, updatedAt: new Date().toISOString() };
   }
 }
@@ -249,23 +257,25 @@ export async function getCartMetaFromDB(): Promise<DexieCartMeta> {
 /**
  * Save or update cart metadata in Dexie.
  */
-export async function saveCartMetaToDB(updates: Partial<Omit<DexieCartMeta, 'id'>>): Promise<DexieCartMeta> {
+export async function saveCartMetaToDB(
+  updates: Partial<Omit<DexieCartMeta, "id">>,
+): Promise<DexieCartMeta> {
   try {
     const current = await getCartMetaFromDB();
     const updated: DexieCartMeta = {
       ...current,
       ...updates,
-      id: 'cart-meta',
+      id: "cart-meta",
       updatedAt: new Date().toISOString(),
     };
     await db.cartMeta.put(updated);
     return updated;
   } catch (err) {
-    console.warn('[Dexie] Failed to save cart metadata:', err);
+    console.warn("[Dexie] Failed to save cart metadata:", err);
     return {
       ...DEFAULT_CART_META,
       ...updates,
-      id: 'cart-meta',
+      id: "cart-meta",
       updatedAt: new Date().toISOString(),
     };
   }
@@ -278,10 +288,13 @@ export async function saveCartMetaToDB(updates: Partial<Omit<DexieCartMeta, 'id'
  */
 export async function markItemsPaidInDB(itemIds: string[]): Promise<void> {
   try {
-    await db.transaction('rw', db.cart, db.cartMeta, async () => {
-      const currentMeta = await db.cartMeta.get('cart-meta') ?? DEFAULT_CART_META;
-      const combined = Array.from(new Set([...currentMeta.paidItems, ...itemIds]));
-      
+    await db.transaction("rw", db.cart, db.cartMeta, async () => {
+      const currentMeta =
+        (await db.cartMeta.get("cart-meta")) ?? DEFAULT_CART_META;
+      const combined = Array.from(
+        new Set([...currentMeta.paidItems, ...itemIds]),
+      );
+
       await db.cartMeta.put({
         ...currentMeta,
         paidItems: combined,
@@ -294,34 +307,37 @@ export async function markItemsPaidInDB(itemIds: string[]): Promise<void> {
       }
     });
   } catch (err) {
-    console.warn('[Dexie] Failed to mark items as paid in DB:', err);
+    console.warn("[Dexie] Failed to mark items as paid in DB:", err);
   }
 }
 
 /**
  * Fetch all items that have not been successfully synced with the backend.
- */
+ *
 export async function getUnsyncedCartItemsFromDB(): Promise<DexieCartItem[]> {
   try {
     return await db.cart
-      .where('syncStatus')
-      .anyOf(['pending', 'failed'])
+      .where("syncStatus")
+      .anyOf(["pending", "failed"])
       .toArray();
   } catch {
     // Fallback in case of index issues
     try {
       const all = await db.cart.toArray();
-      return all.filter((i) => i.syncStatus !== 'synced');
+      return all.filter((i) => i.syncStatus !== "synced");
     } catch {
       return [];
     }
   }
-}
+}*/
 
 /**
  * Update the synchronization status of a cart item in Dexie.
- */
-export async function updateCartItemSyncStatusInDB(id: string, syncStatus: CartSyncStatus): Promise<void> {
+ *
+export async function updateCartItemSyncStatusInDB(
+  id: string,
+  syncStatus: CartSyncStatus,
+): Promise<void> {
   try {
     await db.cart.update(id, {
       syncStatus,
@@ -330,4 +346,4 @@ export async function updateCartItemSyncStatusInDB(id: string, syncStatus: CartS
   } catch (err) {
     console.warn(`[Dexie] Failed to update syncStatus for ${id}:`, err);
   }
-}
+}*/
