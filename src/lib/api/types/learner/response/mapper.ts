@@ -2,9 +2,13 @@ import {
   CourseEntitlement,
   AISchoolEntitlement,
   EntitlementResponse,
+  PublishedCourse,
+  PublishedModule,
 } from "@/lib/api/types/learner/response/types";
 
 import {
+  PublishedCourseDto,
+  PublishedModuleDto,
   CourseEntitlementDto,
   AISchoolEntitlementDto,
   EntitlementResponseDto,
@@ -55,5 +59,36 @@ export function toEntitlementResponse(
   return {
     schools: dto.schools ? dto.schools.map(toAISchoolEntitlement) : null,
     courses: dto.courses ? dto.courses.map(toCourseEntitlement) : null,
+  };
+}
+
+export function toPublishedModule(dto: PublishedModuleDto): PublishedModule {
+  return {
+    id: dto.id,
+    courseId: dto.course_id,
+    title: dto.title,
+    slug: dto.slug,
+    isEntitled: dto.is_entitled,
+    isEnrolled: dto.is_enrolled,
+    hasFinished: dto.has_finished,
+    description: dto.description,
+    position: dto.position,
+    masterclass: dto.masterclass,
+  };
+}
+
+export function toPublishedCourse(dto: PublishedCourseDto): PublishedCourse {
+  return {
+    id: dto.id,
+    aiSchoolId: dto.ai_school_id,
+    title: dto.title,
+    slug: dto.slug,
+    isEntitled: dto.is_entitled,
+    isEnrolled: dto.is_enrolled,
+    hasFinished: dto.has_finished,
+    description: dto.description,
+    position: dto.position,
+    price: dto.price,
+    modules: dto.modules.map(toPublishedModule),
   };
 }

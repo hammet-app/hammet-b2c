@@ -15,7 +15,10 @@ import {
 import {
   EntitlementResponse,
   EntitlementResponseDto,
+  PublishedCourse,
+  PublishedCourseDto,
   toEntitlementResponse,
+  toPublishedCourse,
 } from "./types/learner";
 
 export const learnerApi = {
@@ -72,6 +75,21 @@ export const learnerApi = {
       { onRefresh, skipSessionExpired: true },
     );
     return toAiSchoolCoursesResponse(response);
+  },
+
+  /** Fetch a given course */
+  getCourse: async (
+    courseId: string,
+    token: string,
+    onRefresh: () => Promise<string | null>,
+  ): Promise<PublishedCourse> => {
+    const response = await apiClient.get<PublishedCourseDto>(
+      `/learner/courses/${courseId}`,
+      token,
+      { onRefresh, skipSessionExpired: true },
+    );
+
+    return toPublishedCourse(response);
   },
 
   /**

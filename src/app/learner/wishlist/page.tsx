@@ -18,18 +18,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useWishlist } from "@/lib/store/use-wishlist";
-import { useCart } from "@/lib/store/use-cart";
+//import { useCart } from "@/lib/store/use-cart";
 import { cn } from "@/lib/utils/utils";
+import { cartApi } from "@/lib/api/cart";
 
 export default function WishlistPage() {
   const router = useRouter();
   const wishlistItems = useWishlist((state) => state.items);
   const removeItem = useWishlist((state) => state.removeItem);
-  const { addItem, hasItem } = useCart();
+  //const { addItem, hasItem } = useCart();
 
-  const handleMoveToCart = (item: (typeof wishlistItems)[0]) => {
-    addItem({
-      id: item.id,
+  const handleMoveToCart = async (item: (typeof wishlistItems)[0]) => {
+    await cartApi.addItem({
       productId: item.id,
       title: item.title,
       price: item.price,
@@ -63,7 +63,8 @@ export default function WishlistPage() {
 
           {wishlistItems.length > 0 && (
             <div className="rounded-2xl border border-black/[0.05] bg-white/70 px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-200">
-              {wishlistItems.length} {wishlistItems.length === 1 ? "Item" : "Items"} Saved
+              {wishlistItems.length}{" "}
+              {wishlistItems.length === 1 ? "Item" : "Items"} Saved
             </div>
           )}
         </motion.header>
@@ -78,7 +79,8 @@ export default function WishlistPage() {
               Your wishlist is currently empty
             </h3>
             <p className="mx-auto mt-2 max-w-md text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-              Explore our AI Schools catalog and tap the heart icon on courses you want to save for later.
+              Explore our AI Schools catalog and tap the heart icon on courses
+              you want to save for later.
             </p>
             <Button
               onClick={() => router.push("/learner/ai-schools")}
@@ -90,7 +92,6 @@ export default function WishlistPage() {
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {wishlistItems.map((item, idx) => {
-              const inCart = hasItem(item.id);
               return (
                 <motion.div
                   key={item.id}
@@ -103,7 +104,9 @@ export default function WishlistPage() {
                     {/* Top Badges */}
                     <div className="flex items-center justify-between mb-4">
                       <span className="rounded-full bg-purple-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
-                        {item.type === "school" ? "Diploma School" : "Specialized Course"}
+                        {item.type === "school"
+                          ? "Diploma School"
+                          : "Specialized Course"}
                       </span>
                       <button
                         onClick={() => removeItem(item.id)}
@@ -144,27 +147,33 @@ export default function WishlistPage() {
                   {/* Pricing & Actions */}
                   <div className="border-t border-slate-100 pt-4 dark:border-white/5">
                     <div className="mb-3 flex items-baseline justify-between">
-                      <span className="text-xs text-slate-400">Enrollment Fee</span>
+                      <span className="text-xs text-slate-400">
+                        Enrollment Fee
+                      </span>
                       <span className="text-lg font-bold text-slate-900 dark:text-white">
-                        {item.price === 0 ? "Free" : `₦${item.price.toLocaleString()}`}
+                        {item.price === 0
+                          ? "Free"
+                          : `₦${item.price.toLocaleString()}`}
                       </span>
                     </div>
 
-                    <div className="flex gap-2">
+                    {/*<div className="flex gap-2">
                       <Button
                         onClick={() => handleMoveToCart(item)}
                         className={cn(
                           "w-full rounded-xl font-bold transition shadow-sm",
                           inCart
                             ? "bg-slate-200 text-slate-500 dark:bg-white/10 dark:text-slate-400"
-                            : "bg-purple-600 text-white hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 shadow-purple-600/20"
+                            : "bg-purple-600 text-white hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 shadow-purple-600/20",
                         )}
                         disabled={inCart}
                       >
                         <ShoppingCart className="mr-2 h-4 w-4" />
-                        <span>{inCart ? "Already in Cart" : "Move to Cart"}</span>
+                        <span>
+                          {inCart ? "Already in Cart" : "Move to Cart"}
+                        </span>
                       </Button>
-                    </div>
+                    </div>*/}
                   </div>
                 </motion.div>
               );

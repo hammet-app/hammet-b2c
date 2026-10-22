@@ -25,10 +25,10 @@ import {
   HugeCourseAcademicWatermark,
   HugeEducationalHeroIllustration,
 } from "@/components/ui/educational-illustrations";
-import { SchoolVibrantIcon, GlowingMagicSparkle } from "@/components/ui/vibrant-ai-icons";
-
-// Set this to the learner-entitlements endpoint when the backend route is ready.
-const ENTITLEMENTS_ROUTE = "";
+import {
+  SchoolVibrantIcon,
+  GlowingMagicSparkle,
+} from "@/components/ui/vibrant-ai-icons";
 
 export default function MyLearningPage() {
   const { accessToken, refreshToken } = useAuth();
@@ -61,12 +61,14 @@ export default function MyLearningPage() {
 
         setSchools(
           (response.schools ?? []).filter(
-            (school: AISchoolEntitlement) => school.isEntitled || school.isEnrolled,
+            (school: AISchoolEntitlement) =>
+              school.isEntitled || school.isEnrolled,
           ),
         );
         setCourses(
           (response.courses ?? []).filter(
-            (course: CourseEntitlement) => course.isEntitled || course.isEnrolled,
+            (course: CourseEntitlement) =>
+              course.isEntitled || course.isEnrolled,
           ),
         );
       } catch (err) {
@@ -118,9 +120,7 @@ export default function MyLearningPage() {
       <div className="relative mx-auto max-w-[1280px]">
         {/* ── 1. ELEVATED "MY LEARNING" HERO BANNER ────────────────────── */}
         {/* Note: NO overflow-hidden on outer container so peeking-human is NEVER clipped! */}
-        <header
-          className="group relative mb-12 mt-20 sm:mt-24 rounded-3xl border border-purple-500/20 bg-gradient-to-br from-white via-purple-50/40 to-indigo-50/50 p-7 sm:p-10 lg:p-12 shadow-[0_12px_40px_rgba(139,92,246,0.10)] dark:border-white/[0.08] dark:bg-gradient-to-br dark:from-[#130E24] dark:via-[#17112C] dark:to-[#0D091A] dark:shadow-[0_16px_48px_rgba(0,0,0,0.4)]"
-        >
+        <header className="group relative mb-12 mt-20 sm:mt-24 rounded-3xl border border-purple-500/20 bg-gradient-to-br from-white via-purple-50/40 to-indigo-50/50 p-7 sm:p-10 lg:p-12 shadow-[0_12px_40px_rgba(139,92,246,0.10)] dark:border-white/[0.08] dark:bg-gradient-to-br dark:from-[#130E24] dark:via-[#17112C] dark:to-[#0D091A] dark:shadow-[0_16px_48px_rgba(0,0,0,0.4)]">
           {/* Peeking Human atop the banner - completely restored and visible above the roof */}
           <div className="pointer-events-none absolute right-6 sm:right-16 top-0 z-30 flex -translate-y-[calc(100%-1px)] select-none flex-row items-end gap-3.5">
             <div className="mb-4 rounded-2xl border border-purple-200/90 bg-white px-4 py-2 text-xs font-bold text-slate-800 shadow-[0_8px_24px_rgba(0,0,0,0.10)] dark:border-white/10 dark:bg-slate-900 dark:text-cyan-300 sm:text-sm">
@@ -138,7 +138,7 @@ export default function MyLearningPage() {
             {/* Subtle Ambient Radial Glowing Lights */}
             <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-purple-500/10 blur-3xl dark:bg-purple-500/15" />
             <div className="absolute -bottom-24 left-1/4 h-80 w-80 rounded-full bg-cyan-400/08 blur-3xl dark:bg-cyan-500/10" />
-            
+
             {/* Tech Academic Coordinate Dot Grid Pattern */}
             <div className="absolute inset-0 bg-[radial-gradient(#8B5CF6_1.2px,transparent_1.2px)] [background-size:24px_24px] opacity-[0.05] dark:opacity-[0.08]" />
 
@@ -162,7 +162,9 @@ export default function MyLearningPage() {
               </h1>
 
               <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-600 dark:text-slate-300 sm:text-base">
-                Access your AI schools and courses in one place. Advance your skills, earn verifiable certificates, and master production-grade artificial intelligence.
+                Access your AI schools and courses in one place. Advance your
+                skills, earn verifiable certificates, and master
+                production-grade artificial intelligence.
               </p>
 
               {/* Educational Metrics & Reassurance Pills */}
@@ -206,12 +208,14 @@ export default function MyLearningPage() {
                 </h2>
               </div>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Schools you are entitled to access. Complete tracks for career-defining AI capability.
+                Schools you are entitled to access. Complete tracks for
+                career-defining AI capability.
               </p>
             </div>
             {!loading && !error && (
               <span className="w-fit rounded-full bg-purple-100/80 border border-purple-200 px-3.5 py-1 text-xs font-bold text-purple-700 dark:border-cyan-500/20 dark:bg-cyan-500/15 dark:text-cyan-300">
-                {schools.length} {schools.length === 1 ? "School Enrolled" : "Schools Enrolled"}
+                {schools.length}{" "}
+                {schools.length === 1 ? "School Enrolled" : "Schools Enrolled"}
               </span>
             )}
           </div>
@@ -243,7 +247,8 @@ export default function MyLearningPage() {
                 No entitled AI schools yet
               </p>
               <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">
-                Schools you have access to will appear here once registered or unlocked through checkout.
+                Schools you have access to will appear here once registered or
+                unlocked through checkout.
               </p>
               <Link
                 href="/learner/ai-schools"
@@ -275,7 +280,11 @@ export default function MyLearningPage() {
                   <div className="relative z-10">
                     <div className="mb-4 flex items-center justify-between">
                       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/15 to-indigo-500/10 text-purple-600 border border-purple-500/20 shadow-xs dark:from-cyan-500/15 dark:to-purple-500/10 dark:text-cyan-300 dark:border-cyan-400/20">
-                        <SchoolVibrantIcon schoolId={school.id} schoolName={school.name} size="md" />
+                        <SchoolVibrantIcon
+                          schoolId={school.id}
+                          schoolName={school.name}
+                          size="md"
+                        />
                       </div>
                       <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200/60 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800/40">
                         School Track
@@ -333,7 +342,8 @@ export default function MyLearningPage() {
                 </h2>
               </div>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Courses included in your entitlements. Self-paced, interactive AI labs.
+                Courses included in your entitlements. Self-paced, interactive
+                AI labs.
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -405,7 +415,8 @@ export default function MyLearningPage() {
                           {school?.name ?? "AI School"}
                         </h3>
                         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-white/10 dark:text-slate-300">
-                          {schoolCourses.length} {schoolCourses.length === 1 ? "module" : "modules"}
+                          {schoolCourses.length}{" "}
+                          {schoolCourses.length === 1 ? "module" : "modules"}
                         </span>
                       </div>
                       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -452,7 +463,9 @@ export default function MyLearningPage() {
 
                             {/* Bottom row: clean, no purple watermark obstruction */}
                             <div className="relative z-10 mt-5 pt-3.5 border-t border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
-                              <span className="text-xs text-slate-400 font-medium">Self-paced course</span>
+                              <span className="text-xs text-slate-400 font-medium">
+                                Self-paced course
+                              </span>
                               <Link
                                 href={`/learner/courses/${course.slug}`}
                                 className="inline-flex items-center gap-1 text-xs font-bold text-purple-600 hover:text-purple-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors py-1 px-2 rounded-lg hover:bg-purple-50 dark:hover:bg-cyan-500/10"

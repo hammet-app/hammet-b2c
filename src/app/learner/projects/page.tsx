@@ -37,38 +37,51 @@ import {
   TerminalDoodleIcon,
 } from "@/components/ui/character-icons";
 import { useLearnerStore, LearnerProject } from "@/lib/store/use-learner-store";
-import { useCart } from "@/lib/store/use-cart";
+//import { useCart } from "@/lib/store/use-cart";
 import { BadgeCelebrationModal } from "@/components/ui/badge-celebration-modal";
 
 export default function ProjectsPage() {
   const projects = useLearnerStore((state) => state.projects);
   const startProject = useLearnerStore((state) => state.startProject);
-  const updateProjectProgress = useLearnerStore((state) => state.updateProjectProgress);
+  const updateProjectProgress = useLearnerStore(
+    (state) => state.updateProjectProgress,
+  );
   const submitProject = useLearnerStore((state) => state.submitProject);
-  const activeCelebrationBadge = useLearnerStore((state) => state.activeCelebrationBadge);
-  const triggerCelebration = useLearnerStore((state) => state.triggerCelebration);
+  const activeCelebrationBadge = useLearnerStore(
+    (state) => state.activeCelebrationBadge,
+  );
+  const triggerCelebration = useLearnerStore(
+    (state) => state.triggerCelebration,
+  );
   const closeCelebration = useLearnerStore((state) => state.closeCelebration);
   const badges = useLearnerStore((state) => state.badges);
 
-  const { hasPaidItem, paidItems } = useCart();
+  //const { hasPaidItem, paidItems } = useCart();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const [statusFilter, setStatusFilter] = useState<"all" | "in-progress" | "completed" | "not-started">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "in-progress" | "completed" | "not-started"
+  >("all");
   const [selectedTrack, setSelectedTrack] = useState<string>("All Tracks");
   const [searchQuery, setSearchQuery] = useState("");
   const [launchingId, setLaunchingId] = useState<string | null>(null);
-  const [sandboxLaunched, setSandboxLaunched] = useState<Record<string, boolean>>({});
+  const [sandboxLaunched, setSandboxLaunched] = useState<
+    Record<string, boolean>
+  >({});
 
   // Project Submission Modal
-  const [submittingProject, setSubmittingProject] = useState<LearnerProject | null>(null);
+  const [submittingProject, setSubmittingProject] =
+    useState<LearnerProject | null>(null);
   const [submissionRepo, setSubmissionRepo] = useState("");
   const [submissionDemo, setSubmissionDemo] = useState("");
   const [submissionNotes, setSubmissionNotes] = useState("");
-  const [rubricChecked, setRubricChecked] = useState<Record<number, boolean>>({});
+  const [rubricChecked, setRubricChecked] = useState<Record<number, boolean>>(
+    {},
+  );
   const [evaluating, setEvaluating] = useState(false);
   const [evalStep, setEvalStep] = useState<string>("");
 
@@ -88,17 +101,21 @@ export default function ProjectsPage() {
     const matchesTrack =
       selectedTrack === "All Tracks" ? true : p.track === selectedTrack;
     const q = searchQuery.toLowerCase().trim();
-    const matchesSearch = !q || (
+    const matchesSearch =
+      !q ||
       p.title.toLowerCase().includes(q) ||
       p.description.toLowerCase().includes(q) ||
       p.track.toLowerCase().includes(q) ||
-      p.tags?.some((tag) => tag.toLowerCase().includes(q))
-    );
+      p.tags?.some((tag) => tag.toLowerCase().includes(q));
     return matchesStatus && matchesTrack && matchesSearch;
   });
 
-  const completedCount = projects.filter((p) => p.status === "completed").length;
-  const inProgressCount = projects.filter((p) => p.status === "in-progress").length;
+  const completedCount = projects.filter(
+    (p) => p.status === "completed",
+  ).length;
+  const inProgressCount = projects.filter(
+    (p) => p.status === "in-progress",
+  ).length;
 
   const handleLaunchSandbox = (id: string) => {
     setLaunchingId(id);
@@ -112,7 +129,9 @@ export default function ProjectsPage() {
     setSubmittingProject(project);
     setSubmissionRepo(`https://github.com/learner/${project.id}-solution`);
     setSubmissionDemo(`https://${project.id}.hammet.dev`);
-    setSubmissionNotes("Implemented full stateful recovery with async dispatch and Pydantic validation.");
+    setSubmissionNotes(
+      "Implemented full stateful recovery with async dispatch and Pydantic validation.",
+    );
     // Pre-check rubric
     const initialChecked: Record<number, boolean> = {};
     project.rubric.forEach((_, idx) => {
@@ -127,7 +146,9 @@ export default function ProjectsPage() {
     setEvalStep("Spinning up evaluation container & PyTest harness...");
 
     setTimeout(() => {
-      setEvalStep("Running 18 automated rubric tests & performance benchmarks...");
+      setEvalStep(
+        "Running 18 automated rubric tests & performance benchmarks...",
+      );
     }, 900);
 
     setTimeout(() => {
@@ -165,7 +186,10 @@ export default function ProjectsPage() {
           </h1>
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400 sm:text-base">
-            Build, benchmark, and deploy production-grade AI systems. Each project is attached to course modules, verified by automated test harnesses, and mints an authentic credential badge for your portfolio.
+            Build, benchmark, and deploy production-grade AI systems. Each
+            project is attached to course modules, verified by automated test
+            harnesses, and mints an authentic credential badge for your
+            portfolio.
           </p>
         </motion.section>
 
@@ -204,8 +228,17 @@ export default function ProjectsPage() {
               transition={{ delay: 0.05 * i }}
               className="rounded-2xl border border-black/[0.06] bg-white p-5 shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02]"
             >
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{stat.label}</p>
-              <p className={cn("mt-1 text-2xl font-black tracking-tight", stat.color)}>{stat.value}</p>
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                {stat.label}
+              </p>
+              <p
+                className={cn(
+                  "mt-1 text-2xl font-black tracking-tight",
+                  stat.color,
+                )}
+              >
+                {stat.value}
+              </p>
               <p className="mt-0.5 text-[11px] text-slate-400">{stat.sub}</p>
             </motion.div>
           ))}
@@ -242,7 +275,9 @@ export default function ProjectsPage() {
               </span>
             )}
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Track:</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                Track:
+              </span>
               <select
                 value={selectedTrack}
                 onChange={(e) => setSelectedTrack(e.target.value)}
@@ -264,7 +299,10 @@ export default function ProjectsPage() {
             { id: "all", label: `All Projects (${projects.length})` },
             { id: "in-progress", label: `In Progress (${inProgressCount})` },
             { id: "completed", label: `Completed (${completedCount})` },
-            { id: "not-started", label: `Not Started (${projects.length - completedCount - inProgressCount})` },
+            {
+              id: "not-started",
+              label: `Not Started (${projects.length - completedCount - inProgressCount})`,
+            },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -273,7 +311,7 @@ export default function ProjectsPage() {
                 "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all",
                 statusFilter === tab.id
                   ? "bg-[#17131F] text-white shadow-md dark:bg-white dark:text-[#17131F]"
-                  : "border border-black/[0.08] text-slate-600 hover:bg-black/[0.04] dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/[0.04]"
+                  : "border border-black/[0.08] text-slate-600 hover:bg-black/[0.04] dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/[0.04]",
               )}
             >
               {tab.label}
@@ -285,7 +323,9 @@ export default function ProjectsPage() {
         {filteredProjects.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-300 p-12 text-center dark:border-white/10">
             <FolderKanban className="mx-auto h-12 w-12 text-slate-400" />
-            <h3 className="mt-3 text-lg font-bold text-slate-900 dark:text-white">No projects found</h3>
+            <h3 className="mt-3 text-lg font-bold text-slate-900 dark:text-white">
+              No projects found
+            </h3>
             <p className="mt-1 text-xs text-slate-500">
               {searchQuery
                 ? `No projects matching "${searchQuery}". Try a different keyword or clear your search.`
@@ -305,7 +345,7 @@ export default function ProjectsPage() {
             {filteredProjects.map((project, index) => {
               const isDone = project.status === "completed";
               const isInProgress = project.status === "in-progress";
-              const isUnlocked = !mounted || isDone || isInProgress || hasPaidItem(project.courseId) || hasPaidItem("course-llm-foundations") || hasPaidItem("school-ai-foundations") || paidItems.length > 0;
+              const isUnlocked = !mounted || isDone || isInProgress;
 
               return (
                 <motion.div
@@ -323,7 +363,9 @@ export default function ProjectsPage() {
                           <span className="text-[10.5px] font-bold uppercase tracking-wider text-purple-600 dark:text-cyan-400">
                             {project.track}
                           </span>
-                          <span className="text-[10px] text-slate-400">• {project.courseTitle}</span>
+                          <span className="text-[10px] text-slate-400">
+                            • {project.courseTitle}
+                          </span>
                         </div>
                         <h3 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-cyan-400 transition-colors">
                           {project.title}
@@ -337,10 +379,10 @@ export default function ProjectsPage() {
                             project.level === "Production"
                               ? "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300"
                               : project.level === "Advanced"
-                              ? "bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300"
-                              : project.level === "Intermediate"
-                              ? "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
-                              : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
+                                ? "bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300"
+                                : project.level === "Intermediate"
+                                  ? "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
+                                  : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
                           )}
                         >
                           {project.level}
@@ -381,10 +423,14 @@ export default function ProjectsPage() {
                       <ul className="space-y-1.5 text-[10.5px] text-slate-500 dark:text-slate-400">
                         {project.rubric.map((item, idx) => (
                           <li key={idx} className="flex items-start gap-1.5">
-                            <span className={cn(
-                              "mt-0.5 h-3 w-3 rounded-full flex items-center justify-center text-[8px] font-bold shrink-0",
-                              isDone ? "bg-emerald-500 text-white" : "border border-slate-300 dark:border-white/20 text-slate-400"
-                            )}>
+                            <span
+                              className={cn(
+                                "mt-0.5 h-3 w-3 rounded-full flex items-center justify-center text-[8px] font-bold shrink-0",
+                                isDone
+                                  ? "bg-emerald-500 text-white"
+                                  : "border border-slate-300 dark:border-white/20 text-slate-400",
+                              )}
+                            >
                               {isDone ? "✓" : idx + 1}
                             </span>
                             <span>{item}</span>
@@ -413,7 +459,9 @@ export default function ProjectsPage() {
                             <Award className="h-3.5 w-3.5" />
                             {project.submission.grade} Evaluation Passed
                           </span>
-                          <span className="text-[10px] text-slate-400">{project.submission.submittedAt}</span>
+                          <span className="text-[10px] text-slate-400">
+                            {project.submission.submittedAt}
+                          </span>
                         </div>
                         <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                           <a
@@ -443,8 +491,8 @@ export default function ProjectsPage() {
                   <div className="mt-6 border-t border-black/[0.06] pt-4 dark:border-white/[0.06]">
                     <div className="flex items-center justify-between mb-2 text-xs">
                       <span className="font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        ~{project.estimatedHours} hours estimated
+                        <Clock className="h-3 w-3" />~{project.estimatedHours}{" "}
+                        hours estimated
                       </span>
 
                       <span className="font-bold text-slate-800 dark:text-slate-200">
@@ -460,8 +508,8 @@ export default function ProjectsPage() {
                           project.progress === 100
                             ? "bg-emerald-500"
                             : project.progress > 0
-                            ? "bg-purple-600 dark:bg-cyan-400"
-                            : "bg-transparent"
+                              ? "bg-purple-600 dark:bg-cyan-400"
+                              : "bg-transparent",
                         )}
                         style={{ width: `${project.progress}%` }}
                       />
@@ -471,7 +519,10 @@ export default function ProjectsPage() {
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-black/[0.05] dark:border-white/[0.05]">
                         <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
                           <Lock className="h-4 w-4 text-purple-600 dark:text-cyan-400 shrink-0" />
-                          <span>Complete <strong>{project.courseTitle}</strong> to unlock this capstone workspace</span>
+                          <span>
+                            Complete <strong>{project.courseTitle}</strong> to
+                            unlock this capstone workspace
+                          </span>
                         </div>
                         <Link
                           href="/learner/ai-schools"
@@ -502,7 +553,7 @@ export default function ProjectsPage() {
                                 "flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all shadow-sm",
                                 sandboxLaunched[project.id]
                                   ? "bg-emerald-50 text-emerald-700 border border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300"
-                                  : "bg-purple-600 text-white hover:bg-purple-700 hover:scale-[1.01]"
+                                  : "bg-purple-600 text-white hover:bg-purple-700 hover:scale-[1.01]",
                               )}
                             >
                               {launchingId === project.id ? (
@@ -533,30 +584,34 @@ export default function ProjectsPage() {
                           </>
                         )}
 
-                      {isDone && (
-                        <div className="flex-1 flex items-center justify-between gap-2">
-                          <Link
-                            href="/learner/passport"
-                            className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-600 dark:text-cyan-400 hover:underline"
-                          >
-                            <Award className="h-4 w-4" />
-                            <span>View Minted Skill Badge in Passport →</span>
-                          </Link>
+                        {isDone && (
+                          <div className="flex-1 flex items-center justify-between gap-2">
+                            <Link
+                              href="/learner/passport"
+                              className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-600 dark:text-cyan-400 hover:underline"
+                            >
+                              <Award className="h-4 w-4" />
+                              <span>View Minted Skill Badge in Passport →</span>
+                            </Link>
 
-                          <button
-                            onClick={() => {
-                              const b = badges.find((badge) => badge.id === project.earnedBadgeId) || badges[0];
-                              if (b) triggerCelebration(b);
-                            }}
-                            className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-100 dark:border-white/10 dark:bg-white/[0.04] dark:text-cyan-300 transition"
-                          >
-                            Re-play Celebration 🎉
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                            <button
+                              onClick={() => {
+                                const b =
+                                  badges.find(
+                                    (badge) =>
+                                      badge.id === project.earnedBadgeId,
+                                  ) || badges[0];
+                                if (b) triggerCelebration(b);
+                              }}
+                              className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-100 dark:border-white/10 dark:bg-white/[0.04] dark:text-cyan-300 transition"
+                            >
+                              Re-play Celebration 🎉
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </motion.div>
               );
             })}
@@ -659,11 +714,19 @@ export default function ProjectsPage() {
                   </span>
                   <div className="space-y-2">
                     {submittingProject.rubric.map((criteria, idx) => (
-                      <label key={idx} className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+                      <label
+                        key={idx}
+                        className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer"
+                      >
                         <input
                           type="checkbox"
                           checked={!!rubricChecked[idx]}
-                          onChange={(e) => setRubricChecked((prev) => ({ ...prev, [idx]: e.target.checked }))}
+                          onChange={(e) =>
+                            setRubricChecked((prev) => ({
+                              ...prev,
+                              [idx]: e.target.checked,
+                            }))
+                          }
                           disabled={evaluating}
                           className="mt-0.5 h-4 w-4 rounded accent-purple-600"
                         />
@@ -681,8 +744,13 @@ export default function ProjectsPage() {
                     className="rounded-2xl border border-cyan-400/30 bg-cyan-50/70 p-4 text-center dark:bg-cyan-950/30"
                   >
                     <div className="mx-auto mb-2 h-7 w-7 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin" />
-                    <p className="text-xs font-bold text-cyan-900 dark:text-cyan-200">{evalStep}</p>
-                    <p className="mt-1 text-[11px] text-slate-500">Do not close this window while cryptographic proofs are compiled.</p>
+                    <p className="text-xs font-bold text-cyan-900 dark:text-cyan-200">
+                      {evalStep}
+                    </p>
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      Do not close this window while cryptographic proofs are
+                      compiled.
+                    </p>
                   </motion.div>
                 )}
               </div>
@@ -701,7 +769,9 @@ export default function ProjectsPage() {
                   disabled={evaluating}
                   className="rounded-xl bg-purple-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-purple-600/30 hover:bg-purple-700 disabled:opacity-50 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 transition"
                 >
-                  {evaluating ? "Evaluating Project..." : "Run Evaluation & Mint Skill Badge ⚡"}
+                  {evaluating
+                    ? "Evaluating Project..."
+                    : "Run Evaluation & Mint Skill Badge ⚡"}
                 </button>
               </div>
             </motion.div>

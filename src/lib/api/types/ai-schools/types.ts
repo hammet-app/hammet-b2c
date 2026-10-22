@@ -43,6 +43,7 @@ export type AiSchoolCoursesResponse = {
   courses: AiSchoolCourse[];
 };
 
+
 // GET /api/v1/hammet/ai-schools/{ai_school_id}/courses
 export type HammetAiSchoolCoursesResponse = {
   aiSchool: AiSchool;

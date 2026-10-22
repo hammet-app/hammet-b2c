@@ -19,7 +19,7 @@ import { learnerApi } from "@/lib/api/learner";
 import { AiSchool, AiSchoolCourse } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { useAnalytics } from "@/hooks/use-analytics";
-import { useCart } from "@/lib/store/use-cart";
+//import { useCart } from "@/lib/store/use-cart";
 import { CourseCard } from "./course-card";
 import { ApiError } from "@/lib/api/api-client";
 import { cartApi } from "@/lib/api/cart";

@@ -16,24 +16,18 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCart, CartItem } from "@/lib/store/use-cart";
+import { CartItem } from "@/lib/store/use-cart";
 import { useAuth } from "@/lib/auth/auth-context";
 import { paymentApi } from "@/lib/api/payment";
 import { getCartItemsFromDB } from "@/lib/db";
+import { OrderResponse } from "@/lib/api/types";
 
 function PaystackCallbackContent() {
-  const searchParams = useSearchParams();
   const router = useRouter();
   const { accessToken } = useAuth();
-  const { items, clearCart, markAsPaid } = useCart();
+  //const { items, clearCart, markAsPaid } = useCart();
 
-  const reference =
-    searchParams.get("reference") ||
-    searchParams.get("trxref") ||
-    searchParams.get("transaction_id") ||
-    "";
-  const statusParam = searchParams.get("status");
-
+  const [order, setOrder] = useState<OrderResponse | null>(null);
   const [verifying, setVerifying] = useState(true);
   const [isSuccess, setIsSuccess] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -41,123 +35,48 @@ function PaystackCallbackContent() {
   const [paidTotal, setPaidTotal] = useState(0);
   const [paymentDate, setPaymentDate] = useState("");
 
-  const itemsRef = useRef(items);
-  itemsRef.current = items;
-  const clearCartRef = useRef(clearCart);
-  clearCartRef.current = clearCart;
-  const markAsPaidRef = useRef(markAsPaid);
-  markAsPaidRef.current = markAsPaid;
-
-  const attemptedRef = useRef(false);
-
   useEffect(() => {
-    if (attemptedRef.current) return;
-    attemptedRef.current = true;
-
     async function handleSettlement() {
-      // 1. Check if Paystack returned a cancellation or failure
-      if (statusParam === "cancelled" || statusParam === "failed") {
-        setIsSuccess(false);
-        setErrorMessage("The payment session on Paystack was cancelled or declined.");
-        setVerifying(false);
+      const savedOrder = sessionStorage.getItem("checkoutOrder");
+      if (!savedOrder) {
         return;
       }
 
-      if (!reference) {
-        setIsSuccess(false);
-        setErrorMessage("No transaction reference was received from the payment gateway.");
-        setVerifying(false);
-        return;
+      try {
+        const parsedOrder = JSON.parse(savedOrder) as OrderResponse;
+        setOrder(parsedOrder);
+      } catch (error) {
+        console.error("Failed to load checkout order:", error);
+        sessionStorage.removeItem("checkoutOrder");
       }
 
       // 2. Verify settlement strictly with the backend API
       try {
-        const verifyRes = await paymentApi.verifyPayment(reference, accessToken);
+        if (!order) {
+          router.push("/learner/learner");
+          return;
+        }
+        const verifyRes = await paymentApi.verifyPayment(order.id, accessToken);
 
-        if (verifyRes.success && verifyRes.data && verifyRes.data.status === "success") {
-          let currentItems = [...itemsRef.current];
-
-          if (currentItems.length === 0 && typeof window !== "undefined") {
-            try {
-              const stored =
-                sessionStorage.getItem("hammet_pending_checkout") ||
-                localStorage.getItem("hammet_pending_checkout");
-              if (stored) {
-                const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                  currentItems = parsed;
-                }
-              }
-            } catch (e) {
-              console.warn("Failed to parse stored pending checkout:", e);
-            }
-          }
-
-          const enrolledItemIds: string[] =
-            verifyRes.data.enrolled_items && verifyRes.data.enrolled_items.length > 0
-              ? verifyRes.data.enrolled_items
-              : currentItems.map((i) => i.id || i.productId).filter((id): id is string => Boolean(id));
-
-          setPurchasedItems(
-            currentItems.length > 0
-              ? currentItems
-              : enrolledItemIds.map((id) => ({
-                  id,
-                  productId: id,
-                  type: "course",
-                  title: `Enrolled Curriculum (${id})`,
-                  price: verifyRes.data?.amount || 0,
-                  quantity: 1,
-                }))
-          );
-          setPaidTotal(verifyRes.data.amount || 0);
-          setPaymentDate(
-            verifyRes.data.paid_at
-              ? new Date(verifyRes.data.paid_at).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              : new Date().toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-          );
-
-          // Activate courses in local DB now that backend confirmed payment
-          if (enrolledItemIds.length > 0) {
-            await markAsPaidRef.current(enrolledItemIds);
-            try {
-              const existingPaid = JSON.parse(localStorage.getItem("hammet-paid-items") || "[]");
-              const mergedPaid = Array.from(new Set([...existingPaid, ...enrolledItemIds]));
-              localStorage.setItem("hammet-paid-items", JSON.stringify(mergedPaid));
-            } catch {}
-          }
-          await clearCartRef.current();
-          try {
-            sessionStorage.removeItem("hammet_pending_checkout");
-            localStorage.removeItem("hammet_pending_checkout");
-          } catch {}
-
+        if (
+          verifyRes.success &&
+          verifyRes.data &&
+          verifyRes.data.status === "success"
+        ) {
           setIsSuccess(true);
         } else {
           // Backend rejected or could not verify payment
           setIsSuccess(false);
           setErrorMessage(
             verifyRes.error ||
-              `Backend verification failed for reference '${reference}'. Settlement status: '${verifyRes.data?.status || "unverified"}'`
+              `Backend verification failed for order '${order.id}'. Settlement status: '${verifyRes.data?.status || "unverified"}'`,
           );
         }
       } catch (err: any) {
         setIsSuccess(false);
         setErrorMessage(
           err?.message ||
-            `Failed to communicate with the payment verification server for reference ${reference}.`
+            `Failed to communicate with the payment verification server for order ${order?.id}.`,
         );
       } finally {
         setVerifying(false);
@@ -165,23 +84,11 @@ function PaystackCallbackContent() {
     }
 
     handleSettlement();
-  }, [reference, statusParam, accessToken]);
+  }, [accessToken]);
 
   const handleStartCourse = () => {
     let target = "/learner/learn";
-    if (purchasedItems.length > 0) {
-      const firstSchool = purchasedItems.find((i) => i.type === "ai_school");
-      if (firstSchool && firstSchool.id) {
-        target = `/learner/ai-schools/${firstSchool.id}`;
-      } else {
-        const firstCourse = purchasedItems.find((i) => i.type === "course");
-        if (firstCourse && firstCourse.schoolId) {
-          target = `/learner/ai-schools/${firstCourse.schoolId}`;
-        } else if (firstCourse && firstCourse.id) {
-          target = `/learner/courses/${firstCourse.id}`;
-        }
-      }
-    }
+
     router.push(target);
   };
 
@@ -197,7 +104,8 @@ function PaystackCallbackContent() {
           Verifying Paystack Payment
         </h3>
         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 max-w-sm">
-          Please wait a moment while we settle your transaction with Paystack and unlock your learning modules...
+          Please wait a moment while we settle your transaction with Paystack
+          and unlock your learning modules...
         </p>
       </div>
     );
@@ -213,17 +121,12 @@ function PaystackCallbackContent() {
           Payment Not Completed
         </h2>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-          {errorMessage || "The transaction could not be completed on Paystack."}
+          {errorMessage ||
+            "The transaction could not be completed on Paystack."}
         </p>
 
-        {reference && (
-          <div className="my-4 rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs font-mono text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
-            Reference: <span className="font-bold text-slate-900 dark:text-white">{reference}</span>
-          </div>
-        )}
-
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-          {reference && (
+          {order?.id && (
             <Button
               onClick={() => {
                 setVerifying(true);
@@ -302,7 +205,8 @@ function PaystackCallbackContent() {
           Payment Successful! 🎉
         </h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-          Congratulations! Your payment has been securely confirmed on Paystack and your curriculum access is officially activated.
+          Congratulations! Your payment has been securely confirmed on Paystack
+          and your curriculum access is officially activated.
         </p>
       </div>
 
@@ -320,34 +224,22 @@ function PaystackCallbackContent() {
               </span>
             </div>
             <p className="mt-1 leading-relaxed text-amber-800/90 dark:text-amber-300/80 text-[11px] sm:text-xs">
-              Your course access has been activated immediately on your profile! Please note that cloud ledger and dashboard progress synchronization may take up to 2–3 minutes during peak network periods, but your courses are unlocked and available to study immediately without delay.
+              Your course access has been activated immediately on your profile!
+              Please note that cloud ledger and dashboard progress
+              synchronization may take up to 2–3 minutes during peak network
+              periods, but your courses are unlocked and available to study
+              immediately without delay.
             </p>
-            <div className="mt-2.5 flex flex-wrap items-center gap-3 text-[11px] font-medium text-amber-900/80 dark:text-amber-300/70 border-t border-amber-500/20 pt-2">
-              <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                Local Learning License: Ready (0s delay)
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                <Zap className="h-3.5 w-3.5 text-purple-500" />
-                Cloud Ledger: Syncing in background
-              </span>
-            </div>
           </div>
         </div>
       </div>
 
       {/* Official Digital Receipt Card */}
       <div className="mt-6 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-5 dark:border-white/10 dark:bg-white/[0.03]">
-        <div className="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-white/5 text-xs">
-          <span className="text-slate-500 dark:text-slate-400">Paystack Reference</span>
-          <span className="font-mono font-bold text-slate-900 dark:text-white">
-            {reference || "TXN-PAYSTACK-CONFIRMED"}
-          </span>
-        </div>
-
         <div className="flex items-center justify-between border-b border-slate-200 py-3 dark:border-white/5 text-xs">
-          <span className="text-slate-500 dark:text-slate-400">Payment Gateway</span>
+          <span className="text-slate-500 dark:text-slate-400">
+            Payment Gateway
+          </span>
           <span className="font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
             <span>Paystack Direct</span>
@@ -355,13 +247,19 @@ function PaystackCallbackContent() {
         </div>
 
         <div className="flex items-center justify-between border-b border-slate-200 py-3 dark:border-white/5 text-xs">
-          <span className="text-slate-500 dark:text-slate-400">Date & Time</span>
-          <span className="text-slate-700 dark:text-slate-300">{paymentDate}</span>
+          <span className="text-slate-500 dark:text-slate-400">
+            Date & Time
+          </span>
+          <span className="text-slate-700 dark:text-slate-300">
+            {paymentDate}
+          </span>
         </div>
 
         {paidTotal > 0 && (
           <div className="flex items-center justify-between border-b border-slate-200 py-3 dark:border-white/5 text-xs">
-            <span className="text-slate-500 dark:text-slate-400">Total Amount Paid</span>
+            <span className="text-slate-500 dark:text-slate-400">
+              Total Amount Paid
+            </span>
             <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
               ₦{paidTotal.toLocaleString()}
             </span>
@@ -442,4 +340,3 @@ export default function PaystackCallbackPage() {
     </div>
   );
 }
-

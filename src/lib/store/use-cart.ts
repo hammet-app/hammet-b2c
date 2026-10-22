@@ -5,14 +5,10 @@ import {
   type DexieCartItem,
   getCartItemsFromDB,
   getCartMetaFromDB,
-  putCartItemToDB,
-  updateCartItemQuantityInDB,
   removeCartItemFromDB,
   clearCartInDB,
   saveCartMetaToDB,
   markItemsPaidInDB,
-  getUnsyncedCartItemsFromDB,
-  updateCartItemSyncStatusInDB,
   db,
 } from "@/lib/db";
 import { cartApi } from "@/lib/api/cart";
@@ -26,7 +22,6 @@ export interface CartItem {
   price: number;
   quantity?: number;
   productId?: string;
-  schoolId?: string;
   syncStatus?: CartSyncStatus;
   createdAt?: string;
   updatedAt?: string;
@@ -37,18 +32,6 @@ export interface Coupon {
   discountPercentage: number;
   description: string;
 }
-
-export const VALID_COUPONS: Record<
-  string,
-  { discountPercentage: number; description: string }
-> = {
-  HAMMET20: { discountPercentage: 20, description: "20% Team Lead Special" },
-  HAMMETAI: { discountPercentage: 20, description: "20% AI Scholar Promo" },
-  HAMMET50: { discountPercentage: 50, description: "50% Community Special" },
-  EARLYBIRD: { discountPercentage: 15, description: "15% Early Bird Discount" },
-  LEARN20: { discountPercentage: 20, description: "20% Learner Pass" },
-  FREE100: { discountPercentage: 100, description: "100% Full Scholarship" },
-};
 
 interface CartStore {
   items: CartItem[];
@@ -89,13 +72,12 @@ interface CartStore {
 }
 
 // ── Background Sync Helpers ──────────────────────────────────────────────────
-
+/**
 async function backgroundSyncAddItem(item: DexieCartItem) {
   if (!item.id) return;
   try {
     const res = await cartApi.addItem(item);
     const newStatus: CartSyncStatus = res.success ? "synced" : "failed";
-    await updateCartItemSyncStatusInDB(item.id, newStatus);
     useCart.setState((state) => ({
       items: state.items.map((i) =>
         i.id === item.id ? { ...i, syncStatus: newStatus } : i,
@@ -140,10 +122,10 @@ async function backgroundSyncClearCart() {
   } catch {
     // Non-blocking best effort for clear
   }
-}
+}*/
 
 // ── Migration from Legacy localStorage ───────────────────────────────────────
-
+/**
 let migrationRan = false;
 
 async function migrateLegacyLocalStorage() {
@@ -462,3 +444,4 @@ if (typeof window !== "undefined") {
     useCart.getState().retryFailedSync();
   });
 }
+*/
