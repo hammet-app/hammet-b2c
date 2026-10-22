@@ -10,6 +10,7 @@ export type AiSchoolDto = {
   name: string;
   description: string;
   price: number;
+  published?: boolean;
 };
 
 export type AiSchoolsResponseDto = {
@@ -35,6 +36,12 @@ export type AiSchoolCoursesResponseDto = {
   courses: AiSchoolCourseDto[];
 };
 
+// GET /api/v1/hammet/ai-schools/{ai_school_id}/courses
+export type HammetAiSchoolCoursesResponseDto = {
+  ai_school: AiSchoolDto;
+  courses: AiSchoolCourseDto[];
+};
+
 // ============================================================
 // CREATE AI SCHOOL
 // ============================================================
@@ -43,6 +50,47 @@ export type AiSchoolCoursesResponseDto = {
 export type CreateAiSchoolRequestDto = {
   name: string;
   description: string;
+  price: number;
+  published: boolean;
+};
+
+export type CreateAiSchoolResponseDto = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  published?: boolean;
+};
+
+// ============================================================
+// UPDATE AI SCHOOL
+// ============================================================
+
+// PATCH /api/v1/hammet/ai-schools/{ai_school_id}  (route unconfirmed)
+export type UpdateAiSchoolRequestDto = CreateAiSchoolRequestDto;
+
+export type UpdateAiSchoolResponseDto = CreateAiSchoolResponseDto;
+
+// CREATE AI COURSE
+// ============================================================
+
+// POST /api/v1/hammet/create/ai_course
+export type CreateAiCourseRequestDto = {
+  title: string;
+  description: string;
+  position: number;
+  ai_school_id: string;
+  price: number;
+  published: boolean;
+};
+
+export type CreateAiCourseResponseDto = {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  position: number;
+  ai_school_id: string;
   price: number;
   published: boolean;
 };

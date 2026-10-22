@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
 
       <body className="min-h-full flex flex-col">
+        <Analytics />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
