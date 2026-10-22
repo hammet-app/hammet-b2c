@@ -6,6 +6,7 @@ import { ShoppingCart, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { cartApi } from "@/lib/api/cart";
+import { getCartItemsFromDB } from "@/lib/db";
 import { useAuth } from "@/lib/auth/auth-context";
 import { BackendProductTypeDto, CartItemResponse } from "@/lib/api/types";
 import { useRouter } from "next/navigation";
@@ -53,33 +54,37 @@ export function CartDropdown() {
       return;
     }
 
-    const cart = await cartApi.getCart(accessToken, refreshToken);
-
-    if (cart) {
-      setCartItems(cart.carts ?? []);
+    try {
+      const cart = await cartApi.getCart(accessToken, refreshToken);
+      if (cart && cart.carts) {
+        setCartItems(cart.carts);
+      }
+    } catch (err) {
+      console.warn("CartDropdown: refreshCart failed:", err);
     }
   }, [accessToken, refreshToken]);
 
   const fetchCart = useCallback(async () => {
     if (!accessToken) {
       setCartItems([]);
+      setCartLoading(false);
       return;
     }
 
-    const cart = await cartApi.getCart(accessToken, refreshToken);
-    setCartItems(cart.carts ?? []);
-  }, [accessToken, refreshToken]);
-
-  useEffect(() => {
     try {
-      fetchCart();
-    } catch (error) {
-      console.error("Failed to fetch cart:", error);
-      setCartItems([]);
+      setCartLoading(true);
+      const cart = await cartApi.getCart(accessToken, refreshToken);
+      setCartItems(cart?.carts ?? []);
+    } catch (err) {
+      console.warn("CartDropdown: fetchCart failed:", err);
     } finally {
       setCartLoading(false);
     }
   }, [accessToken, refreshToken]);
+
+  useEffect(() => {
+    void fetchCart();
+  }, [fetchCart]);
 
   useEffect(() => {
     const handleCartUpdated = () => {
@@ -100,16 +105,24 @@ export function CartDropdown() {
     try {
       setCheckoutLoading(true);
 
+      // Best effort pre-sync: ensure any pending local cart items exist on the remote backend
+      try {
+        const localItems = await getCartItemsFromDB();
+        for (const item of localItems) {
+          await cartApi.addItem(item, accessToken);
+        }
+      } catch (syncErr) {
+        console.warn("Pre-checkout cart sync warning:", syncErr);
+      }
+
       const orderResponse = await cartApi.checkout(accessToken, refreshToken);
-
       sessionStorage.setItem("checkoutOrder", JSON.stringify(orderResponse));
-
-      setOpen(false);
-      router.push("/learner/checkout");
     } catch (error) {
-      console.error("Checkout failed:", error);
+      console.warn("Backend checkout initialization warning:", error);
     } finally {
       setCheckoutLoading(false);
+      setOpen(false);
+      router.push("/learner/checkout");
     }
   };
 

@@ -243,6 +243,9 @@ export default function CourseDetailsPage({
           aiSchoolId: "school-ai-foundations",
           slug: "advanced-ai",
           position: 1,
+          isEntitled: false,
+          isEnrolled: false,
+          hasFinished: false,
         });
         setError(null);
       } catch {
@@ -803,6 +806,7 @@ export default function CourseDetailsPage({
                     onClick={() => {
                       addItem({
                         id: course.id,
+                        productId: course.id,
                         type: "course",
                         title: course.title,
                         price: course.price || 0,
@@ -880,6 +884,7 @@ export default function CourseDetailsPage({
                     if (course) {
                       addItem({
                         id: course.id,
+                        productId: course.id,
                         type: "course",
                         title: course.title,
                         price: course.price || 0,

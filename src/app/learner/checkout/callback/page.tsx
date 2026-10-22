@@ -93,16 +93,17 @@ function PaystackCallbackContent() {
             }
           }
 
-          const enrolledItemIds =
+          const enrolledItemIds: string[] =
             verifyRes.data.enrolled_items && verifyRes.data.enrolled_items.length > 0
               ? verifyRes.data.enrolled_items
-              : currentItems.map((i) => i.id);
+              : currentItems.map((i) => i.id || i.productId).filter((id): id is string => Boolean(id));
 
           setPurchasedItems(
             currentItems.length > 0
               ? currentItems
               : enrolledItemIds.map((id) => ({
                   id,
+                  productId: id,
                   type: "course",
                   title: `Enrolled Curriculum (${id})`,
                   price: verifyRes.data?.amount || 0,

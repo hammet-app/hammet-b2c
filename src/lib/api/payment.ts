@@ -57,12 +57,35 @@ export const paymentApi = {
     token: string,
     onRefresh?: () => Promise<string | null>,
   ): Promise<string> => {
-    return apiClient.post<string>(
+    const res = await apiClient.post<any>(
       "/payment/init",
       { order_id: orderId },
       token,
       onRefresh ? { onRefresh } : { skipSessionExpired: true },
     );
+
+    if (typeof res === "string") {
+      return res;
+    }
+    if (res?.authorization_url) {
+      return res.authorization_url;
+    }
+    if (typeof res?.data === "string") {
+      return res.data;
+    }
+    if (res?.data?.authorization_url) {
+      return res.data.authorization_url;
+    }
+    if (res?.data?.link) {
+      return res.data.link;
+    }
+    if (res?.payment_url) {
+      return res.payment_url;
+    }
+    if (res?.url) {
+      return res.url;
+    }
+    return String(res || "");
   },
 
   /**

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { User, Settings, LogOut, Heart, Crown, LifeBuoy } from "lucide-react";
+import { User, LogOut, Heart, Crown, LifeBuoy } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useLearnerStore } from "@/lib/store/use-learner-store";
@@ -30,9 +30,11 @@ export function ProfileDropdown() {
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      <Link
-        href="/learner/profile"
-        className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 text-xs font-bold text-white transition hover:ring-2 hover:ring-purple-500/30"
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 text-xs font-bold text-white shadow-xs transition hover:ring-2 hover:ring-purple-500/30"
+        aria-label="User profile menu"
       >
         {avatar ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -40,7 +42,7 @@ export function ProfileDropdown() {
         ) : (
           user?.fullName?.charAt(0)?.toUpperCase() ?? "U"
         )}
-      </Link>
+      </button>
 
       <AnimatePresence>
         {open && (
@@ -88,13 +90,6 @@ export function ProfileDropdown() {
                 <User className="h-4 w-4 text-slate-400" />
                 Profile
               </Link>
-              <Link
-                href="/learner/settings"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-purple-600 dark:text-slate-200 dark:hover:bg-white/[0.05] dark:hover:text-cyan-400"
-              >
-                <Settings className="h-4 w-4 text-slate-400" />
-                Settings
-              </Link>
               
               <Link
                 href="/learner/wishlist"
@@ -127,4 +122,3 @@ export function ProfileDropdown() {
     </div>
   );
 }
-

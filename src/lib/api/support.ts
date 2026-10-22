@@ -1,35 +1,24 @@
 import { apiClient } from "@/lib/api/api-client";
-import { CallbackForm } from "@/lib/api/types/support/types";
+import {
+  CreateSupportTicket,
+  SupportTicketResponse,
+  SupportTicketResponseDto,
+  fromCreateSupportTicket,
+  toSupportTicketResponse,
+  CallbackForm,
+  fromCallbackForm,
+} from "@/lib/api/types/support";
 
-// ── Official Support Ticket API Contract ─────────────────────────────────────
+export type {
+  TicketCategory,
+  TicketPriority,
+  CreateSupportTicket,
+  SupportTicketResponse,
+} from "@/lib/api/types/support";
 
-export type TicketCategory =
-  | "technical"
-  | "billing"
-  | "account"
-  | "courseware"
-  | "certification"
-  | "general";
-
-export type TicketPriority = "low" | "medium" | "high" | "critical";
-
-export interface CreateSupportTicketDto {
-  subject: string;
-  message: string;
-  category: TicketCategory;
-  priority?: TicketPriority;
-}
-
-export interface SupportTicketDto {
-  id: string;
-  subject: string;
-  message: string;
-  category: TicketCategory;
-  priority: TicketPriority;
-  status: string;
-  created_at: string;
-  updated_at: string;
-}
+// Backward compatibility alias for DTO
+export type CreateSupportTicketDto = CreateSupportTicket;
+export type SupportTicketDto = SupportTicketResponse;
 
 export interface SupportApiResponse<T> {
   success: boolean;
@@ -40,29 +29,26 @@ export interface SupportApiResponse<T> {
 export const supportApi = {
   /**
    * Submit a new support ticket to the backend.
-   * Endpoint: POST /api/v1/learner/support/tickets
-   * The backend persists the ticket and dispatches an email to support@hammetedu.com.
+   * Official FastAPI Backend Endpoint: POST /api/v1/learner/tickets
+   * Validated strictly against CreateSupportTicket schema: { subject, message, category, priority }
+   * Dispatches automated email notification to support@hammetedu.com and records ticket.
    */
   createTicket: async (
-    payload: CreateSupportTicketDto,
+    payload: CreateSupportTicket,
     token?: string | null
-  ): Promise<SupportApiResponse<SupportTicketDto>> => {
+  ): Promise<SupportApiResponse<SupportTicketResponse>> => {
     try {
-      const response = await apiClient.post<SupportTicketDto>(
-        "/learner/support/tickets",
-        {
-          subject: payload.subject.trim(),
-          message: payload.message.trim(),
-          category: payload.category,
-          priority: payload.priority || "medium",
-        },
+      const dtoPayload = fromCreateSupportTicket(payload);
+      const response = await apiClient.post<SupportTicketResponseDto>(
+        "/learner/tickets",
+        dtoPayload,
         token,
         { skipSessionExpired: true }
       );
 
       return {
         success: true,
-        data: response,
+        data: toSupportTicketResponse(response),
       };
     } catch (err: unknown) {
       const msg =
@@ -79,5 +65,5 @@ export const supportApi = {
 
 // Legacy callback export for backwards compatibility
 export async function sendCallback(body: CallbackForm): Promise<boolean> {
-  return apiClient.post("/callback", body);
+  return apiClient.post("/callback", fromCallbackForm(body));
 }
