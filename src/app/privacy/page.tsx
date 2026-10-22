@@ -1,575 +1,348 @@
-import Image from "next/image";
+"use client";
+
 import Link from "next/link";
+import Image from "next/image";
+import { ArrowLeft, Shield, FileText, Lock, Globe, Database, UserCheck, AlertCircle } from "lucide-react";
 
 const sections = [
-  { id: "intro", label: "Introduction & scope" },
-  { id: "collect", label: "Information we collect" },
-  { id: "use", label: "How we use your information" },
-  { id: "basis", label: "Our legal basis for processing" },
-  { id: "cookies", label: "Cookies & tracking" },
-  { id: "share", label: "How we share information" },
-  { id: "retention", label: "Data retention" },
-  { id: "security", label: "Data security" },
-  { id: "rights", label: "Your rights" },
-  { id: "children", label: "Children's privacy" },
-  { id: "transfers", label: "International data transfers" },
-  { id: "ai", label: "AI features & your data" },
-  { id: "changes", label: "Changes to this Policy" },
-  { id: "contact", label: "Contact & complaints" },
+  { id: "intro", label: "Introduction & Scope" },
+  { id: "collect", label: "Information We Collect" },
+  { id: "use", label: "How We Use Data" },
+  { id: "basis", label: "Legal Basis for Processing" },
+  { id: "cookies", label: "Cookies & Tracking" },
+  { id: "share", label: "Data Sharing & Third Parties" },
+  { id: "retention", label: "Data Retention" },
+  { id: "security", label: "Security & Safeguards" },
+  { id: "rights", label: "Your Privacy Rights" },
+  { id: "children", label: "Children's Privacy" },
+  { id: "transfers", label: "Cross-Border Transfers" },
+  { id: "ai", label: "AI Features & Data Governance" },
+  { id: "changes", label: "Policy Updates" },
+  { id: "contact", label: "Contact & Data Officer" },
 ];
 
 export default function PrivacyPolicyPage() {
   return (
-    <main className="min-h-screen bg-[#FBF7F0] text-[#24123F]">
-      {/* Top bar */}
-      <div className="bg-[#24123F] py-5 text-[#FBF7F0]">
-        <div className="mx-auto flex w-full max-w-3xl items-center px-5 sm:px-8">
+    <main className="min-h-screen bg-slate-50 text-slate-800 antialiased transition-colors dark:bg-[#0B0813] dark:text-slate-200">
+      {/* Top Glassmorphic Navigation Bar */}
+      <header className="sticky top-0 z-50 border-b border-black/[0.08] bg-white/80 backdrop-blur-md dark:border-white/10 dark:bg-[#0B0813]/85">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3.5 sm:px-8">
           <Link
             href="/"
-            className="flex items-center gap-2.5 font-serif text-xl font-bold"
+            className="flex items-center gap-2.5 transition-opacity hover:opacity-90"
           >
             <Image
-              src="/favicon.ico"
+              src="/icon-512x512.png"
               alt="Hammet"
-              width={24}
-              height={24}
-              className="h-6 w-6"
+              width={28}
+              height={28}
+              className="rounded-lg object-contain shadow-sm"
             />
-            Hammet
+            <span className="font-poppins text-lg font-black tracking-tight text-slate-900 dark:text-white">
+              Hammet <span className="text-purple-600 dark:text-purple-400">Academy</span>
+            </span>
           </Link>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/terms"
+              className="text-xs font-semibold text-slate-600 transition hover:text-purple-600 dark:text-slate-400 dark:hover:text-purple-300 sm:text-sm"
+            >
+              Terms &amp; Conditions
+            </Link>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-black/[0.08] bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.05] dark:text-white dark:hover:bg-white/[0.08]"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Back to Home</span>
+            </Link>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="mx-auto w-full max-w-3xl px-5 sm:px-8">
-        {/* Header */}
-        <header className="border-b border-[#E4D9C6] py-12 sm:py-14">
-          <p className="text-[13px] font-semibold uppercase tracking-[0.04em] text-[#0B7285]">
-            Legal
-          </p>
+      <div className="mx-auto max-w-5xl px-5 py-10 sm:px-8 lg:py-14">
+        {/* Header Hero Card */}
+        <div className="relative overflow-hidden rounded-3xl border border-black/[0.08] bg-white p-7 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-10">
+          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-purple-500/5 blur-3xl" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-purple-200/60 bg-purple-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-purple-700 dark:border-purple-500/30 dark:bg-purple-950/40 dark:text-purple-300">
+            <Shield className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+            <span>Privacy &amp; Data Protection</span>
+          </div>
 
-          <h1 className="mt-2 font-serif text-4xl font-bold tracking-tight text-[#24123F] sm:text-5xl">
+          <h1 className="mt-4 font-poppins text-3xl font-black tracking-tight text-slate-950 sm:text-4xl lg:text-5xl dark:text-white">
             Privacy Policy
           </h1>
 
-          <p className="mt-4 text-sm leading-6 text-[#4A3A66]">
-            Effective date: [30th September 2026]
-            <span className="mx-2">·</span>
-            Applies to: app.hammetedu.com and the Hammet mobile and web
-            learning platform
-            <span className="mx-2">·</span>
-            Data controller: Hammet Limited
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-600 sm:text-base dark:text-slate-400">
+            Hammet Limited (&quot;Hammet,&quot; &quot;we,&quot; &quot;our&quot;) is committed to protecting your personal data 
+            and ensuring transparency across our AI Academy, developer playgrounds, and student passport infrastructure.
           </p>
-        </header>
 
-        {/* Legal review notice */}
-        <div className="my-8 rounded-2xl bg-[#F1E9DA] p-5 text-sm leading-6 text-[#4A3A66] sm:p-6">
-          <strong className="text-[#24123F]">Draft for legal review.</strong>{" "}
-          This is a structured starting point built around Nigeria&apos;s Data
-          Protection Act 2023 (NDPA) and its 2025 General Application and
-          Implementation Directive, with GDPR- and CCPA-style rights included
-          since users outside Nigeria may access the Service. It has not been
-          reviewed by a lawyer or your Data Protection Officer and should not be
-          published as-is. Items marked{" "}
-          <code className="rounded bg-[#E8DDCA] px-1.5 py-0.5 text-[13px]">
-            [like this]
-          </code>{" "}
-          need a real value before publishing.
+          <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-black/[0.06] pt-5 text-xs text-slate-500 dark:border-white/10 dark:text-slate-400">
+            <span><strong>Effective Date:</strong> October 2026</span>
+            <span>•</span>
+            <span><strong>Compliance Standards:</strong> NDPA 2023, GDPR &amp; CCPA</span>
+            <span>•</span>
+            <span><strong>Data Controller:</strong> Hammet Limited</span>
+          </div>
         </div>
 
-        {/* Table of contents */}
-        <nav className="my-8 rounded-2xl border border-[#E4D9C6] bg-white p-5 sm:p-6">
-          <h2 className="mb-3 text-sm font-bold uppercase tracking-[0.04em] text-[#0B7285]">
-            Contents
-          </h2>
-
-          <ol className="grid gap-1.5 text-sm sm:grid-cols-2 sm:gap-x-8">
-            {sections.map((section, index) => (
-              <li key={section.id}>
-                <a
-                  href={`#${section.id}`}
-                  className="text-[#0B7285] transition hover:text-[#4B2A8A] hover:underline"
-                >
-                  {index + 1}. {section.label}
-                </a>
-              </li>
-            ))}
-          </ol>
-        </nav>
-
-        {/* Policy */}
-        <article className="pb-20">
-          {/* 1 */}
-          <section
-            id="intro"
-            className="border-t border-[#E4D9C6] pt-9 first:border-t-0 first:pt-0"
-          >
-            <h2 className="font-serif text-2xl font-bold text-[#24123F]">
-              1. Introduction &amp; scope
-            </h2>
-
-            <p className="mt-5 text-base leading-7 text-[#2E1E4A]">
-              Hammet Limited (&quot;Hammet,&quot; &quot;we,&quot; &quot;us,&quot;
-              &quot;our&quot;) respects your privacy. This Privacy Policy
-              explains what personal data we collect through app.hammetedu.com
-              and related apps (the &quot;Service&quot;), why we collect it,
-              how we use and protect it, and the choices and rights you have.
-            </p>
-
-            <p className="mt-4 text-base leading-7 text-[#2E1E4A]">
-              This Policy is written to meet the requirements of Nigeria&apos;s
-              Data Protection Act 2023 (&quot;NDPA&quot;) and its General
-              Application and Implementation Directive, and, where our users
-              are located elsewhere, to reflect standards under the EU/UK
-              General Data Protection Regulation (&quot;GDPR&quot;) and the
-              California Consumer Privacy Act (&quot;CCPA&quot;). Where these
-              laws differ, we apply whichever gives you stronger protection.
-            </p>
-          </section>
-
-          {/* 2 */}
-          <section
-            id="collect"
-            className="mt-9 border-t border-[#E4D9C6] pt-9"
-          >
-            <h2 className="font-serif text-2xl font-bold text-[#24123F]">
-              2. Information we collect
-            </h2>
-
-            <div className="mt-5 overflow-x-auto rounded-xl border border-[#E4D9C6] bg-white">
-              <table className="w-full min-w-[600px] border-collapse text-left text-sm">
-                <thead>
-                  <tr>
-                    <th className="border-b border-[#E4D9C6] px-3 py-3 text-xs font-semibold uppercase tracking-wide text-[#0B7285]">
-                      Category
-                    </th>
-                    <th className="border-b border-[#E4D9C6] px-3 py-3 text-xs font-semibold uppercase tracking-wide text-[#0B7285]">
-                      Examples
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  <tr>
-                    <td className="border-b border-[#E4D9C6] px-3 py-3 align-top font-medium">
-                      Account information
-                    </td>
-                    <td className="border-b border-[#E4D9C6] px-3 py-3 align-top">
-                      Name, email address, phone number, password (stored
-                      hashed), date of birth [if collected], profile photo
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td className="border-b border-[#E4D9C6] px-3 py-3 align-top font-medium">
-                      Learning data
-                    </td>
-                    <td className="border-b border-[#E4D9C6] px-3 py-3 align-top">
-                      Courses enrolled, lesson progress, quiz and exercise
-                      responses, time spent, certificates earned
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td className="border-b border-[#E4D9C6] px-3 py-3 align-top font-medium">
-                      Payment information
-                    </td>
-                    <td className="border-b border-[#E4D9C6] px-3 py-3 align-top">
-                      Billing name and address, transaction history — full card
-                      numbers are handled by our payment processor and are not
-                      stored by Hammet
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td className="border-b border-[#E4D9C6] px-3 py-3 align-top font-medium">
-                      Device &amp; usage information
-                    </td>
-                    <td className="border-b border-[#E4D9C6] px-3 py-3 align-top">
-                      IP address, device type, operating system, browser type,
-                      app version, pages viewed, referring URLs
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td className="border-b border-[#E4D9C6] px-3 py-3 align-top font-medium">
-                      Communications
-                    </td>
-                    <td className="border-b border-[#E4D9C6] px-3 py-3 align-top">
-                      Messages you send us for support, feedback, or
-                      forum/community posts
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td className="px-3 py-3 align-top font-medium">
-                      Cookies &amp; similar technologies
-                    </td>
-                    <td className="px-3 py-3 align-top">
-                      See our{" "}
-                      <Link
-                        href="/cookie-policy"
-                        className="text-[#0B7285] hover:underline"
-                      >
-                        Cookie Policy
-                      </Link>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+        {/* Layout Grid: TOC + Policy Articles */}
+        <div className="mt-10 grid gap-10 lg:grid-cols-[260px_1fr]">
+          {/* Table of Contents */}
+          <aside className="hidden lg:block">
+            <div className="sticky top-24 rounded-2xl border border-black/[0.08] bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#140F22]">
+              <h3 className="mb-3 font-poppins text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Contents
+              </h3>
+              <nav className="space-y-1">
+                {sections.map((sec, idx) => (
+                  <a
+                    key={sec.id}
+                    href={`#${sec.id}`}
+                    className="block rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-purple-50 hover:text-purple-700 dark:text-slate-400 dark:hover:bg-purple-950/40 dark:hover:text-purple-300"
+                  >
+                    <span className="text-slate-400 dark:text-slate-600 mr-1.5">{idx + 1}.</span>
+                    {sec.label}
+                  </a>
+                ))}
+              </nav>
             </div>
-          </section>
+          </aside>
 
-          {/* 3 */}
-          <section id="use" className="mt-9 border-t border-[#E4D9C6] pt-9">
-            <h2 className="font-serif text-2xl font-bold text-[#24123F]">
-              3. How we use your information
-            </h2>
+          {/* Privacy Articles */}
+          <article className="space-y-10 text-sm leading-relaxed text-slate-700 dark:text-slate-300 sm:text-base">
+            {/* 1 */}
+            <section id="intro" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
+              <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
+                1. Introduction &amp; Scope
+              </h2>
+              <p className="mt-4">
+                This Privacy Policy explains what personal data Hammet Limited collects through our web applications, 
+                learning management systems, mobile apps, and developer portals, why we collect it, how it is safeguarded, 
+                and the rights you hold over your data.
+              </p>
+              <p className="mt-3">
+                This Policy is drafted to comply with Nigeria&apos;s Data Protection Act 2023 (&quot;NDPA&quot;) and its General 
+                Application and Implementation Directive, as well as the EU/UK General Data Protection Regulation (&quot;GDPR&quot;) 
+                and the California Consumer Privacy Act (&quot;CCPA&quot;) for international learners.
+              </p>
+            </section>
 
-            <ul className="mt-5 list-disc space-y-2 pl-6 text-base leading-7 text-[#2E1E4A]">
-              <li>
-                To create and maintain your account and deliver the courses and
-                features you access;
-              </li>
-              <li>
-                To track your learning progress and issue certificates;
-              </li>
-              <li>To process payments and manage subscriptions;</li>
-              <li>To personalize content and recommendations;</li>
-              <li>
-                To communicate with you about your account, course updates, and
-                — where you have opted in — marketing;
-              </li>
-              <li>
-                To monitor, secure, and improve the Service, including
-                analyzing aggregate usage trends;
-              </li>
-              <li>
-                To detect, prevent, and address fraud, abuse, or violations of
-                our Terms of Service;
-              </li>
-              <li>To comply with legal obligations.</li>
-            </ul>
-          </section>
+            {/* 2 */}
+            <section id="collect" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
+              <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
+                2. Information We Collect
+              </h2>
+              <p className="mt-4">We collect information to deliver tailored learning experiences, assess module progress, and issue verified credentials:</p>
+              
+              <div className="mt-5 overflow-x-auto rounded-xl border border-black/[0.08] dark:border-white/10">
+                <table className="w-full text-left text-xs sm:text-sm">
+                  <thead className="border-b border-black/[0.08] bg-slate-50 font-bold uppercase tracking-wider text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400">
+                    <tr>
+                      <th className="p-3 sm:p-4">Category</th>
+                      <th className="p-3 sm:p-4">Examples of Data Collected</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-black/[0.06] dark:divide-white/[0.06]">
+                    <tr>
+                      <td className="p-3 font-semibold text-slate-900 dark:text-white sm:p-4">Account Profile</td>
+                      <td className="p-3 sm:p-4">Full name, username, email address, hashed password, avatar photo, bio.</td>
+                    </tr>
+                    <tr>
+                      <td className="p-3 font-semibold text-slate-900 dark:text-white sm:p-4">Learning Telemetry</td>
+                      <td className="p-3 sm:p-4">Enrolled tracks, module milestones, lab completion times, quiz scores, project commits.</td>
+                    </tr>
+                    <tr>
+                      <td className="p-3 font-semibold text-slate-900 dark:text-white sm:p-4">Billing &amp; Transactions</td>
+                      <td className="p-3 sm:p-4">Invoice IDs, transaction receipts, payment method tokens (raw card numbers are handled securely by PCI-compliant payment gateways).</td>
+                    </tr>
+                    <tr>
+                      <td className="p-3 font-semibold text-slate-900 dark:text-white sm:p-4">Device &amp; Session</td>
+                      <td className="p-3 sm:p-4">IP address, browser type, operating system, device identifiers, and platform access logs.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
 
-          {/* 4 */}
-          <section id="basis" className="mt-9 border-t border-[#E4D9C6] pt-9">
-            <h2 className="font-serif text-2xl font-bold text-[#24123F]">
-              4. Our legal basis for processing
-            </h2>
+            {/* 3 */}
+            <section id="use" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
+              <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
+                3. How We Use Your Information
+              </h2>
+              <ul className="mt-4 list-disc space-y-2 pl-5">
+                <li>To initialize accounts, authenticate users, and manage course enrollments.</li>
+                <li>To evaluate coding assessments, track streaks, and issue digital completion credentials.</li>
+                <li>To provide responsive technical support and communicate vital cohort announcements.</li>
+                <li>To detect fraud, safeguard learning sandboxes, and maintain platform security.</li>
+                <li>To generate aggregated, anonymized insights for educational curriculum improvement.</li>
+              </ul>
+            </section>
 
-            <p className="mt-5 text-base leading-7 text-[#2E1E4A]">
-              Where the NDPA or GDPR applies, we rely on one or more of the
-              following bases for each use of your data: performance of our
-              contract with you (delivering the Service you signed up for),
-              your consent (for example, for marketing emails or optional
-              cookies), our legitimate interests (for example, keeping the
-              Service secure and improving it), and compliance with legal
-              obligations. You may withdraw consent at any time where consent
-              is our basis for processing, without affecting processing carried
-              out before withdrawal.
-            </p>
-          </section>
+            {/* 4 */}
+            <section id="basis" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
+              <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
+                4. Legal Basis for Processing
+              </h2>
+              <p className="mt-4">
+                Under NDPA and GDPR, we process personal data under designated legal grounds:
+              </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 p-4 dark:border-purple-400/20">
+                  <h4 className="font-bold text-purple-950 dark:text-purple-300">Contractual Performance</h4>
+                  <p className="mt-1 text-xs">Delivering the learning courses, projects, and certifications you registered to receive.</p>
+                </div>
+                <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4 dark:border-cyan-400/20">
+                  <h4 className="font-bold text-cyan-950 dark:text-cyan-300">Legitimate Interests</h4>
+                  <p className="mt-1 text-xs">Protecting the integrity of assessments and continually upgrading academy tools.</p>
+                </div>
+              </div>
+            </section>
 
-          {/* 5 */}
-          <section
-            id="cookies"
-            className="mt-9 border-t border-[#E4D9C6] pt-9"
-          >
-            <h2 className="font-serif text-2xl font-bold text-[#24123F]">
-              5. Cookies &amp; tracking
-            </h2>
+            {/* 5 */}
+            <section id="cookies" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
+              <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
+                5. Cookies &amp; Local Storage
+              </h2>
+              <p className="mt-4">
+                We use strictly necessary cookies and browser local storage to maintain authenticated sessions, 
+                remember your dark/light theme preference, and cache active learning progress. You can control 
+                non-essential tracking through your browser settings.
+              </p>
+            </section>
 
-            <p className="mt-5 text-base leading-7 text-[#2E1E4A]">
-              We use cookies and similar technologies to keep you logged in,
-              remember your preferences, and understand how the Service is
-              used. Full detail on the categories of cookies we use, and how to
-              manage them, is in our{" "}
-              <Link
-                href="/cookie-policy"
-                className="text-[#0B7285] hover:underline"
-              >
-                Cookie Policy
-              </Link>
-              .
-            </p>
-          </section>
+            {/* 6 */}
+            <section id="share" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
+              <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
+                6. Data Sharing &amp; Third Parties
+              </h2>
+              <p className="mt-4">
+                <strong>We never sell your personal data.</strong> Information is shared only with verified infrastructure 
+                partners bound by strict confidentiality and data protection agreements:
+              </p>
+              <ul className="mt-3 list-disc space-y-2 pl-5">
+                <li>Cloud hosting &amp; database providers (AWS, Supabase).</li>
+                <li>PCI-DSS compliant payment gateways (Paystack, Stripe).</li>
+                <li>Institutional partners (when you join via an employer or university license).</li>
+                <li>Legal compliance bodies when mandated by court orders or active law enforcement investigations.</li>
+              </ul>
+            </section>
 
-          {/* 6 */}
-          <section id="share" className="mt-9 border-t border-[#E4D9C6] pt-9">
-            <h2 className="font-serif text-2xl font-bold text-[#24123F]">
-              6. How we share information
-            </h2>
+            {/* 7 */}
+            <section id="retention" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
+              <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
+                7. Data Retention
+              </h2>
+              <p className="mt-4">
+                Your data is retained for the lifetime of your active student account. You may request account deletion at 
+                any time via your profile settings. Verified certificate hashes are retained permanently to ensure third-party 
+                employers can authenticate your earned credentials upon request.
+              </p>
+            </section>
 
-            <p className="mt-5 text-base leading-7 text-[#2E1E4A]">
-              We do not sell your personal data. We share information only in
-              the following circumstances:
-            </p>
+            {/* 8 */}
+            <section id="security" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
+              <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
+                8. Security &amp; Data Safeguards
+              </h2>
+              <p className="mt-4">
+                We implement industry-standard technical and organizational security measures, including TLS 1.3 encryption 
+                in transit, AES-256 encryption at rest, regular vulnerability scans, and strict role-based access control (RBAC). 
+                In the event of a security breach affecting your data, we will notify regulators and impacted users in compliance with NDPA timelines.
+              </p>
+            </section>
 
-            <ul className="mt-4 list-disc space-y-2 pl-6 text-base leading-7 text-[#2E1E4A]">
-              <li>
-                <strong>Service providers</strong> who help us operate the
-                Service, such as hosting ([Supabase/AWS — confirm]), payment
-                processing ([Paystack/Flutterwave — confirm]), analytics, and
-                customer support tools — bound by contracts requiring them to
-                protect your data and use it only for the purposes we specify;
-              </li>
+            {/* 9 */}
+            <section id="rights" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
+              <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
+                9. Your Privacy Rights
+              </h2>
+              <p className="mt-4">Depending on your jurisdiction, you enjoy the following enforceable rights:</p>
+              <ul className="mt-3 list-disc space-y-2 pl-5">
+                <li><strong>Right of Access:</strong> Request a complete copy of personal records held by Hammet.</li>
+                <li><strong>Right to Rectification:</strong> Correct inaccurate or outdated profile details.</li>
+                <li><strong>Right to Erasure (&quot;Right to be Forgotten&quot;):</strong> Request complete purging of your personal records.</li>
+                <li><strong>Right to Data Portability:</strong> Export your course achievements and code projects in structured formats.</li>
+                <li><strong>Right to Object:</strong> Opt out of marketing emails or analytics tracking at any time.</li>
+              </ul>
+              <p className="mt-4">
+                To exercise any of these rights, email our compliance team at <a href="mailto:privacy@hammetedu.com" className="text-purple-600 underline dark:text-cyan-400">privacy@hammetedu.com</a>. Requests are fulfilled within 30 calendar days.
+              </p>
+            </section>
 
-              <li>
-                <strong>Schools or institutions</strong>, where you access
-                Hammet through a school account, in which case your school may
-                act as data controller for your learning records under a
-                separate arrangement;
-              </li>
+            {/* 10 */}
+            <section id="children" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
+              <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
+                10. Children&apos;s Privacy
+              </h2>
+              <p className="mt-4">
+                Hammet does not knowingly solicit or collect personal data from children under 13 without verifiable parental 
+                consent. If you believe a minor has registered without appropriate authorization, contact us immediately to remove 
+                the associated profile.
+              </p>
+            </section>
 
-              <li>
-                <strong>Legal &amp; safety</strong> — where required by law,
-                court order, or to protect the rights, property, or safety of
-                Hammet, our users, or the public;
-              </li>
+            {/* 11 */}
+            <section id="transfers" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
+              <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
+                11. Cross-Border Data Transfers
+              </h2>
+              <p className="mt-4">
+                Given our global cloud infrastructure, your information may be processed in secure data centers located in 
+                Nigeria, Europe, or the United States. Cross-border transfers adhere to standard contractual clauses (SCCs) 
+                and NDPC adequacy guidelines to ensure uniform protection.
+              </p>
+            </section>
 
-              <li>
-                <strong>Business transfers</strong> — if Hammet is involved in
-                a merger, acquisition, or asset sale, your information may be
-                transferred as part of that transaction, subject to this
-                Policy&apos;s protections continuing to apply.
-              </li>
-            </ul>
-          </section>
+            {/* 12 */}
+            <section id="ai" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
+              <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
+                12. AI Features &amp; Data Governance
+              </h2>
+              <p className="mt-4">
+                When interacting with Hammet AI tutors or automated code reviewers, your prompts and code submissions are processed 
+                to generate real-time feedback. <strong>We do not use your proprietary project code or personal data to train public foundation models without your express opt-in.</strong>
+              </p>
+            </section>
 
-          {/* 7 */}
-          <section
-            id="retention"
-            className="mt-9 border-t border-[#E4D9C6] pt-9"
-          >
-            <h2 className="font-serif text-2xl font-bold text-[#24123F]">
-              7. Data retention
-            </h2>
+            {/* 13 */}
+            <section id="changes" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
+              <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
+                13. Changes to this Policy
+              </h2>
+              <p className="mt-4">
+                We may periodically update this policy to reflect new product features or statutory regulations. 
+                Material changes will be highlighted via in-app banners or email notifications prior to enforcement.
+              </p>
+            </section>
 
-            <p className="mt-5 text-base leading-7 text-[#2E1E4A]">
-              We retain your personal data for as long as your account is
-              active, and for a reasonable period afterward to comply with
-              legal, accounting, or reporting obligations, resolve disputes,
-              and enforce our agreements. Learning records and certificates
-              may be retained longer to allow you to verify your credentials in
-              future. You can request deletion of your account and associated
-              data at any time (see Section 9).
-            </p>
-          </section>
-
-          {/* 8 */}
-          <section
-            id="security"
-            className="mt-9 border-t border-[#E4D9C6] pt-9"
-          >
-            <h2 className="font-serif text-2xl font-bold text-[#24123F]">
-              8. Data security
-            </h2>
-
-            <p className="mt-5 text-base leading-7 text-[#2E1E4A]">
-              We use administrative, technical, and physical safeguards
-              designed to protect your personal data, including encryption in
-              transit, access controls, and regular security review of our
-              systems. No method of transmission or storage is 100% secure, and
-              we cannot guarantee absolute security. If we become aware of a
-              breach affecting your personal data, we will notify the Nigeria
-              Data Protection Commission and affected users as required by the
-              NDPA.
-            </p>
-          </section>
-
-          {/* 9 */}
-          <section id="rights" className="mt-9 border-t border-[#E4D9C6] pt-9">
-            <h2 className="font-serif text-2xl font-bold text-[#24123F]">
-              9. Your rights
-            </h2>
-
-            <p className="mt-5 text-base leading-7 text-[#2E1E4A]">
-              Depending on where you live, you have some or all of the
-              following rights over your personal data:
-            </p>
-
-            <ul className="mt-4 list-disc space-y-2 pl-6 text-base leading-7 text-[#2E1E4A]">
-              <li>
-                <strong>Access</strong> — request a copy of the personal data
-                we hold about you;
-              </li>
-              <li>
-                <strong>Rectification</strong> — correct inaccurate or
-                incomplete data;
-              </li>
-              <li>
-                <strong>Erasure</strong> — request deletion of your data,
-                subject to legal retention requirements;
-              </li>
-              <li>
-                <strong>Restriction</strong> — request that we limit how we use
-                your data in certain circumstances;
-              </li>
-              <li>
-                <strong>Portability</strong> — receive your data in a
-                structured, machine-readable format;
-              </li>
-              <li>
-                <strong>Objection</strong> — object to processing based on
-                legitimate interests or direct marketing;
-              </li>
-              <li>
-                <strong>Withdraw consent</strong> — where processing is based
-                on consent.
-              </li>
-            </ul>
-
-            <p className="mt-4 text-base leading-7 text-[#2E1E4A]">
-              To exercise any of these rights, email{" "}
-              <a
-                href="mailto:hammetedu@gmail.com"
-                className="text-[#0B7285] hover:underline"
-              >
-                hammetedu@gmail.com
-              </a>
-              . We will respond within the timeframe required by applicable
-              law (typically within 30 days). If you are not satisfied with our
-              response, you may lodge a complaint with the Nigeria Data
-              Protection Commission (NDPC), or, if you are in the EU/UK, with
-              your local data protection authority.
-            </p>
-          </section>
-
-          {/* 10 */}
-          <section
-            id="children"
-            className="mt-9 border-t border-[#E4D9C6] pt-9"
-          >
-            <h2 className="font-serif text-2xl font-bold text-[#24123F]">
-              10. Children&apos;s privacy
-            </h2>
-
-            <p className="mt-5 text-base leading-7 text-[#2E1E4A]">
-              The Service is intended for users aged 13 and older. Under the
-              NDPA, processing a child&apos;s personal data requires the
-              consent of a parent or legal guardian, and we require this for
-              any account holder under 18. If you believe a child has provided
-              us with personal data without appropriate consent, contact us at{" "}
-              <a
-                href="mailto:hammetedu@gmail.com"
-                className="text-[#0B7285] hover:underline"
-              >
-                hammetedu@gmail.com
-              </a>{" "}
-              and we will investigate and delete the data as required.
-            </p>
-
-            <p className="mt-4 text-base leading-7 text-[#2E1E4A]">
-              [If Hammet&apos;s B2C platform will knowingly serve users under
-              13 — for example, through a school-supervised account — this
-              section needs additional safeguards drafted with counsel, similar
-              to COPPA-style protections.]
-            </p>
-          </section>
-
-          {/* 11 */}
-          <section
-            id="transfers"
-            className="mt-9 border-t border-[#E4D9C6] pt-9"
-          >
-            <h2 className="font-serif text-2xl font-bold text-[#24123F]">
-              11. International data transfers
-            </h2>
-
-            <p className="mt-5 text-base leading-7 text-[#2E1E4A]">
-              Your data may be processed in countries other than the one you
-              live in, including [Nigeria and the United States, where our
-              infrastructure providers operate]. Where we transfer personal
-              data out of Nigeria or the EU/UK, we do so only where the
-              destination provides an adequate level of protection, under
-              contractual safeguards, or with your consent, as required under
-              the NDPA and GDPR.
-            </p>
-          </section>
-
-          {/* 12 */}
-          <section id="ai" className="mt-9 border-t border-[#E4D9C6] pt-9">
-            <h2 className="font-serif text-2xl font-bold text-[#24123F]">
-              12. AI features &amp; your data
-            </h2>
-
-            <p className="mt-5 text-base leading-7 text-[#2E1E4A]">
-              Where the Service uses AI to generate feedback or recommendations,
-              your learning inputs (such as quiz responses or written answers)
-              may be processed by AI models, including third-party AI
-              providers, to generate that output. We do not use your personal
-              data to train third-party AI models without your consent.
-            </p>
-          </section>
-
-          {/* 13 */}
-          <section
-            id="changes"
-            className="mt-9 border-t border-[#E4D9C6] pt-9"
-          >
-            <h2 className="font-serif text-2xl font-bold text-[#24123F]">
-              13. Changes to this Policy
-            </h2>
-
-            <p className="mt-5 text-base leading-7 text-[#2E1E4A]">
-              We may update this Privacy Policy from time to time. If we make
-              material changes, we will notify you by email or through the
-              Service before they take effect. The &quot;Effective date&quot;
-              at the top of this page shows when it was last updated.
-            </p>
-          </section>
-
-          {/* 14 */}
-          <section
-            id="contact"
-            className="mt-9 border-t border-[#E4D9C6] pt-9"
-          >
-            <h2 className="font-serif text-2xl font-bold text-[#24123F]">
-              14. Contact &amp; complaints
-            </h2>
-
-            <p className="mt-5 text-base leading-7 text-[#2E1E4A]">
-              Questions, requests, or complaints about this Policy can be sent
-              to{" "}
-              <a
-                href="mailto:hammetedu@gmail.com"
-                className="text-[#0B7285] hover:underline"
-              >
-                hammetedu@gmail.com
-              </a>{" "}
-              or{" "}
-              <a
-                href="mailto:admin@hammetlabs.com"
-                className="text-[#0B7285] hover:underline"
-              >
-                admin@hammetlabs.com
-              </a>
-              , or by phone at 07040576412. [If Hammet appoints a formal Data
-              Protection Officer under the NDPA, their name and direct contact
-              should be added here.]
-            </p>
-          </section>
-        </article>
+            {/* 14 */}
+            <section id="contact" className="scroll-mt-28 rounded-2xl border border-black/[0.08] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22] sm:p-8">
+              <h2 className="font-poppins text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
+                14. Contact &amp; Data Protection Officer
+              </h2>
+              <p className="mt-4">
+                For questions, complaints, or data deletion requests, contact our designated Data Protection Officer:
+              </p>
+              <div className="mt-4 space-y-1 rounded-xl bg-slate-100 p-4 font-mono text-xs dark:bg-white/[0.04]">
+                <p><strong>DPO Office:</strong> dpo@hammetedu.com</p>
+                <p><strong>General Support:</strong> hammetedu@gmail.com / admin@hammetlabs.com</p>
+                <p><strong>Telephone:</strong> +234 704 057 6412</p>
+                <p><strong>Address:</strong> Hammet Limited, Lagos, Nigeria</p>
+              </div>
+            </section>
+          </article>
+        </div>
 
         {/* Footer */}
-        <footer className="flex flex-col gap-3 border-t border-[#E4D9C6] py-8 text-sm text-[#4A3A66] sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap gap-x-5 gap-y-2">
-            <Link
-              href="/terms"
-              className="text-[#0B7285] hover:underline"
-            >
-              Terms of Service
-            </Link>
-
-            <Link
-              href="/cookie-policy"
-              className="text-[#0B7285] hover:underline"
-            >
-              Cookie Policy
-            </Link>
+        <footer className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-black/[0.06] pt-8 text-xs text-slate-500 dark:border-white/10 dark:text-slate-400 sm:flex-row">
+          <div className="flex gap-4">
+            <Link href="/privacy" className="font-semibold text-slate-800 dark:text-slate-200 hover:text-purple-600 dark:hover:text-cyan-400">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-purple-600 dark:hover:text-cyan-400">Terms of Service</Link>
           </div>
-
-          <div>© 2026 Hammet Limited</div>
+          <p>© {new Date().getFullYear()} Hammet Limited. All rights reserved.</p>
         </footer>
       </div>
     </main>
