@@ -10,7 +10,9 @@ export type AiSchoolDto = {
   name: string;
   description: string;
   price: number;
-  published?: boolean;
+  is_entitled: boolean;
+  is_enrolled: boolean;
+  has_finished: boolean;
 };
 
 export type AiSchoolsResponseDto = {
@@ -29,7 +31,11 @@ export type AiSchoolCourseDto = {
   slug: string;
   description: string;
   ai_school_id: string;
+  position: number;
   price: number;
+  is_entitled: boolean;
+  is_enrolled: boolean;
+  has_finished: boolean;
 };
 
 export type AiSchoolCoursesResponseDto = {

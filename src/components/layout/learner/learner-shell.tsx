@@ -1,11 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
+import { useLenis } from "lenis/react";
 import {
+  Timer,
+  Sparkles,
+  ShieldCheck,
+  CheckCircle2,
+  ArrowRight,
   BookOpen,
   ChevronLeft,
   ChevronRight,
@@ -13,15 +19,25 @@ import {
   Home,
   LogOut,
   Menu,
-  Settings,
-  UserRound,
   X,
-  FileBadge,
-  CreditCard,
+  Sun,
+  Moon,
+  Crown,
+  Briefcase,
+  Settings,
+  Bell,
+  GraduationCap,
+  MessageSquare,
+  LifeBuoy,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-context";
 import { useTheme } from "@/lib/use-theme";
+//import { useCart } from "@/lib/store/use-cart";
+import { useLearnerStore } from "@/lib/store/use-learner-store";
+import { CartDropdown } from "./cart-dropdown";
+import { ProfileDropdown } from "./profile-dropdown";
+import { ChatWidget } from "./chat-widget";
 
 const navigation = [
   {
@@ -35,23 +51,77 @@ const navigation = [
     icon: BookOpen,
   },
   {
+    label: "Schools",
+    href: "/learner/ai-schools",
+    icon: GraduationCap,
+  },
+  {
     label: "Projects",
     href: "/learner/projects",
     icon: FolderKanban,
   },
-  {
-    label: "Passport",
-    href: "/learner/passport",
-    icon: FileBadge,
-  },
-  {
-    label: "AI Schools",
-    href: "/learner/ai-schools",
-    icon: BookOpen,
-  },
+  // {
+  //   label: "Portfolio",
+  //   href: "/learner/portfolio",
+  //   icon: Briefcase,
+  // },
+  // {
+  //   label: "Hammet Pro",
+  //   href: "/learner/pro",
+  //   icon: Crown,
+  // },
+  // {
+  //   label: "Community Chat",
+  //   href: "/learner/chat",
+  //   icon: MessageSquare,
+  // },
+  // {
+  //   label: "Support Tickets",
+  //   href: "/learner/support",
+  //   icon: LifeBuoy,
+  // },
 ];
 
 const STORAGE_KEY = "hammet-learner-sidebar-collapsed";
+const typingWords = ["LEARN", "BUILD", "CREATE", "GROW"];
+
+function TypewriterWord({ collapsed }: { collapsed: boolean }) {
+  const [text, setText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [loopNum, setLoopNum] = useState(0);
+
+  useEffect(() => {
+    if (collapsed) return;
+    const currentWord = typingWords[loopNum % typingWords.length];
+
+    let timer: NodeJS.Timeout;
+
+    if (!isDeleting) {
+      if (text.length < currentWord.length) {
+        timer = setTimeout(() => {
+          setText(currentWord.substring(0, text.length + 1));
+        }, 80);
+      } else {
+        timer = setTimeout(() => {
+          setIsDeleting(true);
+        }, 1400);
+      }
+    } else {
+      if (text.length > 0) {
+        timer = setTimeout(() => {
+          setText(currentWord.substring(0, text.length - 1));
+        }, 40);
+      } else {
+        setIsDeleting(false);
+        setLoopNum((prev) => prev + 1);
+      }
+    }
+
+    return () => clearTimeout(timer);
+  }, [text, isDeleting, loopNum, collapsed]);
+
+  return <span>{text}</span>;
+}
 
 interface LearnerShellProps {
   children: React.ReactNode;
@@ -62,6 +132,22 @@ export function LearnerShell({ children }: LearnerShellProps) {
   const { user, logout } = useAuth();
   const { theme, toggle } = useTheme();
 
+  //const cartItems = useCart((state) => state.items);
+  const syncAccountState = useLearnerStore((state) => state.syncAccountState);
+  const isPro = useLearnerStore((state) => state.isPro);
+  const [mounted, setMounted] = useState(false);
+
+  // Sync test account vs real user accounts
+  useEffect(() => {
+    syncAccountState(user?.id);
+  }, [user?.id, syncAccountState]);
+
+  // Avoid hydration mismatch for cart icon badge
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
+
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === "undefined") {
       return false;
@@ -71,6 +157,26 @@ export function LearnerShell({ children }: LearnerShellProps) {
   });
 
   const [mobileOpen, setMobileOpen] = useState(false);
+  const lenis = useLenis();
+
+  // Desktop media query tracker for responsive layout synchronization
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 1024px)");
+    setIsDesktop(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
+  // Debounced resize of Lenis after sidebar animation settles (eliminates frame-by-frame DOM reflow)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      lenis?.resize();
+    }, 160);
+    return () => clearTimeout(timer);
+  }, [collapsed, lenis]);
 
   function toggleSidebar() {
     setCollapsed((current) => {
@@ -80,84 +186,138 @@ export function LearnerShell({ children }: LearnerShellProps) {
     });
   }
 
+  const isBlurredSection =
+    pathname === "/learner/chat" ||
+    pathname.startsWith("/learner/chat/") ||
+    pathname === "/learner/portfolio" ||
+    pathname.startsWith("/learner/portfolio/") ||
+    pathname === "/learner/settings" ||
+    pathname.startsWith("/learner/settings/") ||
+    pathname === "/learner/notifications" ||
+    pathname.startsWith("/learner/notifications/") ||
+    pathname === "/learner/pro" ||
+    pathname.startsWith("/learner/pro/");
+
+  const sidebarTransition = {
+    duration: 0.14,
+    ease: "easeOut" as const,
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F3FF] text-slate-950 transition-colors dark:bg-[#0D0A17] dark:text-white">
-      {/* Desktop sidebar */}
-      <aside
-        className={[
-          "fixed inset-y-0 left-0 z-40 hidden border-r border-black/[0.06] bg-white/80 backdrop-blur-xl transition-[width] duration-300 dark:border-white/[0.06] dark:bg-[#120E1D]/90 lg:flex lg:flex-col",
-          collapsed ? "w-[76px]" : "w-[248px]",
-        ].join(" ")}
+      {/* Desktop sidebar with snappy GPU-accelerated Motion animation */}
+      <motion.aside
+        initial={false}
+        animate={{
+          width: collapsed ? 76 : 248,
+        }}
+        transition={sidebarTransition}
+        onAnimationComplete={() => {
+          lenis?.resize();
+        }}
+        className="fixed inset-y-0 left-0 z-50 hidden border-r border-black/[0.06] bg-white dark:border-white/[0.06] dark:bg-[#120E1D] lg:flex lg:flex-col overflow-hidden will-change-[width] transform-gpu"
       >
-        <div
-          className={[
-            "flex h-full flex-col",
-            collapsed ? "items-center px-3" : "px-4",
-          ].join(" ")}
-        >
+        <div className="flex h-full flex-col px-3">
           {/* Brand */}
           <div
             className={[
               "flex h-20 w-full items-center",
-              collapsed ? "justify-center" : "justify-between px-2",
+              collapsed ? "justify-center" : "justify-between px-1",
             ].join(" ")}
           >
             <Link
               href="/learner"
-              className="relative flex items-center font-black tracking-[-0.04em]"
+              className="relative flex items-center font-black tracking-[-0.04em] shrink-0 h-9"
             >
-              {collapsed ? (
-                <Image
-                  src="/icon-512x512.png"
-                  alt="Hammet"
-                  width={130}
-                  height={34}
-                  className="h-8 w-auto mb-4"
-                />
-              ) : (
-                <span className="text-[22px] bg-gradient-to-r from-purple-700 via-violet-600 to-cyan-500 bg-clip-text text-transparent">
-                  Hammet
-                </span>
-              )}
+              <AnimatePresence mode="wait" initial={false}>
+                {collapsed ? (
+                  <motion.div
+                    key="brand-icon"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.12 }}
+                  >
+                    <Image
+                      src="/icon-512x512.png"
+                      alt="Hammet"
+                      width={32}
+                      height={32}
+                      className="h-8 w-8 rounded-xl object-contain mb-3"
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.span
+                    key="brand-text"
+                    initial={{ opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -6 }}
+                    transition={{ duration: 0.12 }}
+                    className="text-[22px] bg-gradient-to-r from-purple-700 via-violet-600 to-cyan-500 bg-clip-text text-transparent font-black"
+                  >
+                    Hammet
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </Link>
 
             {!collapsed && (
-              <button
+              <motion.button
                 type="button"
                 onClick={toggleSidebar}
+                whileHover={{ scale: 1.06 }}
+                whileTap={{ scale: 0.92 }}
                 aria-label="Collapse sidebar"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-white/[0.06] dark:hover:text-white"
+                className="group/toggle flex h-8 w-8 items-center justify-center rounded-xl border border-purple-500/15 bg-purple-50/60 text-slate-500 shadow-sm transition-all duration-200 hover:border-purple-500/40 hover:bg-purple-100/80 hover:text-purple-700 hover:shadow-[0_0_12px_rgba(168,85,247,0.3)] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400 dark:hover:border-purple-400/40 dark:hover:bg-purple-500/15 dark:hover:text-purple-200 dark:hover:shadow-[0_0_14px_rgba(168,85,247,0.35)]"
               >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
+                <ChevronLeft className="h-4 w-4 transition-transform duration-200 group-hover/toggle:-translate-x-0.5" />
+              </motion.button>
             )}
           </div>
 
           {collapsed && (
-            <button
+            <motion.button
               type="button"
               onClick={toggleSidebar}
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.92 }}
               aria-label="Expand sidebar"
-              className="mb-5 flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-white/[0.06] dark:hover:text-white"
+              className="group/toggle mb-4 mx-auto flex h-8 w-8 items-center justify-center rounded-xl border border-purple-500/15 bg-purple-50/60 text-slate-500 shadow-sm transition-all duration-200 hover:border-purple-500/40 hover:bg-purple-100/80 hover:text-purple-700 hover:shadow-[0_0_12px_rgba(168,85,247,0.3)] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400 dark:hover:border-purple-400/40 dark:hover:bg-purple-500/15 dark:hover:text-purple-200 dark:hover:shadow-[0_0_14px_rgba(168,85,247,0.35)]"
             >
-              <ChevronRight className="h-4 w-4" />
-            </button>
+              <ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover/toggle:translate-x-0.5" />
+            </motion.button>
           )}
 
           {/* Primary navigation */}
           <nav className="w-full space-y-1">
-            {!collapsed && (
-              <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-                Learn
-              </p>
-            )}
+            <motion.div
+              animate={{
+                height: collapsed ? 0 : 16,
+                opacity: collapsed ? 0 : 1,
+                marginBottom: collapsed ? 0 : 12,
+              }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="flex items-center px-2 text-[11px] font-black uppercase tracking-[0.22em] text-[#8B5CF6] dark:text-[#A78BFA] select-none overflow-hidden"
+            >
+              <TypewriterWord collapsed={collapsed} />
+              <motion.span
+                animate={{ opacity: [1, 0, 1] }}
+                transition={{
+                  duration: 0.65,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="ml-1 inline-block h-3.5 w-[2.5px] rounded-full bg-[#06B6D4] shadow-[0_0_8px_#06B6D4]"
+              />
+            </motion.div>
 
             {navigation.map((item) => {
               const Icon = item.icon;
               const active =
                 item.href === "/learner"
                   ? pathname === "/learner"
-                  : pathname.startsWith(item.href);
+                  : pathname === item.href ||
+                    pathname.startsWith(item.href + "/");
 
               return (
                 <Link
@@ -165,32 +325,44 @@ export function LearnerShell({ children }: LearnerShellProps) {
                   href={item.href}
                   title={collapsed ? item.label : undefined}
                   className={[
-                    "group relative flex h-11 items-center rounded-xl text-sm font-medium transition",
-                    collapsed
-                      ? "justify-center"
-                      : "gap-3 px-3",
+                    "group relative flex h-11 items-center rounded-xl text-sm font-medium transition-colors duration-150 overflow-hidden select-none",
+                    collapsed ? "justify-center px-0" : "px-3 gap-3",
                     active
-                      ? "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300"
-                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-white",
+                      ? "text-purple-700 font-semibold dark:text-cyan-300"
+                      : "text-slate-600 hover:text-purple-700 dark:text-slate-400 dark:hover:text-purple-300",
                   ].join(" ")}
                 >
                   {active && (
-                    <motion.span
-                      layoutId="learner-active-nav"
-                      className="absolute left-0 h-5 w-0.5 rounded-full bg-purple-600 dark:bg-cyan-400"
-                    />
+                    <span className="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full bg-purple-600 shadow-[0_0_8px_rgba(168,85,247,0.8)] dark:bg-cyan-400" />
                   )}
 
                   <Icon
                     className={[
-                      "h-[18px] w-[18px] shrink-0",
+                      "h-[18px] w-[18px] shrink-0 transition-colors duration-150",
                       active
                         ? "text-purple-600 dark:text-cyan-400"
-                        : "",
+                        : "text-slate-400 group-hover:text-purple-700 dark:text-slate-400 dark:group-hover:text-purple-300",
                     ].join(" ")}
                   />
 
-                  {!collapsed && <span>{item.label}</span>}
+                  <motion.span
+                    animate={{
+                      opacity: collapsed ? 0 : 1,
+                      width: collapsed ? 0 : "auto",
+                    }}
+                    transition={{
+                      duration: 0.12,
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                    className={[
+                      "truncate whitespace-nowrap overflow-hidden transition-colors duration-150",
+                      active
+                        ? "text-purple-700 dark:text-cyan-300 font-semibold"
+                        : "text-slate-600 group-hover:text-purple-700 dark:text-slate-400 dark:group-hover:text-purple-300",
+                    ].join(" ")}
+                  >
+                    {item.label}
+                  </motion.span>
                 </Link>
               );
             })}
@@ -200,143 +372,309 @@ export function LearnerShell({ children }: LearnerShellProps) {
           <div className="flex-1" />
 
           {/* Secondary navigation */}
-          <div className="w-full border-t border-black/[0.06] pt-4 dark:border-white/[0.06]">
+          <div className="w-full border-t border-black/[0.06] pt-3 dark:border-white/[0.06]">
+            {/* Settings commented out while under development
             <Link
               href="/learner/settings"
               title={collapsed ? "Settings" : undefined}
               className={[
-                "flex h-11 items-center rounded-xl text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-white",
-                collapsed ? "justify-center" : "gap-3 px-3",
+                "group flex h-11 items-center rounded-xl text-sm font-medium text-slate-600 transition-colors duration-150 hover:text-purple-700 dark:text-slate-400 dark:hover:text-purple-300 overflow-hidden select-none",
+                collapsed ? "justify-center px-0" : "px-3 gap-3",
               ].join(" ")}
             >
-              <Settings className="h-[18px] w-[18px] shrink-0" />
-              {!collapsed && <span>Settings</span>}
+              <Settings className="h-[18px] w-[18px] shrink-0 text-slate-400 transition-colors duration-150 group-hover:text-purple-700 dark:text-slate-400 dark:group-hover:text-purple-300" />
+              <motion.span
+                animate={{
+                  opacity: collapsed ? 0 : 1,
+                  width: collapsed ? 0 : "auto",
+                }}
+                transition={{
+                  duration: 0.12,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className="truncate whitespace-nowrap overflow-hidden transition-colors duration-150 group-hover:text-purple-700 dark:group-hover:text-purple-300"
+              >
+                Settings
+              </motion.span>
             </Link>
+            */}
 
             <button
               type="button"
               onClick={() => void logout()}
               title={collapsed ? "Sign out" : undefined}
               className={[
-                "mt-1 flex h-11 w-full items-center rounded-xl text-sm font-medium text-slate-500 transition hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400",
-                collapsed ? "justify-center" : "gap-3 px-3",
+                "mt-1 flex h-11 w-full items-center rounded-xl text-sm font-medium text-slate-600 transition-colors duration-150 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 overflow-hidden select-none",
+                collapsed ? "justify-center px-0" : "px-3 gap-3",
               ].join(" ")}
             >
-              <LogOut className="h-[18px] w-[18px] shrink-0" />
-              {!collapsed && <span>Sign out</span>}
+              <LogOut className="h-[18px] w-[18px] shrink-0 text-slate-400 transition-colors duration-150 group-hover:text-red-600 dark:group-hover:text-red-400" />
+              <motion.span
+                animate={{
+                  opacity: collapsed ? 0 : 1,
+                  width: collapsed ? 0 : "auto",
+                }}
+                transition={{
+                  duration: 0.12,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className="truncate whitespace-nowrap overflow-hidden transition-colors duration-150 group-hover:text-red-600 dark:group-hover:text-red-400"
+              >
+                Sign out
+              </motion.span>
             </button>
           </div>
 
           {/* Profile */}
           <div
             className={[
-              "flex w-full items-center border-t border-black/[0.06] py-4 dark:border-white/[0.06]",
-              collapsed ? "justify-center" : "gap-3 px-2",
+              "flex w-full items-center border-t border-black/[0.06] py-3 dark:border-white/[0.06] overflow-hidden",
+              collapsed ? "justify-center px-0" : "px-2 gap-3",
             ].join(" ")}
           >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 text-xs font-bold text-white">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 text-xs font-bold text-white shadow-xs">
               {user?.fullName?.charAt(0)?.toUpperCase() ?? "U"}
             </div>
 
-            {!collapsed && (
-              <div className="min-w-0">
+            <motion.div
+              animate={{
+                opacity: collapsed ? 0 : 1,
+                width: collapsed ? 0 : "auto",
+              }}
+              transition={{
+                duration: 0.12,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              className="min-w-0 flex-1 overflow-hidden"
+            >
+              <div className="flex items-center gap-1.5">
                 <p className="truncate text-sm font-semibold">
                   {user?.fullName ?? "Learner"}
                 </p>
-                <p className="truncate text-xs text-slate-400">
-                  Learner
-                </p>
+                {isPro && (
+                  <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white shadow-sm ring-1 ring-amber-400/30">
+                    <Crown className="h-2.5 w-2.5 fill-white" />
+                    PRO
+                  </span>
+                )}
               </div>
-            )}
+              <p className="truncate text-xs text-slate-400">
+                {isPro ? "Pro Member" : "Learner"}
+              </p>
+            </motion.div>
           </div>
         </div>
-      </aside>
+      </motion.aside>
 
-      {/* Mobile drawer overlay */}
-      {mobileOpen && (
-        <button
-          type="button"
-          aria-label="Close navigation"
-          onClick={() => setMobileOpen(false)}
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
-        />
-      )}
+      {/* Mobile drawer with Motion AnimatePresence */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              key="mobile-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setMobileOpen(false)}
+              className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+            />
 
-      {/* Mobile navigation */}
-      <aside
-        className={[
-          "fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-white shadow-2xl transition-transform duration-300 dark:bg-[#120E1D] lg:hidden",
-          mobileOpen ? "translate-x-0" : "-translate-x-full",
-        ].join(" ")}
-      >
-        <div className="flex h-20 items-center justify-between px-5">
-          <span className="text-[22px] font-black tracking-[-0.04em] bg-gradient-to-r from-purple-700 via-violet-600 to-cyan-500 bg-clip-text text-transparent">
-            Hammet
-          </span>
+            <motion.aside
+              key="mobile-drawer"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 480, damping: 38 }}
+              className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-white shadow-2xl dark:bg-[#120E1D] lg:hidden"
+            >
+              <div className="flex h-20 items-center justify-between px-5">
+                <span className="text-[22px] font-black tracking-[-0.04em] bg-gradient-to-r from-purple-700 via-violet-600 to-cyan-500 bg-clip-text text-transparent">
+                  Hammet
+                </span>
 
-          <button
-            type="button"
-            onClick={() => setMobileOpen(false)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06]"
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06]"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <nav className="space-y-1 px-4">
+                {navigation.map((item) => {
+                  const Icon = item.icon;
+                  const active =
+                    item.href === "/learner"
+                      ? pathname === "/learner"
+                      : pathname === item.href ||
+                        pathname.startsWith(item.href + "/");
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={[
+                        "group flex h-12 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors duration-150 select-none",
+                        active
+                          ? "text-purple-700 font-semibold dark:text-cyan-300"
+                          : "text-slate-600 hover:text-purple-700 dark:text-slate-400 dark:hover:text-purple-300",
+                      ].join(" ")}
+                    >
+                      <Icon className="h-[18px] w-[18px] transition-colors duration-150 text-slate-400 group-hover:text-purple-700 dark:text-slate-400 dark:group-hover:text-purple-300" />
+                      <span className="truncate whitespace-nowrap transition-colors duration-150 text-slate-600 group-hover:text-purple-700 dark:text-slate-400 dark:group-hover:text-purple-300">
+                        {item.label}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              <div className="mt-auto border-t border-black/[0.06] p-4 dark:border-white/[0.06]">
+                {/* User profile */}
+                <div className="mb-3 flex items-center gap-3 px-2">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 text-xs font-bold text-white">
+                    {user?.fullName?.charAt(0)?.toUpperCase() ?? "U"}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
+                        {user?.fullName ?? "Learner"}
+                      </p>
+                      {isPro && (
+                        <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white shadow-sm ring-1 ring-amber-400/30">
+                          <Crown className="h-2.5 w-2.5 fill-white" />
+                          PRO
+                        </span>
+                      )}
+                    </div>
+                    <p className="truncate text-xs text-slate-400">
+                      {isPro ? "Pro Member" : "Learner"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Settings commented out while under development
+                <Link
+                  href="/learner/settings"
+                  onClick={() => setMobileOpen(false)}
+                  className="group flex h-11 items-center gap-3 rounded-xl px-3 text-sm text-slate-600 transition-colors duration-150 hover:text-purple-700 dark:text-slate-400 dark:hover:text-purple-300 select-none"
+                >
+                  <Settings className="h-[18px] w-[18px] text-slate-400 transition-colors duration-150 group-hover:text-purple-700 dark:text-slate-400 dark:group-hover:text-purple-300" />
+                  <span className="transition-colors duration-150 group-hover:text-purple-700 dark:group-hover:text-purple-300">
+                    Settings
+                  </span>
+                </Link>
+                */}
+
+                <button
+                  type="button"
+                  onClick={() => void logout()}
+                  className="mt-1 flex h-11 w-full items-center gap-3 rounded-xl px-3 text-sm text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                >
+                  <LogOut className="h-[18px] w-[18px]" />
+                  Sign out
+                </button>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Full-Page Blurry Layer with Coming Soon Tag & Pause Message for under-development sections */}
+      <AnimatePresence>
+        {isBlurredSection && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: 1,
+              left: isDesktop ? (collapsed ? 76 : 248) : 0,
+            }}
+            exit={{ opacity: 0 }}
+            transition={sidebarTransition}
+            className="fixed inset-0 z-[45] backdrop-blur-xl bg-slate-900/40 dark:bg-black/60 flex flex-col items-center justify-center pointer-events-auto will-change-[left] p-4 sm:p-6"
+            aria-hidden="true"
           >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+            {/* Center Frosted Coming Soon Tag & Message Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="relative mx-auto flex w-full max-w-lg flex-col items-center text-center rounded-[2.2rem] border border-white/20 bg-white/95 p-8 sm:p-10 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-[#120E1D]/95"
+            >
+              {/* Subtle ambient aura */}
+              <div className="absolute -top-12 h-32 w-32 rounded-full bg-gradient-to-tr from-purple-500/30 to-cyan-500/30 blur-3xl pointer-events-none" />
 
-        <nav className="space-y-1 px-4">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-            const active =
-              item.href === "/learner"
-                ? pathname === "/learner"
-                : pathname.startsWith(item.href);
+              {/* Pulsing Timer Icon Badge */}
+              <div className="relative mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/25">
+                <Timer className="h-7 w-7 animate-pulse" />
+              </div>
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={[
-                  "flex h-12 items-center gap-3 rounded-xl px-3 text-sm font-medium transition",
-                  active
-                    ? "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300"
-                    : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-white/[0.05]",
-                ].join(" ")}
-              >
-                <Icon className="h-[18px] w-[18px]" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+              {/* Coming Soon Tag */}
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/10 border border-purple-500/25 px-3.5 py-1 text-[11px] font-mono font-bold tracking-widest text-purple-700 dark:text-purple-300 uppercase mb-3 shadow-xs">
+                <Sparkles className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                COMING SOON // SYSTEM IN PROGRESS
+              </span>
 
-        <div className="mt-auto border-t border-black/[0.06] p-4 dark:border-white/[0.06]">
-          <Link
-            href="/learner/settings"
-            onClick={() => setMobileOpen(false)}
-            className="flex h-11 items-center gap-3 rounded-xl px-3 text-sm text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-white/[0.05]"
-          >
-            <Settings className="h-[18px] w-[18px]" />
-            Settings
-          </Link>
+              {/* Section Heading */}
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+                {pathname.includes("/chat")
+                  ? "Community Chat System"
+                  : pathname.includes("/portfolio")
+                    ? "Public Portfolio System"
+                    : pathname.includes("/pro")
+                      ? "Hammet Pro Membership"
+                      : pathname.includes("/settings")
+                        ? "Account Settings & Preferences"
+                        : pathname.includes("/notifications")
+                          ? "Notifications Hub"
+                          : "Feature In Progress"}
+              </h2>
 
-          <button
-            type="button"
-            onClick={() => void logout()}
-            className="mt-1 flex h-11 w-full items-center gap-3 rounded-xl px-3 text-sm text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-          >
-            <LogOut className="h-[18px] w-[18px]" />
-            Sign out
-          </button>
-        </div>
-      </aside>
+              {/* Detailed Pause Message */}
+              <p className="mt-3.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-sans max-w-md">
+                This section is on pause for now while the backend services and
+                APIs are being wired up. All active learning curriculums, AI
+                schools, and course projects are fully live and operational.
+              </p>
 
-      {/* Main application */}
-      <div
-        className={[
-          "min-h-screen transition-[padding] duration-300",
-          collapsed ? "lg:pl-[76px]" : "lg:pl-[248px]",
-        ].join(" ")}
+              {/* Security & System Info Pills */}
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-1.5 text-[11px] font-semibold text-slate-700 dark:bg-white/[0.05] dark:text-slate-300 border border-black/[0.04] dark:border-white/[0.06]">
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  Backend Integration Pending
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-1.5 text-[11px] font-semibold text-slate-700 dark:bg-white/[0.05] dark:text-slate-300 border border-black/[0.04] dark:border-white/[0.06]">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+                  Live Navigation Active
+                </span>
+              </div>
+
+              {/* Action Button: Return to Active Learning */}
+              <div className="mt-7">
+                <Link
+                  href="/learner/learn"
+                  className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-purple-600/25 transition-all hover:from-purple-500 hover:to-violet-500 hover:shadow-lg hover:shadow-purple-600/35 active:scale-95"
+                >
+                  <span>Explore Active Learning</span>
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Main application container with synchronized Motion transition */}
+      <motion.div
+        initial={false}
+        animate={{
+          paddingLeft: isDesktop ? (collapsed ? 76 : 248) : 0,
+        }}
+        transition={sidebarTransition}
+        className="min-h-screen will-change-[padding-left]"
       >
         {/* Top bar */}
         <header className="sticky top-0 z-30 h-16 border-b border-black/[0.06] bg-[#F5F3FF]/85 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#0D0A17]/85">
@@ -361,33 +699,67 @@ export function LearnerShell({ children }: LearnerShellProps) {
             </div>
 
             <div className="flex items-center gap-2">
+              <CartDropdown />
+
+              {/* Notifications commented out while under development
+              <Link
+                href="/learner/notifications"
+                aria-label="Notifications"
+                className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white/50 text-slate-500 shadow-sm ring-1 ring-black/5 transition-all hover:bg-white/80 hover:text-slate-900 dark:bg-white/[0.03] dark:text-slate-400 dark:ring-white/10 dark:hover:bg-white/[0.08] dark:hover:text-white"
+              >
+                <Bell className="h-[18px] w-[18px]" />
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-[#0D0A17]" />
+              </Link>
+              */}
+
               <button
                 type="button"
                 onClick={toggle}
                 aria-label={`Switch to ${
                   theme === "dark" ? "light" : "dark"
                 } mode`}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-white"
+                className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white/50 text-slate-500 shadow-sm ring-1 ring-black/5 transition-all hover:bg-white/80 hover:text-slate-900 dark:bg-white/[0.03] dark:text-slate-400 dark:ring-white/10 dark:hover:bg-white/[0.08] dark:hover:text-white"
               >
-                {theme === "dark" ? "☼" : "◐"}
+                <motion.div
+                  initial={false}
+                  animate={{
+                    scale: theme === "dark" ? 0 : 1,
+                    opacity: theme === "dark" ? 0 : 1,
+                    rotate: theme === "dark" ? -90 : 0,
+                  }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="absolute"
+                >
+                  <Sun className="h-[18px] w-[18px]" />
+                </motion.div>
+                <motion.div
+                  initial={false}
+                  animate={{
+                    scale: theme === "dark" ? 1 : 0,
+                    opacity: theme === "dark" ? 1 : 0,
+                    rotate: theme === "dark" ? 0 : 90,
+                  }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="absolute"
+                >
+                  <Moon className="h-[18px] w-[18px]" />
+                </motion.div>
               </button>
 
-              <Link
-                href="/learner/profile"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 text-xs font-bold text-white"
-              >
-                {user?.fullName?.charAt(0)?.toUpperCase() ?? "U"}
-              </Link>
+              <ProfileDropdown />
             </div>
           </div>
         </header>
 
         <main>{children}</main>
-      </div>
 
-      {/* Mobile bottom navigation */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.06] bg-white/90 px-2 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#120E1D]/90 lg:hidden">
-        <div className="mx-auto flex max-w-md items-center justify-around">
+        {/* Global Floating Community Chat Launcher & Widget */}
+        {/* <ChatWidget /> */}
+      </motion.div>
+
+      {/* Mobile bottom navigation with fluid horizontal touch swipe */}
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.06] bg-white/95 pb-[env(safe-area-inset-bottom)] pt-1.5 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#120E1D]/95 lg:hidden shadow-lg">
+        <div className="relative mx-auto flex w-full max-w-lg items-center gap-1.5 overflow-x-auto scroll-smooth px-3 py-1 overscroll-x-contain touch-pan-x [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {navigation.map((item) => {
             const Icon = item.icon;
             const active =
@@ -400,14 +772,18 @@ export function LearnerShell({ children }: LearnerShellProps) {
                 key={item.href}
                 href={item.href}
                 className={[
-                  "flex min-w-[68px] flex-col items-center gap-1 rounded-xl py-1.5 text-[10px] font-medium transition",
+                  "flex shrink-0 min-w-[62px] flex-col items-center justify-center gap-1 rounded-xl px-2 py-1.5 text-[10px] font-medium transition-all duration-150 active:scale-95",
                   active
-                    ? "text-purple-700 dark:text-cyan-400"
-                    : "text-slate-400",
+                    ? "text-purple-700 bg-purple-50 dark:text-cyan-300 dark:bg-purple-500/15 font-bold shadow-xs"
+                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200",
                 ].join(" ")}
               >
-                <Icon className="h-[18px] w-[18px]" />
-                <span>{item.label}</span>
+                <Icon
+                  className={`h-[18px] w-[18px] transition-transform ${active ? "scale-110 text-purple-600 dark:text-cyan-400" : ""}`}
+                />
+                <span className="truncate max-w-[70px] whitespace-nowrap">
+                  {item.label}
+                </span>
               </Link>
             );
           })}

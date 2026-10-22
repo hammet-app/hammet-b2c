@@ -35,37 +35,47 @@ import { toPagination } from "../support";
  */
 
 export function toAiSchool(dto: AiSchoolDto): AiSchool {
-    return {
-        id: dto.id,
-        name: dto.name,
-        description: dto.description,
-        price: dto.price,
-        published: dto.published,
-    };
+  return {
+    id: dto.id,
+    name: dto.name,
+    description: dto.description,
+    price: dto.price,
+    isEnrolled: dto.is_enrolled,
+    isEntitled: dto.is_entitled,
+    hasFinished: dto.has_finished,
+  };
 }
 
-export function toAiSchoolsResponse(dto: AiSchoolsResponseDto): AiSchoolsResponse {
-    return {
-        aiSchools: dto.ai_schools.map(toAiSchool),
-        pagination: toPagination(dto.pagination),
-    };
+export function toAiSchoolsResponse(
+  dto: AiSchoolsResponseDto,
+): AiSchoolsResponse {
+  return {
+    aiSchools: dto.ai_schools.map(toAiSchool),
+    pagination: toPagination(dto.pagination),
+  };
 }
 
 export function toAiSchoolCourse(dto: AiSchoolCourseDto): AiSchoolCourse {
-    return {
-        id: dto.id,
-        title: dto.title,
-        slug: dto.slug,
-        description: dto.description,
-        aiSchoolId: dto.ai_school_id,
-        price: dto.price,
-    };
+  return {
+    id: dto.id,
+    title: dto.title,
+    slug: dto.slug,
+    description: dto.description,
+    aiSchoolId: dto.ai_school_id,
+    position: dto.position,
+    price: dto.price,
+    isEnrolled: dto.is_enrolled,
+    isEntitled: dto.is_entitled,
+    hasFinished: dto.has_finished,
+  };
 }
 
-export function toAiSchoolCoursesResponse(dto: AiSchoolCoursesResponseDto): AiSchoolCoursesResponse {
-    return {
-        courses: dto.courses.map(toAiSchoolCourse),
-    };
+export function toAiSchoolCoursesResponse(
+  dto: AiSchoolCoursesResponseDto,
+): AiSchoolCoursesResponse {
+  return {
+    courses: dto.courses.map(toAiSchoolCourse),
+  };
 }
 
 export function toHammetAiSchoolCoursesResponse(dto: HammetAiSchoolCoursesResponseDto): HammetAiSchoolCoursesResponse {
@@ -75,13 +85,15 @@ export function toHammetAiSchoolCoursesResponse(dto: HammetAiSchoolCoursesRespon
     };
 }
 
-export function fromCreateAiSchoolRequest(req: CreateAiSchoolRequest): CreateAiSchoolRequestDto {
-    return {
-        name: req.name,
-        description: req.description,
-        price: req.price,
-        published: req.published,
-    };
+export function fromCreateAiSchoolRequest(
+  req: CreateAiSchoolRequest,
+): CreateAiSchoolRequestDto {
+  return {
+    name: req.name,
+    description: req.description,
+    price: req.price,
+    published: req.published,
+  };
 }
 
 export function toCreateAiSchoolResponse(dto: CreateAiSchoolResponseDto): CreateAiSchoolResponse {

@@ -8,6 +8,9 @@ import { Pagination } from "../support";
 export type AiSchool = {
   id: string;
   name: string;
+  isEntitled: boolean;
+  isEnrolled: boolean;
+  hasFinished: boolean;
   description: string;
   price: number;
   published?: boolean;
@@ -27,14 +30,19 @@ export type AiSchoolCourse = {
   id: string;
   title: string;
   slug: string;
+  isEntitled: boolean;
+  isEnrolled: boolean;
+  hasFinished: boolean;
   description: string;
   aiSchoolId: string;
+  position: number;
   price: number;
 };
 
 export type AiSchoolCoursesResponse = {
   courses: AiSchoolCourse[];
 };
+
 
 // GET /api/v1/hammet/ai-schools/{ai_school_id}/courses
 export type HammetAiSchoolCoursesResponse = {
