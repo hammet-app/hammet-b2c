@@ -177,7 +177,7 @@ export default function PortfolioPage() {
         {/* ── PORTFOLIO DISPLAY STAGE (FROSTED BLUR OVERLAY APPLIED) ── */}
         <div className="relative rounded-[2.5rem] overflow-hidden">
           {/* ── UNDERLYING CONTENT (PERMANENTLY BLURRED) ── */}
-          <div className="filter blur-md select-none pointer-events-none opacity-40 scale-[0.99] transition-all duration-500">
+          <div className="opacity-90 select-none pointer-events-none transition-all duration-500">
             {/* ── TEMPLATE 1: BENTO GRID (LINEAR / VERCEL STYLE) ──────────────── */}
             {activeTab === "bento" && (
           <div className="space-y-6">
@@ -641,37 +641,8 @@ export default function PortfolioPage() {
         )}
       </div>
 
-      {/* ── ELEGANT FROSTED GLASS COMING SOON OVERLAY (PERMANENT BLUR) ── */}
-      <div className="absolute inset-0 z-30 flex flex-col items-center justify-start pt-20 sm:pt-28 p-6 sm:p-12 text-center bg-slate-950/85 dark:bg-slate-950/90 backdrop-blur-xl rounded-[2.5rem] border border-white/20 shadow-2xl">
-        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-purple-500/30 border border-purple-400/50 text-purple-300 shadow-xl shadow-purple-500/30 mb-4">
-          <Timer className="h-8 w-8 text-purple-200 animate-pulse" />
-        </div>
-
-        <span className="rounded-full bg-purple-600/30 border border-purple-400/50 px-4 py-1 text-xs font-poppins font-bold tracking-widest text-purple-200 uppercase mb-3 shadow-sm">
-          Portfolio Engine In Progress
-        </span>
-
-        <h3 className="text-2xl sm:text-4xl font-black tracking-tight text-white max-w-xl font-poppins drop-shadow-md">
-          Public Portfolio System Coming Soon
-        </h3>
-
-        <p className="mt-3.5 max-w-xl text-sm sm:text-base text-slate-100 font-medium leading-relaxed font-poppins drop-shadow-sm">
-          The automated portfolio engine and verified showcase templates (Bento Grid, Terminal Hacker, Silicon Valley, and Academic Lab) are currently being finalized. Your project milestones, test scores, and code submissions are safely tracked and will automatically populate your live portfolio upon launch.
-        </p>
-
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <div className="flex items-center gap-2 rounded-xl bg-white/15 border border-white/25 px-4 py-2.5 text-xs font-poppins font-bold text-white shadow-md backdrop-blur-sm">
-            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-            <span>Projects &amp; Test Records Safe</span>
-          </div>
-          <div className="flex items-center gap-2 rounded-xl bg-white/15 border border-white/25 px-4 py-2.5 text-xs font-poppins font-bold text-white shadow-md backdrop-blur-sm">
-            <ShieldCheck className="h-4 w-4 text-cyan-400" />
-            <span>4 Bespoke Themes Prepared</span>
-          </div>
-        </div>
+      </div>
       </div>
     </div>
-  </div>
-</div>
   );
 }

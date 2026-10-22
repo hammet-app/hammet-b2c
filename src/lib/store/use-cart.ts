@@ -5,14 +5,14 @@ import {
   type DexieCartItem,
   getCartItemsFromDB,
   getCartMetaFromDB,
-  //putCartItemToDB,
-  //updateCartItemQuantityInDB,
+  putCartItemToDB,
+  updateCartItemQuantityInDB,
   removeCartItemFromDB,
   clearCartInDB,
   saveCartMetaToDB,
   markItemsPaidInDB,
-  //getUnsyncedCartItemsFromDB,
-  //updateCartItemSyncStatusInDB,
+  getUnsyncedCartItemsFromDB,
+  updateCartItemSyncStatusInDB,
   db,
 } from "@/lib/db";
 import { cartApi } from "@/lib/api/cart";
@@ -25,7 +25,8 @@ export interface CartItem {
   title: string;
   price: number;
   quantity?: number;
-  productId: string;
+  productId?: string;
+  schoolId?: string;
   syncStatus?: CartSyncStatus;
   createdAt?: string;
   updatedAt?: string;
@@ -58,13 +59,13 @@ interface CartStore {
   isSyncing: boolean;
 
   // Cart operations (all routed through Dexie)
-  //addItem: (item: Omit<CartItem, "syncStatus">) => Promise<void>;
-  //removeItem: (id: string) => Promise<void>;
-  //updateQuantity: (id: string, quantity: number) => Promise<void>;
-  //clearCart: () => Promise<void>;
-  /*hydrateFromDB: (
-    token: string,
-    onRefresh: () => Promise<string | null>,
+  addItem: (item: Omit<CartItem, "syncStatus">) => Promise<void>;
+  removeItem: (id: string) => Promise<void>;
+  updateQuantity: (id: string, quantity: number) => Promise<void>;
+  clearCart: () => Promise<void>;
+  hydrateFromDB: (
+    token?: string,
+    onRefresh?: () => Promise<string | null>,
   ) => Promise<void>;
   retryFailedSync: () => Promise<void>;
 
@@ -72,8 +73,10 @@ interface CartStore {
   getTotal: () => number;
   hasItem: (id: string) => boolean;
   hasPaidItem: (id: string) => boolean;
-  getItemQuantity: (id: string) => number;*/
+  getItemQuantity: (id: string) => number;
 
+  // Payment simulation & coupon management
+  markAsPaid: (specificIds?: string[]) => Promise<void>;
   applyCoupon: (code: string) => {
     success: boolean;
     message: string;
@@ -81,13 +84,14 @@ interface CartStore {
     savePromise?: Promise<unknown>;
   };
   removeCoupon: () => Promise<void>;
-  //getDiscountAmount: () => number;
-  //getFinalTotal: () => number;
+  getDiscountAmount: () => number;
+  getFinalTotal: () => number;
 }
 
 // ── Background Sync Helpers ──────────────────────────────────────────────────
 
-/*async function backgroundSyncAddItem(item: DexieCartItem) {
+async function backgroundSyncAddItem(item: DexieCartItem) {
+  if (!item.id) return;
   try {
     const res = await cartApi.addItem(item);
     const newStatus: CartSyncStatus = res.success ? "synced" : "failed";
@@ -124,7 +128,7 @@ async function backgroundSyncUpdateQuantity(id: string, quantity: number) {
 
 async function backgroundSyncRemoveItem(id: string) {
   try {
-    //await cartApi.removeItem(id);
+    // Non-blocking best effort for delete
   } catch {
     // Non-blocking best effort for delete
   }
@@ -136,13 +140,13 @@ async function backgroundSyncClearCart() {
   } catch {
     // Non-blocking best effort for clear
   }
-}*/
+}
 
 // ── Migration from Legacy localStorage ───────────────────────────────────────
 
 let migrationRan = false;
 
-/*async function migrateLegacyLocalStorage() {
+async function migrateLegacyLocalStorage() {
   if (typeof window === "undefined" || migrationRan) return;
   migrationRan = true;
 
@@ -157,12 +161,13 @@ let migrationRan = false;
       if (Array.isArray(legacyState.items) && legacyState.items.length > 0) {
         for (const item of legacyState.items) {
           await putCartItemToDB({
-            id: item.id,
+            id: item.id || item.productId,
             type: item.type,
             title: item.title,
             price: item.price,
             quantity: item.quantity ?? 1,
-            productId: item.productId,
+            productId: item.productId || item.id,
+            schoolId: item.schoolId,
             syncStatus: "pending",
           });
         }
@@ -193,7 +198,7 @@ let migrationRan = false;
       err,
     );
   }
-}*/
+}
 
 // ── Store Definition ─────────────────────────────────────────────────────────
 
@@ -205,9 +210,9 @@ export const useCart = create<CartStore>((set, get) => ({
   isHydrated: false,
   isSyncing: false,
 
-  /*hydrateFromDB: async (
-    token: string,
-    onRefresh: () => Promise<string | null>,
+  hydrateFromDB: async (
+    token?: string,
+    onRefresh?: () => Promise<string | null>,
   ) => {
     if (typeof window === "undefined") return;
 
@@ -228,7 +233,8 @@ export const useCart = create<CartStore>((set, get) => ({
           title: item.title,
           price: item.price,
           quantity: item.quantity,
-          productId: item.productId,
+          productId: item.productId || item.id || "",
+          schoolId: item.schoolId,
           syncStatus: item.syncStatus,
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
@@ -249,13 +255,15 @@ export const useCart = create<CartStore>((set, get) => ({
 
   addItem: async (item) => {
     const state = get();
-    if (!item.id) return;
-    if (state.items.some((i) => i.id === item.id)) return;
-    if (state.paidItems.includes(item.id)) return;
+    const itemId = item.id || item.productId;
+    if (!itemId) return;
+    if (state.items.some((i) => i.id === itemId || i.productId === item.productId)) return;
+    if (state.paidItems.includes(itemId)) return;
 
     const quantity = Math.max(1, item.quantity ?? 1);
     const optimisticItem: CartItem = {
       ...item,
+      id: itemId,
       quantity,
       syncStatus: "pending",
       createdAt: new Date().toISOString(),
@@ -267,28 +275,29 @@ export const useCart = create<CartStore>((set, get) => ({
 
     // 2. Primary local persistence: Write to Dexie
     const persisted = await putCartItemToDB({
-      id: item.id,
+      id: itemId,
       type: item.type,
       title: item.title,
       price: item.price,
       quantity,
-      productId: item.productId,
+      productId: item.productId || itemId,
+      schoolId: item.schoolId,
       syncStatus: "pending",
     });
 
     // 3. Background sync with backend
-    //backgroundSyncAddItem(persisted);
+    backgroundSyncAddItem(persisted);
   },
 
   removeItem: async (id: string) => {
     // 1. Reactive UI update
-    set((state) => ({ items: state.items.filter((i) => i.id !== id) }));
+    set((state) => ({ items: state.items.filter((i) => i.id !== id && i.productId !== id) }));
 
     // 2. Primary local persistence: Remove from Dexie
     await removeCartItemFromDB(id);
 
     // 3. Background sync with backend
-    //backgroundSyncRemoveItem(id);
+    backgroundSyncRemoveItem(id);
   },
 
   updateQuantity: async (id: string, quantity: number) => {
@@ -308,7 +317,7 @@ export const useCart = create<CartStore>((set, get) => ({
     await updateCartItemQuantityInDB(id, quantity);
 
     // 3. Background sync with backend
-    //backgroundSyncUpdateQuantity(id, quantity);
+    backgroundSyncUpdateQuantity(id, quantity);
   },
 
   clearCart: async () => {
@@ -319,10 +328,10 @@ export const useCart = create<CartStore>((set, get) => ({
     await clearCartInDB();
 
     // 3. Background sync with backend
-    //backgroundSyncClearCart();
+    backgroundSyncClearCart();
   },
 
-  /*retryFailedSync: async () => {
+  retryFailedSync: async () => {
     if (typeof window === "undefined") return;
 
     try {
@@ -330,20 +339,29 @@ export const useCart = create<CartStore>((set, get) => ({
       if (unsynced.length === 0) return;
 
       set({ isSyncing: true });
-      const meta = await getCartMetaFromDB();
-      const res = await cartApi.syncCart(unsynced, meta.couponCode);
-
-      if (res.success) {
-        for (const item of unsynced) {
+      for (const item of unsynced) {
+        if (!item.id) continue;
+        const res = await cartApi.addItem(item);
+        if (res.success) {
           await updateCartItemSyncStatusInDB(item.id, "synced");
         }
-        set((state) => ({
-          isSyncing: false,
-          items: state.items.map((i) => ({ ...i, syncStatus: "synced" })),
-        }));
-      } else {
-        set({ isSyncing: false });
       }
+      const updated = await getCartItemsFromDB();
+      set({
+        isSyncing: false,
+        items: updated.map((item) => ({
+          id: item.id ?? item.productId,
+          type: item.type,
+          title: item.title,
+          price: item.price,
+          quantity: item.quantity,
+          productId: item.productId || item.id || "",
+          schoolId: item.schoolId,
+          syncStatus: item.syncStatus,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+        })),
+      });
     } catch {
       set({ isSyncing: false });
     }
@@ -355,14 +373,29 @@ export const useCart = create<CartStore>((set, get) => ({
       0,
     ),
 
-  hasItem: (id: string) => get().items.some((i) => i.id === id),
+  hasItem: (id: string) => get().items.some((i) => i.id === id || i.productId === id),
 
   hasPaidItem: (id: string) => get().paidItems.includes(id),
 
   getItemQuantity: (id: string) => {
-    const item = get().items.find((i) => i.id === id);
+    const item = get().items.find((i) => i.id === id || i.productId === id);
     return item?.quantity ?? 0;
-  },*/
+  },
+
+  markAsPaid: async (specificIds?: string[]) => {
+    const state = get();
+    const itemIds: string[] = specificIds ?? state.items.map((i) => i.id || i.productId).filter((id): id is string => Boolean(id));
+    const updatedPaid: string[] = Array.from(new Set([...state.paidItems, ...itemIds]));
+
+    // 1. Reactive UI update
+    set({
+      items: state.items.filter((i) => !itemIds.includes((i.id || i.productId) as string)),
+      paidItems: updatedPaid,
+    });
+
+    // 2. Primary local persistence in Dexie
+    await markItemsPaidInDB(itemIds);
+  },
 
   applyCoupon: (code: string) => {
     const clean = code.trim().toUpperCase();
@@ -395,7 +428,7 @@ export const useCart = create<CartStore>((set, get) => ({
     await saveCartMetaToDB({ couponCode: null, discountPercentage: 0 });
   },
 
-  /*getDiscountAmount: () => {
+  getDiscountAmount: () => {
     const total = get().getTotal();
     const pct = get().discountPercentage;
     return Math.round((total * pct) / 100);
@@ -405,12 +438,12 @@ export const useCart = create<CartStore>((set, get) => ({
     const total = get().getTotal();
     const discount = get().getDiscountAmount();
     return Math.max(0, total - discount);
-  },*/
+  },
 }));
 
 // ── Auto-Hydration & Browser Event Listeners ─────────────────────────────────
 
-/*if (typeof window !== "undefined") {
+if (typeof window !== "undefined") {
   // Attach for test automation and client debugging
   (
     window as unknown as {
@@ -429,4 +462,3 @@ export const useCart = create<CartStore>((set, get) => ({
     useCart.getState().retryFailedSync();
   });
 }
-*/

@@ -16,14 +16,20 @@ export interface CachedSession {
   cachedAt: string;
 }
 
-export type CartItemType = "ai_school" | "course" | "profile";
+export type CartItemType = "ai_school" | "course" | "profile" | "school";
 export type CartSyncStatus = "synced" | "pending" | "failed";
 
 export interface DexieCartItem {
+  id?: string;
   type: CartItemType;
   title: string;
   price: number;
-  productId: string;
+  quantity?: number;
+  productId?: string;
+  schoolId?: string;
+  syncStatus?: CartSyncStatus;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface DexieCartMeta {
@@ -149,13 +155,14 @@ export interface PutCartItemInput {
   price: number;
   quantity?: number;
   productId: string;
+  schoolId?: string;
   syncStatus?: CartSyncStatus;
 }
 
 /**
  * Insert or update a cart item in Dexie.
  * If the item already exists, updates its quantity and timestamp.
- *
+ */
 export async function putCartItemToDB(
   input: PutCartItemInput,
 ): Promise<DexieCartItem> {
@@ -168,7 +175,8 @@ export async function putCartItemToDB(
       title: input.title,
       price: input.price,
       quantity: Math.max(1, input.quantity ?? existing?.quantity ?? 1),
-      productId: input.productId ?? existing?.productId,
+      productId: input.productId ?? existing?.productId ?? input.id,
+      schoolId: input.schoolId ?? existing?.schoolId,
       syncStatus: input.syncStatus ?? "pending",
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
@@ -184,17 +192,18 @@ export async function putCartItemToDB(
       price: input.price,
       quantity: Math.max(1, input.quantity ?? 1),
       productId: input.productId,
+      schoolId: input.schoolId,
       syncStatus: "failed",
       createdAt: now,
       updatedAt: now,
     };
   }
-}/
+}
 
 /**
  * Update quantity of a cart item in Dexie.
  * If quantity <= 0, the item is removed.
- *
+ */
 export async function updateCartItemQuantityInDB(
   id: string,
   quantity: number,
@@ -313,7 +322,7 @@ export async function markItemsPaidInDB(itemIds: string[]): Promise<void> {
 
 /**
  * Fetch all items that have not been successfully synced with the backend.
- *
+ */
 export async function getUnsyncedCartItemsFromDB(): Promise<DexieCartItem[]> {
   try {
     return await db.cart
@@ -329,11 +338,11 @@ export async function getUnsyncedCartItemsFromDB(): Promise<DexieCartItem[]> {
       return [];
     }
   }
-}*/
+}
 
 /**
  * Update the synchronization status of a cart item in Dexie.
- *
+ */
 export async function updateCartItemSyncStatusInDB(
   id: string,
   syncStatus: CartSyncStatus,
@@ -346,4 +355,4 @@ export async function updateCartItemSyncStatusInDB(
   } catch (err) {
     console.warn(`[Dexie] Failed to update syncStatus for ${id}:`, err);
   }
-}*/
+}

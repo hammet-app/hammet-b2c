@@ -55,8 +55,12 @@ export default function AiSchoolsPage() {
       return;
     }
 
-    const cart = await cartApi.getCart(accessToken, refreshToken);
-    setCartItems(cart.carts ?? []);
+    try {
+      const cart = await cartApi.getCart(accessToken, refreshToken);
+      setCartItems(cart?.carts ?? []);
+    } catch (err) {
+      console.warn("page-b fetchCart failed:", err);
+    }
   }, [accessToken, refreshToken]);
 
   const refreshCart = useCallback(async () => {
@@ -65,10 +69,13 @@ export default function AiSchoolsPage() {
       return;
     }
 
-    const cart = await cartApi.getCart(accessToken, refreshToken);
-
-    if (cart) {
-      setCartItems(cart.carts ?? []);
+    try {
+      const cart = await cartApi.getCart(accessToken, refreshToken);
+      if (cart && cart.carts) {
+        setCartItems(cart.carts);
+      }
+    } catch (err) {
+      console.warn("page-b refreshCart failed:", err);
     }
   }, [accessToken, refreshToken]);
 

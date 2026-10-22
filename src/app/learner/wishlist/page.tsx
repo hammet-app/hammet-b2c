@@ -30,9 +30,10 @@ export default function WishlistPage() {
   const handleMoveToCart = (item: (typeof wishlistItems)[0]) => {
     addItem({
       id: item.id,
+      productId: item.id,
       title: item.title,
       price: item.price,
-      type: item.type,
+      type: item.type === "school" ? "ai_school" : item.type,
     });
     removeItem(item.id);
   };
