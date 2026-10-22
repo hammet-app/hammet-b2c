@@ -11,37 +11,15 @@ import { UpdateAiSchoolRequest } from "@/lib/api/types";
 import { getHammetAiSchoolCourses, updateAiSchool } from "@/lib/api/hammet";
 import { ApiError } from "@/lib/api/api-client";
 import { is_enabled } from "@/lib/features/flags";
+import { canManageAiCatalog } from "@/lib/utils/roles";
 import { Alert } from "@/components/ui";
-
-const inputClassName =
-  "w-full rounded-xl border border-black/[0.08] bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-purple-400 focus:ring-4 focus:ring-purple-500/10 dark:border-white/[0.08] dark:bg-white/[0.04] dark:focus:border-cyan-400 dark:focus:ring-cyan-400/10";
-
-function Notice({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="px-5 pb-28 pt-8 sm:px-7 sm:pt-10 lg:px-10 lg:pb-12 lg:pt-10">
-      <div className="mx-auto max-w-[900px]">
-        <div className="rounded-[28px] border border-black/[0.06] bg-white p-8 dark:border-white/[0.06] dark:bg-white/[0.03]">
-          <h1 className="text-2xl font-semibold tracking-[-0.04em]">{title}</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{children}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
+import { Notice, PublishSelect, SessionExpiredNotice, inputClassName } from "@/components/hammet/admin-form";
 
 export default function EditAiSchoolPage() {
   const { schoolId } = useParams<{ schoolId: string }>();
-  const { user, accessToken, refreshToken } = useAuth();
+  const { user, accessToken, refreshToken, isLoading: authLoading } = useAuth();
 
-  const access = user?.access ?? [];
-  const adminScope = user?.scope ?? "";
-
-  const isHammetAdmin = user?.role === "hammet_admin";
-  const isPlatformAdmin = adminScope == "platform";
-  const isB2CCoursesAdmin =
-    adminScope == "b2c" && access.includes("courses");
-
-  const canEdit = isHammetAdmin && (isPlatformAdmin || isB2CCoursesAdmin);
+  const canEdit = canManageAiCatalog(user);
 
   const [featureEnabled, setFeatureEnabled] = useState<boolean | null>(null);
 
@@ -52,7 +30,8 @@ export default function EditAiSchoolPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  const [published, setPublished] = useState(false);
+  // null = keep the current status. The admin routes don't return it, so it's usually unknown.
+  const [published, setPublished] = useState<boolean | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -77,7 +56,7 @@ export default function EditAiSchoolPage() {
         setName(school.name);
         setDescription(school.description);
         setPrice(String(school.price));
-        setPublished(Boolean(school.published));
+        setPublished(school.published ?? null);
       } catch (err) {
         if (!active) return;
         if (err instanceof ApiError && err.notFound) {
@@ -112,7 +91,7 @@ export default function EditAiSchoolPage() {
         name: name.trim(),
         description: description.trim(),
         price: parsedPrice,
-        published,
+        published: published ?? undefined,
       } satisfies UpdateAiSchoolRequest;
 
       await updateAiSchool(schoolId, body, accessToken, refreshToken);
@@ -126,6 +105,10 @@ export default function EditAiSchoolPage() {
     } finally {
       setIsSaving(false);
     }
+  }
+
+  if (!authLoading && !accessToken) {
+    return <SessionExpiredNotice />;
   }
 
   if (!canEdit) {
@@ -228,20 +211,7 @@ export default function EditAiSchoolPage() {
                   )}
                 </label>
 
-                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-black/[0.08] bg-slate-50 px-4 py-3 dark:border-white/[0.08] dark:bg-white/[0.04]">
-                  <input
-                    type="checkbox"
-                    checked={published}
-                    onChange={(event) => setPublished(event.target.checked)}
-                    className="mt-0.5 h-4 w-4 accent-purple-600"
-                  />
-                  <span>
-                    <span className="block text-sm font-medium">Publish school</span>
-                    <span className="block text-xs leading-5 text-slate-500 dark:text-slate-400">
-                      Learners can&apos;t see unpublished schools.
-                    </span>
-                  </span>
-                </label>
+                <PublishSelect value={published} onChange={setPublished} noun="schools" />
               </div>
 
               <button

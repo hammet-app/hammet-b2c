@@ -6,22 +6,34 @@ import {
   type CreateAiSchoolResponseDto,
   type CreateAiCourseRequest,
   type CreateAiCourseResponse,
-  type CreateAiCourseResponseDto,
   type UpdateAiSchoolRequest,
   type UpdateAiSchoolResponse,
   type UpdateAiSchoolResponseDto,
+  type UpdateAiCourseRequest,
+  type UpdateAiCourseResponse,
+  type UpdateAiCourseResponseDto,
+  type UpdateAiModuleRequest,
+  type AiModule,
+  type AiModuleDto,
+  type AddAiQuizRequest,
+  type AiQuiz,
+  type AiQuizDto,
   type AiSchool,
   type AiSchoolsResponseDto,
   fromUpdateAiSchoolRequest,
   toUpdateAiSchoolResponse,
+  fromUpdateAiCourseRequest,
+  toUpdateAiCourseResponse,
+  fromUpdateAiModuleRequest,
+  toAiModule,
+  fromAddAiQuizRequest,
+  toAiQuiz,
   type HammetAiSchoolCoursesResponse,
   type HammetAiSchoolCoursesResponseDto,
   toHammetAiSchoolCoursesResponse,
   fromRegisterHammetAdminRequest,
   fromCreateAiSchoolRequest,
   toCreateAiSchoolResponse,
-  fromCreateAiCourseRequest,
-  toCreateAiCourseResponse,
   toAiSchoolsResponse,
 } from "@/lib/api/types";
 
@@ -64,16 +76,16 @@ export async function createAiSchool(
   return toCreateAiSchoolResponse(response)
 }
 
-// TODO: route and method unconfirmed — the backend's /openapi.json is down. Update once known.
+// The backend rejects a body with no fields set, and treats false/0 as unset.
 export async function updateAiSchool(
   schoolId: string,
   body: UpdateAiSchoolRequest,
   token: string,
   onRefresh: () => Promise<string | null>
 ): Promise<UpdateAiSchoolResponse> {
-  const payload = fromUpdateAiSchoolRequest(body)
+  const payload = fromUpdateAiSchoolRequest(schoolId, body)
   const response = await apiClient.patch<UpdateAiSchoolResponseDto>(
-    `/hammet/ai-schools/${encodeURIComponent(schoolId)}`,
+    `/hammet/edit/ai-school/${encodeURIComponent(schoolId)}`,
     payload,
     token,
     { onRefresh }
@@ -82,20 +94,74 @@ export async function updateAiSchool(
   return toUpdateAiSchoolResponse(response)
 }
 
+// There is no create-course route; courses are created through the school edit route.
 export async function createAiCourse(
   body: CreateAiCourseRequest,
   token: string,
   onRefresh: () => Promise<string | null>
 ): Promise<CreateAiCourseResponse> {
-  const payload = fromCreateAiCourseRequest(body)
-  const response = await apiClient.post<CreateAiCourseResponseDto>(
-    "/hammet/create/ai_course",
+  const response = await updateAiSchool(
+    body.aiSchoolId,
+    { courses: [body] },
+    token,
+    onRefresh
+  )
+
+  return response.courses[0]
+}
+
+// Modules listed in body.modules are created under the course.
+export async function updateAiCourse(
+  courseId: string,
+  body: UpdateAiCourseRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>
+): Promise<UpdateAiCourseResponse> {
+  const payload = fromUpdateAiCourseRequest(courseId, body)
+  const response = await apiClient.patch<UpdateAiCourseResponseDto>(
+    `/hammet/edit/ai-courses/${encodeURIComponent(courseId)}`,
     payload,
     token,
     { onRefresh }
   )
 
-  return toCreateAiCourseResponse(response)
+  return toUpdateAiCourseResponse(response)
+}
+
+// Resources listed in body.resources are added to the module.
+// The returned module's resources only holds the ones added by this request.
+export async function updateAiModule(
+  moduleId: string,
+  body: UpdateAiModuleRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>
+): Promise<AiModule> {
+  const payload = fromUpdateAiModuleRequest(moduleId, body)
+  const response = await apiClient.patch<AiModuleDto>(
+    `/hammet/edit/ai-modules/${encodeURIComponent(moduleId)}`,
+    payload,
+    token,
+    { onRefresh }
+  )
+
+  return toAiModule(response)
+}
+
+export async function addAiQuiz(
+  moduleId: string,
+  body: AddAiQuizRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>
+): Promise<AiQuiz> {
+  const payload = fromAddAiQuizRequest(body)
+  const response = await apiClient.patch<AiQuizDto>(
+    `/hammet/edit/ai-modules/${encodeURIComponent(moduleId)}/quiz/add`,
+    payload,
+    token,
+    { onRefresh }
+  )
+
+  return toAiQuiz(response)
 }
 
 export async function getHammetAiSchools(

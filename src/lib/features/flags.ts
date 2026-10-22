@@ -13,6 +13,7 @@ const gbContext = {
 const localFlags: Record<string, boolean> = {
   gloria_school_creation: process.env.NEXT_PUBLIC_GLORIA_SCHOOL_CREATION === "true",
   gloria_course_creation: process.env.NEXT_PUBLIC_GLORIA_COURSE_CREATION === "true",
+  gloria_module_creation: process.env.NEXT_PUBLIC_GLORIA_MODULE_CREATION === "true",
 };
 
 function localProvider() {
