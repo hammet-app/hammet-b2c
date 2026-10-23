@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { getHammetAiSchoolCourses, getHammetAiSchools } from "@/lib/api/hammet";
 import type { AiSchool, AiSchoolCourse } from "@/lib/api/types";
 import { Alert } from "@/components/ui";
+import { SessionExpiredNotice } from "@/components/hammet/admin-form";
 
 const inputClassName =
   "w-full rounded-xl border border-black/[0.08] bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-purple-400 focus:ring-4 focus:ring-purple-500/10 dark:border-white/[0.08] dark:bg-white/[0.04] dark:focus:border-cyan-400 dark:focus:ring-cyan-400/10";
@@ -17,7 +18,7 @@ const inputClassName =
 function AiCoursesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { accessToken, refreshToken } = useAuth();
+  const { accessToken, refreshToken, isLoading: authLoading } = useAuth();
   const requestedSchoolId = searchParams.get("schoolId") ?? "";
 
   const [schools, setSchools] = useState<AiSchool[]>([]);
@@ -80,6 +81,10 @@ function AiCoursesContent() {
       active = false;
     };
   }, [accessToken, refreshToken, selectedSchoolId]);
+
+  if (!authLoading && !accessToken) {
+    return <SessionExpiredNotice />;
+  }
 
   return (
     <div className="px-5 pb-28 pt-8 sm:px-7 sm:pt-10 lg:px-10 lg:pb-12 lg:pt-10">
@@ -176,9 +181,18 @@ function AiCoursesContent() {
                   {course.description}
                 </p>
 
-                <p className="mt-5 text-sm font-semibold">
-                  {course.price === 0 ? "Free" : course.price.toLocaleString()}
-                </p>
+                <div className="mt-5 flex items-center justify-between">
+                  <span className="text-sm font-semibold">
+                    {course.price === 0 ? "Free" : course.price.toLocaleString()}
+                  </span>
+
+                  <Link
+                    href={`/hammet/courses/${encodeURIComponent(course.id)}/edit?schoolId=${encodeURIComponent(selectedSchoolId)}`}
+                    className="text-sm font-semibold text-purple-700 hover:underline dark:text-cyan-400"
+                  >
+                    Edit / add modules
+                  </Link>
+                </div>
               </motion.article>
             ))}
           </div>
