@@ -33,7 +33,8 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils/utils";
 import { cartApi } from "@/lib/api/cart";
-import { getCartItemsFromDB } from "@/lib/db";
+import { learnerApi } from "@/lib/api/learner";
+import { clearCartInDB, getCartItemsFromDB } from "@/lib/db";
 import { paymentApi } from "@/lib/api/payment";
 import { OrderResponse } from "@/lib/api/types";
 
@@ -44,6 +45,7 @@ export default function CheckoutPage() {
 
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [isRemovingCoupon, setIsRemovingCoupon] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   // Payment Link State
@@ -66,6 +68,11 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     const savedOrder = sessionStorage.getItem("checkoutOrder");
+    const savedCoupon = sessionStorage.getItem("checkoutCouponCode");
+    if (savedCoupon) {
+      setCouponCode(savedCoupon);
+      setCouponApplied(true);
+    }
 
     if (!savedOrder) {
       return;
@@ -113,49 +120,67 @@ export default function CheckoutPage() {
   }, [order]);
 
   // Creating order for checkout
+  const prepareOrder = async (): Promise<OrderResponse> => {
+    if (!accessToken)
+      throw new Error("Please sign in again before checking out.");
+    const localItems = await getCartItemsFromDB();
+    const remoteCart = await learnerApi.getCart(accessToken, refreshToken);
+    const remoteKeys = new Set(
+      (remoteCart.carts ?? []).map(
+        (item) => `${item.productType}:${item.productId}`,
+      ),
+    );
+    for (const item of localItems) {
+      if (remoteKeys.has(`${item.type}:${item.productId}`)) continue;
+      const addResult = await cartApi.addItem(item, accessToken);
+      if (!addResult.success) {
+        throw new Error(
+          addResult.error ?? `Could not add ${item.title} to checkout.`,
+        );
+      }
+    }
+    const newOrder = await cartApi.checkout(accessToken, refreshToken);
+    setOrder(newOrder);
+    sessionStorage.setItem("checkoutOrder", JSON.stringify(newOrder));
+    return newOrder;
+  };
+
   const handleProceedToPayment = async () => {
     if (!accessToken) {
       setGatewayError("Please sign in again before checking out.");
       return;
     }
 
-    if (!order) {
-      try {
-        setIsCreatingOrder(true);
-        // Best effort: ensure local items exist on the remote backend before checkout initialization
-        try {
-          const localItems = await getCartItemsFromDB();
-          for (const item of localItems) {
-            await cartApi.addItem(item, accessToken);
-          }
-        } catch {}
-
-        const newOrder = await cartApi.checkout(accessToken, refreshToken);
-        setOrder(newOrder);
-        sessionStorage.setItem("checkoutOrder", JSON.stringify(newOrder));
-      } catch (err: unknown) {
-        setGatewayError(
-          err instanceof Error
-            ? err.message
-            : "Failed to prepare checkout order. Please try again.",
-        );
-      } finally {
-        setIsCreatingOrder(false);
-      }
-      return;
-    }
-
+    let activeOrder = order;
     try {
+      setIsCreatingOrder(true);
+      setGatewayError(null);
+      if (!activeOrder) {
+        activeOrder = await prepareOrder();
+      }
+
       const res = await paymentApi.initPayment(
-        order.id,
+        activeOrder.id,
         accessToken,
         refreshToken,
       );
-      console.log(res);
-
-      window.location.assign(res);
-    } catch (err) {
+      if (res === "/learner/checkout/callback?free=1") {
+        router.push(res);
+      } else if (/^https:\/\//i.test(res)) {
+        window.location.assign(res);
+      } else {
+        throw new Error(
+          "Payment provider did not return a valid checkout URL.",
+        );
+      }
+    } catch (err: unknown) {
+      setGatewayError(
+        err instanceof Error
+          ? err.message
+          : "Unable to start payment. Please try again.",
+      );
     } finally {
+      setIsCreatingOrder(false);
     }
   };
 
@@ -168,9 +193,9 @@ export default function CheckoutPage() {
     setGatewayError(null);
 
     try {
-      // Your coupon API should return the updated OrderResponse.
+      const activeOrder = order ?? (await prepareOrder());
       const updatedOrder = await cartApi.applyCoupon(
-        order!.id,
+        activeOrder.id,
         couponCode.trim(),
         accessToken,
         refreshToken,
@@ -178,6 +203,11 @@ export default function CheckoutPage() {
 
       setOrder(updatedOrder);
       setCouponApplied(true);
+      setCouponCode(couponCode.trim().toUpperCase());
+      sessionStorage.setItem(
+        "checkoutCouponCode",
+        couponCode.trim().toUpperCase(),
+      );
 
       // Keep the updated order available if the page is refreshed.
       sessionStorage.setItem("checkoutOrder", JSON.stringify(updatedOrder));
@@ -192,9 +222,71 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleRemoveCoupon = () => {
-    setCouponCode("");
+  const handleRemoveCoupon = async () => {
+    if (!order || !accessToken) return;
+    setIsRemovingCoupon(true);
     setCouponFeedback(null);
+    try {
+      const updatedOrder = await cartApi.removeCoupon(
+        order.id,
+        accessToken,
+        refreshToken,
+      );
+      setOrder(updatedOrder);
+      setCouponCode("");
+      setCouponApplied(false);
+      sessionStorage.removeItem("checkoutCouponCode");
+      sessionStorage.setItem("checkoutOrder", JSON.stringify(updatedOrder));
+    } catch (err: unknown) {
+      setCouponFeedback({
+        success: false,
+        message:
+          err instanceof Error ? err.message : "Unable to remove coupon.",
+      });
+    } finally {
+      setIsRemovingCoupon(false);
+    }
+  };
+
+  const handleClearCart = async () => {
+    if (!accessToken) return;
+    const result = await cartApi.clearCart(accessToken);
+    if (!result.success) {
+      setGatewayError(result.error ?? "Unable to clear cart.");
+      return;
+    }
+    await clearCartInDB();
+    sessionStorage.removeItem("checkoutOrder");
+    sessionStorage.removeItem("checkoutCouponCode");
+    setOrder(null);
+  };
+
+  const handleEditOrder = async (
+    productId: string,
+    productType: string,
+    add: boolean,
+  ) => {
+    if (!accessToken) return;
+    const response = await cartApi.editOrder(
+      {
+        product_id: productId,
+        product_type: productType,
+        add,
+      },
+      accessToken,
+      refreshToken,
+    );
+
+    if (!response) {
+      setOrder(null);
+      await clearCartInDB();
+      sessionStorage.removeItem("checkoutOrder");
+      sessionStorage.removeItem("checkoutCouponCode");
+      return;
+    }
+
+    setOrder(response);
+    sessionStorage.setItem("checkoutOrder", JSON.stringify(response));
   };
 
   if (!mounted) return null;
@@ -287,12 +379,14 @@ export default function CheckoutPage() {
                         ? "Curriculum Track"
                         : "Curriculum Tracks"}
                     </span>
-                    {/*<button
-                      onClick={clearCart}
-                      className="text-xs font-medium text-red-500 hover:text-red-600 dark:hover:text-red-400 transition"
-                    >
-                      Clear Cart
-                    </button>*/}
+                    {orderItems && orderItems.length > 0 && (
+                      <button
+                        onClick={() => void handleClearCart()}
+                        className="text-xs font-medium text-red-500 hover:text-red-600 dark:hover:text-red-400 transition"
+                      >
+                        Clear Cart
+                      </button>
+                    )}
                   </div>
 
                   {orderItems &&
@@ -340,14 +434,10 @@ export default function CheckoutPage() {
 
                             <button
                               onClick={() => {
-                                if (!accessToken) return;
-                                cartApi.editOrder(
-                                  {
-                                    product_id: item.productId,
-                                    product_type: item.productType,
-                                  },
-                                  accessToken,
-                                  refreshToken,
+                                handleEditOrder(
+                                  item.productId,
+                                  item.productType,
+                                  false,
                                 );
                               }}
                               className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 transition"
@@ -388,10 +478,11 @@ export default function CheckoutPage() {
                           <span>applied ({discountPercentage}% off)</span>
                         </div>
                         <button
-                          onClick={handleRemoveCoupon}
+                          onClick={() => void handleRemoveCoupon()}
+                          disabled={isRemovingCoupon}
                           className="text-xs font-semibold text-emerald-700 underline hover:text-emerald-900 dark:text-emerald-300 dark:hover:text-white"
                         >
-                          Remove
+                          {isRemovingCoupon ? "Removing…" : "Remove"}
                         </button>
                       </div>
                     ) : (

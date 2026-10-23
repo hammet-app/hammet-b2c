@@ -40,6 +40,9 @@ export default function AiSchoolDetailsPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [isInCart, setIsInCart] = useState(false);
+  const [courseIdsInCart, setCourseIdsInCart] = useState<string[]>([]);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -50,7 +53,7 @@ export default function AiSchoolDetailsPage({
 
     try {
       if (!accessToken) return;
-      let targetId = schoolId;
+      const targetId = schoolId;
 
       // Fetch school details to display dynamic name and map human slugs to backend UUIDs
       try {
@@ -95,13 +98,41 @@ export default function AiSchoolDetailsPage({
     fetchCourses();
   }, [fetchCourses]);
 
+  useEffect(() => {
+    if (!school?.id || !accessToken) return;
+    let cancelled = false;
+    void learnerApi.getCart(accessToken, refreshToken).then((cart) => {
+      if (cancelled) return;
+      setIsInCart(
+        Boolean(
+          cart.carts?.some(
+            (item) =>
+              item.productType === "ai_school" && item.productId === school.id,
+          ),
+        ),
+      );
+      setCourseIdsInCart(
+        cart.carts
+          ?.filter((item) => item.productType === "course")
+          .map((item) => item.productId) ?? [],
+      );
+    }).catch(() => {
+      if (!cancelled) {
+        setIsInCart(false);
+        setCourseIdsInCart([]);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [school?.id, accessToken, refreshToken]);
+
   // Calculate full school price
   const fullSchoolPrice = courses.reduce(
     (total, course) => total + course.price,
     0,
   ); // 20% discount for full school
   const isSchoolPaid = school?.isEntitled;
-  const isInCart = school?.isEntitled;
 
   const filteredCourses = courses.filter((course) => {
     if (!searchQuery.trim()) return true;
@@ -169,23 +200,32 @@ export default function AiSchoolDetailsPage({
                   </div>
                   <Button
                     className="bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-600/20 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400"
-                    onClick={() => {
+                    onClick={async () => {
+                      if (!school?.id || !accessToken) return;
+                      if (isInCart) {
+                        router.push("/learner/checkout");
+                        return;
+                      }
+                      setIsAddingToCart(true);
                       trackEvent("checkout_started", {
                         properties: { schoolId, price: fullSchoolPrice },
                       });
-                      if (isInCart) {
-                        router.push("/learner/checkout");
-                      } else {
-                        cartApi.addItem({
+                      const result = await cartApi.addItem({
                           title: school?.name ?? "",
                           price: school?.price ?? 0,
                           type: "ai_school",
                           productId: school?.id ?? "",
-                        });
+                        }, accessToken);
+                      setIsAddingToCart(false);
+                      if (result.success) {
+                        setIsInCart(true);
+                      } else {
+                        setError(result.error ?? "Unable to add this school to your cart.");
                       }
                     }}
+                    disabled={isAddingToCart}
                   >
-                    {isInCart ? "Checkout" : "Add to cart"}
+                    {isAddingToCart ? "Adding…" : isInCart ? "Checkout" : "Add to cart"}
                   </Button>
                 </div>
               </div>
@@ -307,6 +347,7 @@ export default function AiSchoolDetailsPage({
                 key={course.id}
                 course={course}
                 school={school || undefined}
+                hasCartItem={courseIdsInCart.includes(course.id)}
                 index={index}
                 mounted={mounted}
               />

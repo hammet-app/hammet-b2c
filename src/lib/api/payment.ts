@@ -1,9 +1,6 @@
 import { apiClient } from "@/lib/api/api-client";
-import { getPersistedSession } from "@/lib/db";
 import type { CartItem } from "@/lib/store/use-cart";
 import type {
-  AddToCartRequestDto,
-  BackendProductTypeDto,
   CheckoutRequestDto as CheckoutRequest,
   CheckoutItemRequestDto as CheckoutItemDto,
 } from "@/lib/api/types/payment";
@@ -16,8 +13,18 @@ export interface CheckoutResponse {
   reference: string;
 }
 
+type InitPaymentResponse =
+  | boolean
+  | string
+  | {
+      authorization_url?: string;
+      data?: string | { authorization_url?: string; link?: string };
+      payment_url?: string;
+      url?: string;
+    };
+
 export interface VerifyPaymentResponse {
-  status: "success" | "pending" | "failed" | string;
+  status: "successful" | "pending" | "failed" | string;
   //reference: string;
   //amount: number;
   //currency: string;
@@ -57,7 +64,7 @@ export const paymentApi = {
     token: string,
     onRefresh?: () => Promise<string | null>,
   ): Promise<string> => {
-    const res = await apiClient.post<any>(
+    const res = await apiClient.post<InitPaymentResponse>(
       "/payment/init",
       { order_id: orderId },
       token,
@@ -65,7 +72,7 @@ export const paymentApi = {
     );
 
     if (typeof res === "boolean") {
-      return "/learner/learn";
+      return "/learner/checkout/callback?free=1";
     }
 
     if (typeof res === "string") {
@@ -102,8 +109,8 @@ export const paymentApi = {
     onRefresh?: () => Promise<string | null>,
   ): Promise<PaymentApiResponse<VerifyPaymentResponse>> => {
     try {
-      const response = await apiClient.get<VerifyPaymentResponse>(
-        `/learner/payment/verify/${orderId}`,
+      const response = await apiClient.get<string | VerifyPaymentResponse>(
+        `/payment/verify/${orderId}`,
         token,
         { onRefresh, skipSessionExpired: true },
       );
@@ -115,24 +122,28 @@ export const paymentApi = {
         };
       }
 
-      if (response.status !== "success") {
+      const normalized: VerifyPaymentResponse =
+        typeof response === "string" ? { status: response } : response;
+
+      if (normalized.status !== "successful") {
         return {
           success: false,
-          data: response,
-          error: `Payment status is '${response.status || "unverified"}'. The transaction was not confirmed.`,
+          data: normalized,
+          error: `Payment status is '${normalized.status || "unverified"}'. The transaction was not confirmed.`,
         };
       }
 
       return {
         success: true,
-        data: response,
+        data: normalized,
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[paymentApi.verifyPayment] Backend error:", err);
+      const error = err instanceof Error ? err.message : undefined;
       return {
         success: false,
         error:
-          err?.message ||
+          error ||
           `Backend payment verification failed for reference ${orderId}.`,
       };
     }

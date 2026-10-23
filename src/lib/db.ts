@@ -234,6 +234,9 @@ export async function removeCartItemFromDB(id: string): Promise<void> {
 export async function clearCartInDB(): Promise<void> {
   try {
     await db.cart.clear();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("cart-updated"));
+    }
   } catch (err) {
     console.warn("[Dexie] Failed to clear cart:", err);
   }
