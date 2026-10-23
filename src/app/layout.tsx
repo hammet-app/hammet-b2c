@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import { SmoothScrollProvider } from "@/components/providers/smooth-scroll-provider";
 import { Poppins, Geist_Mono } from "next/font/google";

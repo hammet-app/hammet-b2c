@@ -33,7 +33,7 @@ import {
 
 import { useAuth } from "@/lib/auth/auth-context";
 import { useTheme } from "@/lib/use-theme";
-import { useCart } from "@/lib/store/use-cart";
+//import { useCart } from "@/lib/store/use-cart";
 import { useLearnerStore } from "@/lib/store/use-learner-store";
 import { CartDropdown } from "./cart-dropdown";
 import { ProfileDropdown } from "./profile-dropdown";
@@ -51,7 +51,7 @@ const navigation = [
     icon: BookOpen,
   },
   {
-    label: "School of AI foundation",
+    label: "Schools",
     href: "/learner/ai-schools",
     icon: GraduationCap,
   },
@@ -132,7 +132,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
   const { user, logout } = useAuth();
   const { theme, toggle } = useTheme();
 
-  const cartItems = useCart((state) => state.items);
+  //const cartItems = useCart((state) => state.items);
   const syncAccountState = useLearnerStore((state) => state.syncAccountState);
   const isPro = useLearnerStore((state) => state.isPro);
   const [mounted, setMounted] = useState(false);
@@ -185,7 +185,6 @@ export function LearnerShell({ children }: LearnerShellProps) {
       return next;
     });
   }
-
 
   const isBlurredSection =
     pathname === "/learner/chat" ||
@@ -584,8 +583,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
         )}
       </AnimatePresence>
 
-
-                  {/* Full-Page Blurry Layer with Coming Soon Tag & Pause Message for under-development sections */}
+      {/* Full-Page Blurry Layer with Coming Soon Tag & Pause Message for under-development sections */}
       <AnimatePresence>
         {isBlurredSection && (
           <motion.div
@@ -626,19 +624,21 @@ export function LearnerShell({ children }: LearnerShellProps) {
                 {pathname.includes("/chat")
                   ? "Community Chat System"
                   : pathname.includes("/portfolio")
-                  ? "Public Portfolio System"
-                  : pathname.includes("/pro")
-                  ? "Hammet Pro Membership"
-                  : pathname.includes("/settings")
-                  ? "Account Settings & Preferences"
-                  : pathname.includes("/notifications")
-                  ? "Notifications Hub"
-                  : "Feature In Progress"}
+                    ? "Public Portfolio System"
+                    : pathname.includes("/pro")
+                      ? "Hammet Pro Membership"
+                      : pathname.includes("/settings")
+                        ? "Account Settings & Preferences"
+                        : pathname.includes("/notifications")
+                          ? "Notifications Hub"
+                          : "Feature In Progress"}
               </h2>
 
               {/* Detailed Pause Message */}
               <p className="mt-3.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-sans max-w-md">
-                This section is on pause for now while the backend services and APIs are being wired up. All active learning curriculums, AI schools, and course projects are fully live and operational.
+                This section is on pause for now while the backend services and
+                APIs are being wired up. All active learning curriculums, AI
+                schools, and course projects are fully live and operational.
               </p>
 
               {/* Security & System Info Pills */}

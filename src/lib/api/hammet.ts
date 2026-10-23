@@ -2,8 +2,41 @@ import { apiClient } from "@/lib/api/api-client";
 import {
   type RegisterHammetAdminRequest,
   type CreateAiSchoolRequest,
+  type CreateAiSchoolResponse,
+  type CreateAiSchoolResponseDto,
+  type CreateAiCourseRequest,
+  type CreateAiCourseResponse,
+  type UpdateAiSchoolRequest,
+  type UpdateAiSchoolResponse,
+  type UpdateAiSchoolResponseDto,
+  type UpdateAiCourseRequest,
+  type UpdateAiCourseResponse,
+  type UpdateAiCourseResponseDto,
+  type UpdateAiModuleRequest,
+  type AiModule,
+  type AiModuleDto,
+  type AddAiQuizRequest,
+  type AiQuiz,
+  type AiQuizDto,
+  type AiSchool,
+  type AiSchoolsResponseDto,
+  fromUpdateAiSchoolRequest,
+  toUpdateAiSchoolResponse,
+  fromUpdateAiCourseRequest,
+  toUpdateAiCourseResponse,
+  fromUpdateAiModuleRequest,
+  toAiModule,
+  fromAddAiQuizRequest,
+  toAiQuiz,
+  type HammetAiSchoolCoursesResponse,
+  type HammetAiSchoolCoursesResponseDto,
+  toHammetAiSchoolCoursesResponse,
   fromRegisterHammetAdminRequest,
   fromCreateAiSchoolRequest,
+  toCreateAiSchoolResponse,
+  toAiSchoolsResponse,
+  CreateAiCourseResponseDto,
+  toCreateAiCourseResponse,
 } from "@/lib/api/types";
 
 // ------------------------------------------------------------
@@ -15,14 +48,16 @@ export async function registerHammet(
   token: string,
   onRefresh: () => Promise<string | null>,
 ): Promise<boolean> {
-  const payload = fromRegisterHammetAdminRequest(body)
+  const payload = fromRegisterHammetAdminRequest(body);
 
   const response = await apiClient.post<boolean>(
-    "/auth/register/hammet", 
-    payload, token, {onRefresh});
-  
-  return response
+    "/auth/register/hammet",
+    payload,
+    token,
+    { onRefresh },
+  );
 
+  return response;
 }
 
 // ------------------------------------------------------------
@@ -32,13 +67,145 @@ export async function registerHammet(
 export async function createAiSchool(
   body: CreateAiSchoolRequest,
   token: string,
-  onRefresh: () => Promise<string | null>
-): Promise<unknown> {
-  const payload = fromCreateAiSchoolRequest(body)
-  return await apiClient.post<unknown>(
+  onRefresh: () => Promise<string | null>,
+): Promise<CreateAiSchoolResponse> {
+  const payload = fromCreateAiSchoolRequest(body);
+  const response = await apiClient.post<CreateAiSchoolResponseDto>(
     "/hammet/create/ai-school",
     payload,
     token,
-    { onRefresh }
-  )
+    { onRefresh },
+  );
+
+  return toCreateAiSchoolResponse(response);
+}
+
+// The backend rejects a body with no fields set, and treats false/0 as unset.
+export async function updateAiSchool(
+  schoolId: string,
+  body: UpdateAiSchoolRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<UpdateAiSchoolResponse> {
+  const payload = fromUpdateAiSchoolRequest(schoolId, body);
+  const response = await apiClient.patch<UpdateAiSchoolResponseDto>(
+    `/hammet/edit/ai-school/${encodeURIComponent(schoolId)}`,
+    payload,
+    token,
+    { onRefresh },
+  );
+
+  return toUpdateAiSchoolResponse(response);
+}
+
+// There is no create-course route; courses are created through the school edit route.
+export async function createAiCourse(
+  body: CreateAiCourseRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<CreateAiCourseResponse> {
+  const response = await updateAiSchool(
+    body.aiSchoolId,
+    { courses: [body] },
+    token,
+    onRefresh,
+  );
+
+  return response.courses[0];
+}
+
+// Modules listed in body.modules are created under the course.
+export async function updateAiCourse(
+  courseId: string,
+  body: UpdateAiCourseRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<UpdateAiCourseResponse> {
+  const payload = fromUpdateAiCourseRequest(courseId, body);
+  const response = await apiClient.patch<UpdateAiCourseResponseDto>(
+    `/hammet/edit/ai-courses/${encodeURIComponent(courseId)}`,
+    payload,
+    token,
+    { onRefresh },
+  );
+
+  return toUpdateAiCourseResponse(response);
+}
+
+// Resources listed in body.resources are added to the module.
+// The returned module's resources only holds the ones added by this request.
+export async function updateAiModule(
+  moduleId: string,
+  body: UpdateAiModuleRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<AiModule> {
+  const payload = fromUpdateAiModuleRequest(moduleId, body);
+  const response = await apiClient.patch<AiModuleDto>(
+    `/hammet/edit/ai-modules/${encodeURIComponent(moduleId)}`,
+    payload,
+    token,
+    { onRefresh },
+  );
+
+  return toAiModule(response);
+}
+
+export async function addAiQuiz(
+  moduleId: string,
+  body: AddAiQuizRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<AiQuiz> {
+  const payload = fromAddAiQuizRequest(body);
+  const response = await apiClient.patch<AiQuizDto>(
+    `/hammet/edit/ai-modules/${encodeURIComponent(moduleId)}/quiz/add`,
+    payload,
+    token,
+    { onRefresh },
+  );
+
+  return toAiQuiz(response);
+}
+
+export async function getHammetAiSchools(
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<AiSchool[]> {
+  const response = await apiClient.get<AiSchoolsResponseDto>(
+    "/hammet/ai-schools",
+    token,
+    { onRefresh },
+  );
+
+  return toAiSchoolsResponse(response).aiSchools;
+}
+
+// Returns the school (drafts included) together with its courses.
+export async function getHammetAiSchoolCourses(
+  schoolId: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<HammetAiSchoolCoursesResponse> {
+  const response = await apiClient.get<HammetAiSchoolCoursesResponseDto>(
+    `/hammet/ai-schools/${encodeURIComponent(schoolId)}/courses`,
+    token,
+    { onRefresh },
+  );
+
+  return toHammetAiSchoolCoursesResponse(response);
+}
+
+export async function getHammetAiCourse(
+  courseId: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<CreateAiCourseResponse> {
+  const response = await apiClient.get<CreateAiCourseResponseDto>(
+    `/hammet/courses/${encodeURIComponent(courseId)}`,
+    token,
+    { onRefresh },
+  );
+
+  return toCreateAiCourseResponse(response);
 }

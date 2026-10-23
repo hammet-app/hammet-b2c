@@ -57,6 +57,9 @@
 }
 
 .dark {
+  /* Tells the browser to draw native controls (select dropdown lists, scrollbars) dark too. */
+  color-scheme: dark;
+
   /* ── Surfaces ── */
   --color-bg-page:       #09090b; /* Zinc-950 (very dark greyscale black) */
   --color-bg-card:       #18181b; /* Zinc-900 (neutral dark card background) */

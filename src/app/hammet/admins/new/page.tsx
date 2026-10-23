@@ -48,8 +48,8 @@ const b2cAccess = [
   {
     id: "coupons" as UserAccess,
     label: "Coupons",
-    description: "Create and manage B2C coupons",
-  },
+    description: "Create and manage B2C coupons.",
+  }
 ];
 
 export default function RegisterAdminPage() {

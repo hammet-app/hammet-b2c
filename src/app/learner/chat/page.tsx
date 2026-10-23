@@ -115,7 +115,7 @@ export default function LearnerChatPage() {
         {/* Main Application Frame with Frosted Overlay */}
         <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-xl dark:border-white/[0.08] dark:bg-slate-950">
           {/* ── UNDERLYING RICH CHAT APPLICATION (BLURRED IN BACKGROUND) ────────── */}
-          <div className="grid h-[780px] grid-cols-1 md:grid-cols-[280px_1fr] lg:grid-cols-[280px_1fr_260px] opacity-90 select-none pointer-events-none transition-all">
+          <div className="grid h-[780px] grid-cols-1 md:grid-cols-[280px_1fr] lg:grid-cols-[280px_1fr_260px] filter blur-md select-none pointer-events-none opacity-30 scale-[0.99] transition-all">
             {/* 1. LEFT SIDEBAR: CHANNELS & DIRECT MESSAGES */}
             <div className="hidden border-r border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/[0.08] dark:bg-slate-900/40 md:flex md:flex-col justify-between">
             <div className="space-y-5 overflow-y-auto">
@@ -581,8 +581,114 @@ export default function LearnerChatPage() {
           )}
         </div>
 
+        {/* ── PERMANENT FROSTED GLASS COMING SOON OVERLAY ───────────────────────── */}
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 sm:p-12 text-center bg-slate-900/40 dark:bg-slate-950/85 backdrop-blur-md backdrop-brightness-110">
+        {/* 3D Glass Bubble & Pulsing Timer Icon */}
+        <div className="relative mb-6 flex h-28 w-28 items-center justify-center">
+          <div className="absolute -inset-2 rounded-full bg-purple-500/15 blur-2xl animate-pulse" />
+          <motion.div
+            animate={{ y: [0, -6, 0] }}
+            transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
+            className="relative h-24 w-24 drop-shadow-[0_12px_24px_rgba(144,52,234,0.3)]"
+          >
+            <Image
+              src="/chat-3d-bubble.png"
+              alt="Hammet Community Chat"
+              fill
+              sizes="96px"
+              className="object-contain filter saturate-[1.2]"
+              priority
+            />
+          </motion.div>
+          <span className="absolute bottom-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-slate-950 border border-purple-500/40 text-purple-300 shadow-lg">
+            <Timer className="h-4 w-4 animate-spin-slow" />
+          </span>
+        </div>
+
+        {/* Status Chip */}
+        <span className="rounded-full bg-purple-900/40 border border-purple-500/30 px-4 py-1 text-[11px] font-mono font-bold tracking-widest text-purple-200 uppercase mb-3 shadow-inner">
+          Coming Soon // Live WebSocket Gateway in Development
+        </span>
+
+        {/* Heading */}
+        <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white max-w-2xl">
+          Learner Community &amp; Real-Time Chat System
+        </h2>
+
+        {/* Detailed Explanation of What It's For */}
+        <p className="mt-4 max-w-xl text-xs sm:text-sm text-slate-300 leading-relaxed font-sans">
+          The Hammet Community Chat is being engineered to give learners, engineers, and researchers an interactive hub to communicate, brainstorm ideas, form study cohorts, share runnable code snippets, and review each other’s course capstones in real-time.
+        </p>
+
+        {/* Core Architecture Capabilities */}
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-4xl w-full">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left backdrop-blur-sm">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-500/20 text-purple-300 mb-2">
+              <MessageSquare className="h-4 w-4" />
+            </div>
+            <h4 className="text-xs font-bold text-white">Study Channels</h4>
+            <p className="mt-1 text-[11px] text-slate-400 leading-normal">
+              Dedicated streams for Neural Fine-Tuning, Agentic Swarms, and Vector RAG.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left backdrop-blur-sm">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-500/20 text-cyan-300 mb-2">
+              <Code className="h-4 w-4" />
+            </div>
+            <h4 className="text-xs font-bold text-white">Code Sandboxes</h4>
+            <p className="mt-1 text-[11px] text-slate-400 leading-normal">
+              Share runnable Python snippets, LangGraph graphs, and PyTorch adapters.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left backdrop-blur-sm">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-300 mb-2">
+              <Rocket className="h-4 w-4" />
+            </div>
+            <h4 className="text-xs font-bold text-white">Project Showcase</h4>
+            <p className="mt-1 text-[11px] text-slate-400 leading-normal">
+              Broadcast capstone repos, get live peer feedback, and earn community upvotes.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left backdrop-blur-sm">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300 mb-2">
+              <Crown className="h-4 w-4" />
+            </div>
+            <h4 className="text-xs font-bold text-white">Mentor Office Hours</h4>
+            <p className="mt-1 text-[11px] text-slate-400 leading-normal">
+              Direct access to AI research leads and certified industry practitioners.
+            </p>
+          </div>
+        </div>
+
+        {/* Security & Launch Notice */}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <div className="flex items-center gap-2 rounded-xl bg-white/95 border border-slate-200/90 px-4 py-2 text-xs text-slate-800 font-mono font-medium shadow-sm backdrop-blur-md transition-colors hover:border-purple-400/50 dark:bg-white/[0.08] dark:border-white/15 dark:text-slate-200">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="font-semibold">Encrypted Direct Messaging</span>
+          </div>
+          <div className="flex items-center gap-2 rounded-xl bg-white/95 border border-slate-200/90 px-4 py-2 text-xs text-slate-800 font-mono font-medium shadow-sm backdrop-blur-md transition-colors hover:border-purple-400/50 dark:bg-white/[0.08] dark:border-white/15 dark:text-slate-200">
+            <ShieldCheck className="h-4 w-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
+            <span className="font-semibold">Profile &amp; Badges Auto-Linked</span>
+          </div>
+        </div>
+
+        {/* Back Link to Learning */}
+        <div className="mt-8">
+          <Link
+            href="/learner/projects"
+            className="group inline-flex items-center gap-2.5 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-bold border border-purple-400/30 px-6 py-2.5 text-xs shadow-lg shadow-purple-600/35 hover:shadow-xl hover:shadow-purple-600/50 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 dark:bg-purple-600 dark:hover:bg-purple-500"
+          >
+            <span>Explore Active Course Projects</span>
+            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+          </Link>
         </div>
       </div>
     </div>
-  );
+  </div>
+</div>
+);
 }
+

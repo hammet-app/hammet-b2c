@@ -142,8 +142,7 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
 
       if (apiRes.success && apiRes.data) {
         finalTicketId = apiRes.data.id || finalTicketId;
-        finalCreatedAt =
-          apiRes.data.createdAt ||
+        finalCreatedAt = 
           (apiRes.data as any).created_at ||
           finalCreatedAt;
 
@@ -166,8 +165,7 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
             isOnline: true,
           },
           createdAt: finalCreatedAt,
-          updatedAt:
-            apiRes.data.updatedAt ||
+          updatedAt: 
             (apiRes.data as any).updated_at ||
             finalCreatedAt,
           slaTarget: "Within 24 Hours",

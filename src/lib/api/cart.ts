@@ -32,7 +32,7 @@ export interface CartApiResult<T> {
 export function toCartItemDto(item: DexieCartItem): CartItemDto {
   return {
     product_type: item.type,
-    product_id: item.productId || item.id || "",
+    product_id: item.productId  || "",
   };
 }
 
@@ -67,33 +67,12 @@ export const cartApi = {
       });
       return toCartResponse(data);
     } catch (err: unknown) {
-      console.warn("[cartApi.getCart] Remote cart service unavailable, falling back to local storage:", err);
-      try {
-        const localItems = await getCartItemsFromDB();
-        return {
-          id: "local-cart-fallback",
-          total: localItems.reduce(
-            (acc, i) => acc + (i.price ?? 0) * (i.quantity ?? 1),
-            0,
-          ),
-          carts: localItems.map((item) => ({
-            id: item.id || item.productId || "",
-            cartId: "local",
-            productType: item.type,
-            productId: item.productId || item.id || "",
-            productName: item.title,
-            productPrice: item.price,
-          })),
-          invalidCarts: null,
-        };
-      } catch {
         return {
           id: "empty-cart-fallback",
           total: 0,
           carts: [],
           invalidCarts: null,
         };
-      }
     }
   },
 
@@ -172,7 +151,7 @@ export const cartApi = {
         item.type as BackendProductTypeDto;
       const payload: AddToCartRequestDto = {
         product_type,
-        product_id: item.productId || item.id || "",
+        product_id: item.productId,
       };
       await apiClient.patch("/learner/cart/add", payload, authToken, {
         skipSessionExpired: true,

@@ -7,7 +7,7 @@ import { Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { AiSchool, AiSchoolCourse } from "@/lib/api/types";
-import { useCart } from "@/lib/store/use-cart";
+//import { useCart } from "@/lib/store/use-cart";
 import { useWishlist } from "@/lib/store/use-wishlist";
 import { cartApi } from "@/lib/api/cart";
 

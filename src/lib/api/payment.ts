@@ -18,12 +18,12 @@ export interface CheckoutResponse {
 
 export interface VerifyPaymentResponse {
   status: "success" | "pending" | "failed" | string;
-  reference: string;
-  amount: number;
-  currency: string;
-  paid_at?: string | null;
-  channel?: string | null;
-  enrolled_items: string[];
+  //reference: string;
+  //amount: number;
+  //currency: string;
+  //paid_at?: string | null;
+  //channel?: string | null;
+  //enrolled_items: string[];
 }
 
 export interface CreatePaymentLinkPayload {
@@ -64,6 +64,10 @@ export const paymentApi = {
       onRefresh ? { onRefresh } : { skipSessionExpired: true },
     );
 
+    if (typeof res === "boolean") {
+      return "/learner/learn";
+    }
+
     if (typeof res === "string") {
       return res;
     }
@@ -93,15 +97,15 @@ export const paymentApi = {
    * Surfaces failure transparently if the payment is unverified or declined.
    */
   verifyPayment: async (
-    reference: string,
-    token?: string | null,
+    orderId: string,
+    token: string | null,
+    onRefresh?: () => Promise<string | null>,
   ): Promise<PaymentApiResponse<VerifyPaymentResponse>> => {
     try {
-      const authToken = token || (await getPersistedSession())?.accessToken;
       const response = await apiClient.get<VerifyPaymentResponse>(
-        `/learner/payment/verify/${reference}`,
-        authToken,
-        { skipSessionExpired: true },
+        `/learner/payment/verify/${orderId}`,
+        token,
+        { onRefresh, skipSessionExpired: true },
       );
 
       if (!response) {
@@ -129,7 +133,7 @@ export const paymentApi = {
         success: false,
         error:
           err?.message ||
-          `Backend payment verification failed for reference ${reference}.`,
+          `Backend payment verification failed for reference ${orderId}.`,
       };
     }
   },
