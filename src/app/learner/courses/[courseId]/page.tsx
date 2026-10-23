@@ -20,17 +20,48 @@ import {
   PlayCircle,
   Search,
   X,
+  FileText,
+  Video,
+  Globe,
+  FolderKanban,
+  ArrowUpRight,
+  Terminal,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-context";
 import { learnerApi } from "@/lib/api/learner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/utils";
-import type { PublishedCourse, PublishedModule } from "@/lib/api/types/learner";
+import type {
+  PublishedCourse,
+  PublishedModule,
+  CourseModuleResource,
+  CourseModuleProject,
+} from "@/lib/api/types/learner";
 
 type CourseDetailsPageProps = {
   params: Promise<{ courseId: string }>;
 };
+
+function getResourceIcon(type: string) {
+  const normalized = (type || "").toLowerCase();
+  if (normalized.includes("video")) return Video;
+  if (normalized.includes("doc")) return FileText;
+  if (normalized.includes("article")) return BookOpen;
+  if (normalized.includes("link")) return Globe;
+  return ExternalLink;
+}
+
+function getResourceTypeBadgeClass(type: string) {
+  const normalized = (type || "").toLowerCase();
+  if (normalized.includes("video"))
+    return "bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-300 border-sky-200 dark:border-sky-500/30";
+  if (normalized.includes("doc"))
+    return "bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300 border-purple-200 dark:border-purple-500/30";
+  if (normalized.includes("article"))
+    return "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30";
+  return "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 border-amber-200 dark:border-amber-500/30";
+}
 
 export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
   const { courseId } = use(params);
@@ -312,6 +343,8 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
                   const moduleHasAccess =
                     module.isEnrolled || module.isEntitled;
                   const moduleCanOpen = canAccessCourse && moduleHasAccess;
+                  const resources = module.resources ?? [];
+                  const projects = module.projects ?? [];
 
                   return (
                     <motion.article
@@ -365,6 +398,28 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
                                   Locked
                                 </span>
                               )}
+                              {resources.length > 0 && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-white/10 dark:text-slate-300">
+                                  <FileText className="h-3 w-3" />
+                                  <span>
+                                    {resources.length}{" "}
+                                    {resources.length === 1
+                                      ? "Resource"
+                                      : "Resources"}
+                                  </span>
+                                </span>
+                              )}
+                              {projects.length > 0 && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700 dark:bg-purple-500/15 dark:text-purple-300">
+                                  <FolderKanban className="h-3 w-3" />
+                                  <span>
+                                    {projects.length}{" "}
+                                    {projects.length === 1
+                                      ? "Project"
+                                      : "Projects"}
+                                  </span>
+                                </span>
+                              )}
                             </div>
                           </div>
 
@@ -379,6 +434,33 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
                           <p className="mt-1.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400 sm:text-sm">
                             {module.description}
                           </p>
+
+                          {/* Quick clickable resource links on card if available */}
+                          {resources.length > 0 && (
+                            <div className="mt-3 flex flex-wrap items-center gap-2">
+                              {resources.map((res) => {
+                                const ResIcon = getResourceIcon(
+                                  res.resourceType,
+                                );
+                                return (
+                                  <a
+                                    key={res.id}
+                                    href={res.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title={`Open ${res.title} (${res.resourceType})`}
+                                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200/90 bg-slate-50/70 px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-xs transition hover:border-purple-300 hover:bg-white hover:text-purple-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:text-cyan-300"
+                                  >
+                                    <ResIcon className="h-3 w-3 text-purple-600 dark:text-cyan-400" />
+                                    <span className="truncate max-w-[150px] sm:max-w-[200px]">
+                                      {res.title}
+                                    </span>
+                                    <ExternalLink className="h-2.5 w-2.5 opacity-60" />
+                                  </a>
+                                );
+                              })}
+                            </div>
+                          )}
 
                           <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-black/[0.04] pt-3 dark:border-white/[0.05]">
                             <button
@@ -410,6 +492,22 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
                                   Masterclass
                                 </a>
                               )}
+
+                            {projects.length > 0 && (
+                              <Link
+                                href="/learner/projects"
+                                className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200/80 bg-indigo-50/50 px-3 py-1.5 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100/70 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300"
+                              >
+                                <FolderKanban className="h-3.5 w-3.5" />
+                                <span>
+                                  {projects.length}{" "}
+                                  {projects.length === 1
+                                    ? "Project"
+                                    : "Projects"}
+                                </span>
+                                <ArrowUpRight className="h-3 w-3 opacity-70" />
+                              </Link>
+                            )}
                           </div>
                         </div>
 
@@ -570,14 +668,26 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative flex h-[min(90vh,680px)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-black/[0.08] bg-white shadow-2xl dark:border-white/10 dark:bg-[#120E1F]"
+              className="relative flex h-[min(92vh,780px)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-black/[0.08] bg-white shadow-2xl dark:border-white/10 dark:bg-[#120E1F]"
             >
               <header className="flex items-center justify-between gap-4 border-b border-slate-100 px-6 py-4 dark:border-white/10">
                 <div className="min-w-0">
-                  <span className="rounded-md bg-purple-100 px-2 py-0.5 font-mono text-xs font-bold text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">
-                    MODULE {activeModule.position}
-                  </span>
-                  <h2 className="mt-2 truncate font-bold text-slate-900 dark:text-white">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-md bg-purple-100 px-2 py-0.5 font-mono text-xs font-bold text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">
+                      MODULE {activeModule.position}
+                    </span>
+                    {(activeModule.resources?.length ?? 0) > 0 && (
+                      <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600 dark:bg-white/10 dark:text-slate-300">
+                        {activeModule.resources.length} Resources
+                      </span>
+                    )}
+                    {(activeModule.projects?.length ?? 0) > 0 && (
+                      <span className="rounded-md bg-purple-50 px-2 py-0.5 text-[11px] font-semibold text-purple-700 dark:bg-purple-500/10 dark:text-purple-300">
+                        {activeModule.projects.length} Projects
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="mt-2 truncate text-lg font-bold text-slate-900 dark:text-white">
                     {activeModule.title}
                   </h2>
                 </div>
@@ -591,40 +701,189 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
                 </button>
               </header>
 
-              <div className="flex-1 overflow-y-auto p-6">
-                <div className="mb-5 flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
-                  {activeModule.hasFinished ? (
-                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                  ) : (
-                    <BookOpen className="h-5 w-5 text-purple-500 dark:text-cyan-400" />
-                  )}
-                  {activeModule.hasFinished
-                    ? "Module completed"
-                    : "Module overview"}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
+                    {activeModule.hasFinished ? (
+                      <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                    ) : (
+                      <BookOpen className="h-5 w-5 text-purple-500 dark:text-cyan-400" />
+                    )}
+                    <span>
+                      {activeModule.hasFinished
+                        ? "Module completed"
+                        : "Module overview"}
+                    </span>
+                  </div>
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                    {activeModule.description}
+                  </p>
                 </div>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                  {activeModule.description}
-                </p>
 
                 {activeModule.masterclass && (
-                  <div className="mt-6 rounded-2xl border border-purple-200/70 bg-purple-50 p-4 dark:border-purple-500/20 dark:bg-purple-950/20">
-                    <h3 className="font-bold text-purple-900 dark:text-purple-200">
-                      Masterclass
+                  <div className="rounded-2xl border border-purple-200/70 bg-purple-50 p-4 dark:border-purple-500/20 dark:bg-purple-950/20">
+                    <h3 className="font-bold text-purple-900 dark:text-purple-200 text-sm">
+                      Masterclass Video
                     </h3>
                     {/^https?:\/\//i.test(activeModule.masterclass) ? (
                       <a
                         href={activeModule.masterclass}
                         target="_blank"
                         rel="noreferrer"
-                        className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-purple-700 underline dark:text-cyan-300"
+                        className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-purple-700 underline hover:text-purple-900 dark:text-cyan-300 dark:hover:text-white"
                       >
-                        Open masterclass <ExternalLink className="h-4 w-4" />
+                        Open masterclass video <ExternalLink className="h-4 w-4" />
                       </a>
                     ) : (
                       <p className="mt-2 break-words text-sm text-purple-950 dark:text-purple-300">
                         {activeModule.masterclass}
                       </p>
                     )}
+                  </div>
+                )}
+
+                {/* ── MODULE RESOURCES: Display Title as Clickable Link with URL Destination ── */}
+                {activeModule.resources && activeModule.resources.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
+                        <FileText className="h-4 w-4 text-purple-600 dark:text-cyan-400" />
+                        <span>Curated Module Resources</span>
+                      </h3>
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600 dark:bg-white/10 dark:text-slate-300">
+                        {activeModule.resources.length} Links
+                      </span>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      {activeModule.resources
+                        .slice()
+                        .sort((a, b) => a.position - b.position)
+                        .map((resource) => {
+                          const ResIcon = getResourceIcon(
+                            resource.resourceType,
+                          );
+                          return (
+                            <div
+                              key={resource.id}
+                              className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-black/[0.06] bg-slate-50/70 p-4 transition-all hover:border-purple-300 hover:bg-white hover:shadow-xs dark:border-white/[0.06] dark:bg-white/[0.02] dark:hover:border-cyan-500/30 dark:hover:bg-white/[0.04]"
+                            >
+                              <div className="flex items-start gap-3 min-w-0">
+                                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-100 text-purple-700 shadow-2xs dark:bg-cyan-500/15 dark:text-cyan-300">
+                                  <ResIcon className="h-4 w-4" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  {/* Title as a clickable link using url as destination */}
+                                  <a
+                                    href={resource.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-900 transition hover:text-purple-600 dark:text-white dark:hover:text-cyan-300 group-hover:underline"
+                                  >
+                                    <span className="break-words">
+                                      {resource.title}
+                                    </span>
+                                    <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-70 group-hover:opacity-100" />
+                                  </a>
+                                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                                    <span
+                                      className={cn(
+                                        "rounded-md border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                                        getResourceTypeBadgeClass(
+                                          resource.resourceType,
+                                        ),
+                                      )}
+                                    >
+                                      {resource.resourceType || "resource"}
+                                    </span>
+                                    <a
+                                      href={resource.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="truncate font-mono text-[11px] text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+                                    >
+                                      {resource.url}
+                                    </a>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <a
+                                href={resource.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-purple-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 transition"
+                              >
+                                <span>Open</span>
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </a>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── MODULE PROJECTS: Hands-on Capstone Projects & Instructions ── */}
+                {activeModule.projects && activeModule.projects.length > 0 && (
+                  <div className="space-y-3 border-t border-slate-100 pt-5 dark:border-white/10">
+                    <div className="flex items-center justify-between">
+                      <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
+                        <FolderKanban className="h-4 w-4 text-purple-600 dark:text-cyan-400" />
+                        <span>Attached Capstone Projects</span>
+                      </h3>
+                      <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-[11px] font-bold text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">
+                        {activeModule.projects.length}{" "}
+                        {activeModule.projects.length === 1
+                          ? "Project"
+                          : "Projects"}
+                      </span>
+                    </div>
+
+                    <div className="space-y-3">
+                      {activeModule.projects
+                        .slice()
+                        .sort((a, b) => a.position - b.position)
+                        .map((project) => (
+                          <div
+                            key={project.id}
+                            className="rounded-2xl border border-black/[0.06] bg-slate-50/70 p-5 dark:border-white/[0.06] dark:bg-white/[0.02]"
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                              <div>
+                                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-cyan-400">
+                                  Project {project.position}
+                                </span>
+                                <h4 className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
+                                  {project.title}
+                                </h4>
+                                <p className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                                  {project.description}
+                                </p>
+                              </div>
+                              <Link
+                                href="/learner/projects"
+                                className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-purple-200 bg-white px-3.5 py-2 text-xs font-bold text-purple-700 shadow-xs hover:bg-purple-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-cyan-300 dark:hover:bg-white/[0.08] transition"
+                              >
+                                <span>Open Project Lab</span>
+                                <ArrowUpRight className="h-3.5 w-3.5" />
+                              </Link>
+                            </div>
+
+                            {project.instructions && (
+                              <div className="mt-4 rounded-xl border border-slate-200/70 bg-white p-3.5 dark:border-white/[0.06] dark:bg-[#0B0815]">
+                                <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                  <Terminal className="h-3.5 w-3.5 text-purple-600 dark:text-cyan-400" />
+                                  <span>Instructions &amp; Requirements</span>
+                                </div>
+                                <p className="whitespace-pre-wrap font-sans text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+                                  {project.instructions}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                    </div>
                   </div>
                 )}
               </div>

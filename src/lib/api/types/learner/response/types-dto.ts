@@ -32,6 +32,22 @@ export interface EntitlementResponseDto {
 
 // GET /api/v1/learner/courses/{course_id}
 
+export type CourseModuleResourceDto = {
+  id: string;
+  title: string;
+  resource_type: string;
+  url: string;
+  position: number;
+};
+
+export type CourseModuleProjectDto = {
+  id: string;
+  title: string;
+  description: string;
+  instructions: string;
+  position: number;
+};
+
 export type PublishedModuleDto = {
   id: string;
   course_id: string;
@@ -43,6 +59,8 @@ export type PublishedModuleDto = {
   has_finished: boolean;
   position: number;
   masterclass: string | null;
+  resources?: CourseModuleResourceDto[];
+  projects?: CourseModuleProjectDto[];
 };
 
 export type PublishedCourseDto = {

@@ -4,6 +4,8 @@ import {
   EntitlementResponse,
   PublishedCourse,
   PublishedModule,
+  CourseModuleResource,
+  CourseModuleProject,
 } from "@/lib/api/types/learner/response/types";
 
 import {
@@ -12,6 +14,8 @@ import {
   CourseEntitlementDto,
   AISchoolEntitlementDto,
   EntitlementResponseDto,
+  CourseModuleResourceDto,
+  CourseModuleProjectDto,
 } from "@/lib/api/types/learner/response/types-dto";
 
 /**
@@ -62,6 +66,30 @@ export function toEntitlementResponse(
   };
 }
 
+export function toCourseModuleResource(
+  dto: CourseModuleResourceDto,
+): CourseModuleResource {
+  return {
+    id: dto.id,
+    title: dto.title,
+    resourceType: dto.resource_type,
+    url: dto.url,
+    position: dto.position,
+  };
+}
+
+export function toCourseModuleProject(
+  dto: CourseModuleProjectDto,
+): CourseModuleProject {
+  return {
+    id: dto.id,
+    title: dto.title,
+    description: dto.description,
+    instructions: dto.instructions,
+    position: dto.position,
+  };
+}
+
 export function toPublishedModule(dto: PublishedModuleDto): PublishedModule {
   return {
     id: dto.id,
@@ -74,6 +102,8 @@ export function toPublishedModule(dto: PublishedModuleDto): PublishedModule {
     description: dto.description,
     position: dto.position,
     masterclass: dto.masterclass,
+    resources: dto.resources ? dto.resources.map(toCourseModuleResource) : [],
+    projects: dto.projects ? dto.projects.map(toCourseModuleProject) : [],
   };
 }
 
@@ -89,6 +119,6 @@ export function toPublishedCourse(dto: PublishedCourseDto): PublishedCourse {
     description: dto.description,
     position: dto.position,
     price: dto.price,
-    modules: dto.modules.map(toPublishedModule),
+    modules: dto.modules ? dto.modules.map(toPublishedModule) : [],
   };
 }
