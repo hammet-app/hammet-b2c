@@ -84,6 +84,7 @@ function PaystackCallbackContent() {
     }
 
     handleSettlement();
+    sessionStorage.removeItem("checkoutOrder");
   }, [accessToken]);
 
   const handleStartCourse = () => {
