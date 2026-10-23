@@ -53,7 +53,7 @@ function PaystackCallbackContent() {
       // 2. Verify settlement strictly with the backend API
       try {
         if (!order) {
-          router.push("/learner/learner");
+          router.push("/learner/learn");
           return;
         }
         const verifyRes = await paymentApi.verifyPayment(order.id, accessToken);
