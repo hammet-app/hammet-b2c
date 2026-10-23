@@ -32,6 +32,13 @@ export interface AuthUser {
   sessionDetails: SessionDetails | null;
 }
 
+/** Hammet admins with platform scope, or b2c scope plus course access, manage AI schools and their content. */
+export function canManageAiCatalog(user: AuthUser | null | undefined): boolean {
+  if (user?.role !== "hammet_admin") return false;
+  if (user.scope === "platform") return true;
+  return user.scope === "b2c" && (user.access ?? []).includes("courses");
+}
+
 /** Returns the user's display label for a given role. */
 export function getRoleLabel(role: UserRole): string {
   const map: Record<UserRole, string> = {

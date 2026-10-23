@@ -9,9 +9,10 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { getHammetAiSchools } from "@/lib/api/hammet";
 import type { AiSchool } from "@/lib/api/types";
 import { Alert } from "@/components/ui";
+import { SessionExpiredNotice } from "@/components/hammet/admin-form";
 
 export default function AiSchoolsPage() {
-  const { accessToken, refreshToken } = useAuth();
+  const { accessToken, refreshToken, isLoading: authLoading } = useAuth();
 
   const [schools, setSchools] = useState<AiSchool[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,6 +39,10 @@ export default function AiSchoolsPage() {
       active = false;
     };
   }, [accessToken, refreshToken]);
+
+  if (!authLoading && !accessToken) {
+    return <SessionExpiredNotice />;
+  }
 
   return (
     <div className="px-5 pb-28 pt-8 sm:px-7 sm:pt-10 lg:px-10 lg:pb-12 lg:pt-10">
