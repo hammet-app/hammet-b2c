@@ -117,6 +117,9 @@ export function CartDropdown() {
 
       const orderResponse = await cartApi.checkout(accessToken, refreshToken);
       sessionStorage.setItem("checkoutOrder", JSON.stringify(orderResponse));
+
+      setOpen(false);
+      router.push("/learner/checkout");
     } catch (error) {
       console.warn("Backend checkout initialization warning:", error);
     } finally {
