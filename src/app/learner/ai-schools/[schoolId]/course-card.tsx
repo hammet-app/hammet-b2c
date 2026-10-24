@@ -14,21 +14,40 @@ import { cartApi } from "@/lib/api/cart";
 export function CourseCard({
   course,
   school,
+  hasCartItem,
   index,
   mounted,
 }: {
   course: AiSchoolCourse;
   school?: AiSchool;
+  hasCartItem: boolean;
   index: number;
   mounted: boolean;
 }) {
-  if (!school) return;
   const router = useRouter();
   //const { addItem, hasItem, hasPaidItem } = useCart();
   const wishlist = useWishlist();
   const isWishlisted = wishlist.hasItem(course.id);
   const [hovered, setHovered] = useState(false);
-  const hasItem = false;
+  const [isAdding, setIsAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+  const hasItem = hasCartItem;
+
+  if (!school) return null;
+
+  async function addCourseToCart() {
+    setAddError(null);
+    setIsAdding(true);
+    const result = await cartApi.addItem({
+      productId: course.id,
+      type: "course",
+      title: course.title,
+      price: course.price || 0,
+    });
+    setIsAdding(false);
+    if (result.success) router.push("/learner/checkout");
+    else setAddError(result.error ?? "Unable to add this course to your cart.");
+  }
 
   return (
     <div
@@ -150,19 +169,15 @@ export function CourseCard({
                   ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/20 dark:text-emerald-300"
                   : "bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-500/20 dark:text-purple-300"
               }`}
-              onClick={(e) => {
+              disabled={isAdding}
+              onClick={async (e) => {
                 e.preventDefault();
                 if (course.isEntitled || school.isEntitled) {
                   router.push(`/learner/courses/${course.id}`);
                 } else if (hasItem) {
                   router.push("/learner/checkout");
                 } else {
-                  cartApi.addItem({
-                    productId: course.id,
-                    type: "course",
-                    title: course.title,
-                    price: course.price || 0,
-                  });
+                  await addCourseToCart();
                 }
               }}
             >
@@ -170,12 +185,19 @@ export function CourseCard({
                 ? null
                 : course.isEntitled || school.isEntitled
                   ? "Start course"
-                  : hasItem
+                  : isAdding
+                    ? "Adding…"
+                    : hasItem
                     ? "Checkout"
                     : (course.price || 0) === 0
                       ? "Free"
                       : "Add to cart"}
             </Button>
+            {addError && (
+              <p role="alert" className="mt-2 text-xs text-red-600 dark:text-red-400">
+                {addError}
+              </p>
+            )}
           </div>
         </div>
 
@@ -203,7 +225,8 @@ export function CourseCard({
 
               <div className="flex w-full items-center justify-end gap-3">
                 <button
-                  onClick={(e) => {
+                  disabled={isAdding}
+                  onClick={async (e) => {
                     e.preventDefault();
                     if (isWishlisted) {
                       wishlist.removeItem(course.id);
@@ -232,24 +255,20 @@ export function CourseCard({
                 </button>
 
                 <Button
+                  disabled={isAdding}
                   className={`px-6 shadow-sm backdrop-blur-md transition-all hover:scale-[1.02] ${
                     (course.price || 0) === 0
                       ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/20 dark:text-emerald-300"
                       : "bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-500/20 dark:text-purple-300"
                   }`}
-                  onClick={(e) => {
+                  onClick={async (e) => {
                     e.preventDefault();
                     if (course.isEntitled || school.isEntitled) {
                       router.push(`/learner/courses/${course.id}`);
                     } else if (hasItem) {
                       router.push("/learner/checkout");
                     } else {
-                      cartApi.addItem({
-                        productId: course.id,
-                        type: "course",
-                        title: course.title,
-                        price: course.price || 0,
-                      });
+                      await addCourseToCart();
                     }
                   }}
                 >
@@ -257,7 +276,9 @@ export function CourseCard({
                     ? null
                     : course.isEntitled || school.isEntitled
                       ? "Start course"
-                      : hasItem
+                      : isAdding
+                        ? "Adding…"
+                        : hasItem
                         ? "Checkout"
                         : (course.price || 0) === 0
                           ? "Free"

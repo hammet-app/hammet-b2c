@@ -30,6 +30,7 @@ import {
 
 import { useAuth } from "@/lib/auth/auth-context";
 import { learnerApi } from "@/lib/api/learner";
+import { cartApi } from "@/lib/api/cart";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/utils";
 import type {
@@ -76,6 +77,7 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
     null,
   );
   const [showLockedModal, setShowLockedModal] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   useEffect(() => {
     if (!courseId || !accessToken) {
@@ -628,13 +630,30 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
               </p>
               <div className="mt-6 flex flex-col gap-3">
                 <Button
-                  onClick={() => {
+                  disabled={isAddingToCart}
+                  onClick={async () => {
+                    if (!accessToken || !course) return;
+                    setIsAddingToCart(true);
+                    const result = await cartApi.addItem(
+                      {
+                        type: "course",
+                        productId: course.id,
+                        title: course.title,
+                        price: course.price,
+                      },
+                      accessToken,
+                    );
+                    setIsAddingToCart(false);
+                    if (!result.success) {
+                      setError(result.error ?? "Unable to add this course to your cart.");
+                      return;
+                    }
                     setShowLockedModal(false);
                     router.push("/learner/checkout");
                   }}
                   className="w-full rounded-xl bg-purple-600 py-3 font-bold text-white shadow-md shadow-purple-600/25 hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400"
                 >
-                  Continue to Checkout
+                  {isAddingToCart ? "Adding to cart…" : "Continue to Checkout"}
                   {course.price > 0
                     ? ` • ₦${course.price.toLocaleString()}`
                     : ""}

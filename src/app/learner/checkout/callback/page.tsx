@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useEffect, useState, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "motion/react";
 import {
@@ -16,79 +16,99 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CartItem } from "@/lib/store/use-cart";
 import { useAuth } from "@/lib/auth/auth-context";
 import { paymentApi } from "@/lib/api/payment";
-import { getCartItemsFromDB } from "@/lib/db";
+import { clearCartInDB } from "@/lib/db";
 import { OrderResponse } from "@/lib/api/types";
 
 function PaystackCallbackContent() {
   const router = useRouter();
   const { accessToken } = useAuth();
-  //const { items, clearCart, markAsPaid } = useCart();
 
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [verifying, setVerifying] = useState(true);
-  const [isSuccess, setIsSuccess] = useState(true);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [purchasedItems, setPurchasedItems] = useState<CartItem[]>([]);
+  const [purchasedItems, setPurchasedItems] = useState<
+    Array<{ id: string; title: string }>
+  >([]);
   const [paidTotal, setPaidTotal] = useState(0);
   const [paymentDate, setPaymentDate] = useState("");
 
   useEffect(() => {
+    let cancelled = false;
     async function handleSettlement() {
       const savedOrder = sessionStorage.getItem("checkoutOrder");
       if (!savedOrder) {
+        setErrorMessage("No checkout order was found. Return to checkout and try again.");
+        setIsSuccess(false);
+        setVerifying(false);
+        return;
+      }
+
+      let parsedOrder: OrderResponse;
+      try {
+        parsedOrder = JSON.parse(savedOrder) as OrderResponse;
+        setOrder(parsedOrder);
+        setPaidTotal(parsedOrder.total ?? 0);
+        setPaymentDate(new Date().toLocaleString());
+        setPurchasedItems(
+          (parsedOrder.orders ?? []).map((item, index) => ({
+            id: item.productId || String(index),
+            title: item.productName,
+          })),
+        );
+      } catch {
+        setErrorMessage("The saved checkout order is invalid. Return to checkout and try again.");
+        setIsSuccess(false);
+        setVerifying(false);
         return;
       }
 
       try {
-        const parsedOrder = JSON.parse(savedOrder) as OrderResponse;
-        setOrder(parsedOrder);
-      } catch (error) {
-        console.error("Failed to load checkout order:", error);
-        sessionStorage.removeItem("checkoutOrder");
-      }
-
-      // 2. Verify settlement strictly with the backend API
-      try {
-        if (!order) {
-          router.push("/learner/learn");
+        if (!accessToken) {
+          setErrorMessage("Please sign in again to verify your payment.");
+          setIsSuccess(false);
+          setVerifying(false);
           return;
         }
-        const verifyRes = await paymentApi.verifyPayment(order.id, accessToken);
 
-        if (
-          verifyRes.success &&
-          verifyRes.data &&
-          verifyRes.data.status === "success"
-        ) {
+        let verifyRes;
+        for (let attempt = 0; attempt < 10; attempt += 1) {
+          verifyRes = await paymentApi.verifyPayment(parsedOrder.id, accessToken);
+          if (verifyRes.success || verifyRes.data?.status === "failed") break;
+          if (attempt < 9) await new Promise((resolve) => setTimeout(resolve, 1500));
+        }
+        if (cancelled) return;
+
+        if (verifyRes?.success) {
+          await clearCartInDB();
+          sessionStorage.removeItem("checkoutOrder");
+          sessionStorage.removeItem("checkoutCouponCode");
           setIsSuccess(true);
         } else {
-          // Backend rejected or could not verify payment
           setIsSuccess(false);
           setErrorMessage(
-            verifyRes.error ||
-              `Backend verification failed for order '${order.id}'. Settlement status: '${verifyRes.data?.status || "unverified"}'`,
+            verifyRes?.error ?? "Payment has not been confirmed yet. You can retry verification shortly.",
           );
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        if (cancelled) return;
         setIsSuccess(false);
-        setErrorMessage(
-          err?.message ||
-            `Failed to communicate with the payment verification server for order ${order?.id}.`,
-        );
+        setErrorMessage(err instanceof Error ? err.message : "Unable to verify payment right now.");
       } finally {
-        setVerifying(false);
+        if (!cancelled) setVerifying(false);
       }
     }
 
-    handleSettlement();
-    sessionStorage.removeItem("checkoutOrder");
+    void handleSettlement();
+    return () => {
+      cancelled = true;
+    };
   }, [accessToken]);
 
   const handleStartCourse = () => {
-    let target = "/learner/learn";
+    const target = "/learner/learn";
 
     router.push(target);
   };

@@ -32,7 +32,7 @@ export interface CartApiResult<T> {
 export function toCartItemDto(item: DexieCartItem): CartItemDto {
   return {
     product_type: item.type,
-    product_id: item.productId  || "",
+    product_id: item.productId || "",
   };
 }
 
@@ -62,17 +62,21 @@ export const cartApi = {
     onRefresh: () => Promise<string | null>,
   ): Promise<CartResponse> => {
     try {
-      const data = await apiClient.get<CartResponseDto>("/learner/cart", token, {
-        onRefresh,
-      });
+      const data = await apiClient.get<CartResponseDto>(
+        "/learner/cart",
+        token,
+        {
+          onRefresh,
+        },
+      );
       return toCartResponse(data);
     } catch (err: unknown) {
-        return {
-          id: "empty-cart-fallback",
-          total: 0,
-          carts: [],
-          invalidCarts: null,
-        };
+      return {
+        id: "empty-cart-fallback",
+        total: 0,
+        carts: [],
+        invalidCarts: null,
+      };
     }
   },
 
@@ -188,7 +192,7 @@ export const cartApi = {
     try {
       const authToken = token || (await getPersistedSession())?.accessToken;
 
-      let cartItemId = id;
+      const cartItemId = id;
 
       // Resolve the backend cart-item ID and product payload when
       // the existing caller supplies only one ID.
@@ -213,7 +217,35 @@ export const cartApi = {
   },
 
   clearCart: async (token?: string | null): Promise<CartApiResult<boolean>> => {
-    return { success: true, data: true };
+    try {
+      const authToken = token || (await getPersistedSession())?.accessToken;
+      await apiClient.delete("/learner/cart/clear", undefined, authToken, {
+        skipSessionExpired: true,
+      });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("cart-updated"));
+      }
+      return { success: true, data: true };
+    } catch (err: unknown) {
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : "Failed to clear cart",
+      };
+    }
+  },
+
+  removeCoupon: async (
+    orderId: string,
+    token: string,
+    onRefresh?: () => Promise<string | null>,
+  ): Promise<OrderResponse> => {
+    const response = await apiClient.delete<OrderResponseDto>(
+      `/learner/remove-coupon/${encodeURIComponent(orderId)}`,
+      undefined,
+      token,
+      { onRefresh, skipSessionExpired: true },
+    );
+    return toOrderResponse(response);
   },
 
   checkout: async (
@@ -234,16 +266,21 @@ export const cartApi = {
     body: {
       product_id: string;
       product_type: string;
+      add: boolean;
     },
     token: string,
     onRefresh: () => Promise<string | null>,
-  ): Promise<OrderResponse> => {
+  ): Promise<OrderResponse | null> => {
     const response = await apiClient.patch<OrderResponseDto>(
       "/learner/order/edit",
       body,
       token,
       { onRefresh },
     );
+
+    if (!response) {
+      return response;
+    }
 
     return toOrderResponse(response);
   },
