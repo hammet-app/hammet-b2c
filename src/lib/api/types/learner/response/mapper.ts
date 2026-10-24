@@ -6,6 +6,9 @@ import {
   PublishedModule,
   CourseModuleResource,
   CourseModuleProject,
+  QuizOption,
+  QuizQuestion,
+  LearnerQuiz,
 } from "@/lib/api/types/learner/response/types";
 
 import {
@@ -16,6 +19,9 @@ import {
   EntitlementResponseDto,
   CourseModuleResourceDto,
   CourseModuleProjectDto,
+  QuizOptionResponseDto,
+  QuizQuestionResponseDto,
+  LearnerQuizResponseDto,
 } from "@/lib/api/types/learner/response/types-dto";
 
 /**
@@ -122,3 +128,33 @@ export function toPublishedCourse(dto: PublishedCourseDto): PublishedCourse {
     modules: dto.modules ? dto.modules.map(toPublishedModule) : [],
   };
 }
+
+export function toQuizOption(dto: QuizOptionResponseDto): QuizOption {
+  return {
+    id: dto.id,
+    questionId: dto.question_id,
+    text: dto.text,
+    position: dto.position,
+  };
+}
+
+export function toQuizQuestion(dto: QuizQuestionResponseDto): QuizQuestion {
+  return {
+    id: dto.id,
+    quizId: dto.quiz_id,
+    question: dto.question,
+    position: dto.position,
+    options: dto.options ? dto.options.map(toQuizOption) : [],
+  };
+}
+
+export function toLearnerQuiz(dto: LearnerQuizResponseDto): LearnerQuiz {
+  return {
+    id: dto.id,
+    title: dto.title,
+    description: dto.description,
+    isExam: dto.is_exam,
+    questions: dto.questions ? dto.questions.map(toQuizQuestion) : [],
+  };
+}
+

@@ -11,6 +11,7 @@ import {
   BookOpen,
   Check,
   CheckCircle2,
+  HelpCircle,
   ChevronRight,
   Clock,
   ExternalLink,
@@ -33,6 +34,7 @@ import { learnerApi } from "@/lib/api/learner";
 import { cartApi } from "@/lib/api/cart";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/utils";
+import { ModuleQuiz } from "./module-quiz";
 import type {
   PublishedCourse,
   PublishedModule,
@@ -510,6 +512,17 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
                                 <ArrowUpRight className="h-3 w-3 opacity-70" />
                               </Link>
                             )}
+                            {moduleCanOpen && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenModule(module)}
+                                className="inline-flex items-center gap-1.5 rounded-xl border border-purple-200/80 bg-purple-50/50 px-3 py-1.5 text-xs font-bold text-purple-700 transition hover:bg-purple-100/70 dark:border-purple-500/20 dark:bg-purple-500/10 dark:text-cyan-300"
+                              >
+                                <HelpCircle className="h-3.5 w-3.5" />
+                                <span>Quiz</span>
+                              </button>
+                            )}
+
                           </div>
                         </div>
 
@@ -905,6 +918,16 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
                     </div>
                   </div>
                 )}
+
+                {/* ── MODULE QUIZ: Assessment Questions & Options (GET /api/v1/learner/modules/{module_id}/quiz) ── */}
+                <div className="border-t border-slate-100 pt-5 dark:border-white/10">
+                  <ModuleQuiz
+                    moduleId={activeModule.id}
+                    moduleTitle={activeModule.title}
+                    token={accessToken}
+                    onRefresh={refreshToken}
+                  />
+                </div>
               </div>
 
               <footer className="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/50 px-6 py-4 dark:border-white/10 dark:bg-white/[0.02]">

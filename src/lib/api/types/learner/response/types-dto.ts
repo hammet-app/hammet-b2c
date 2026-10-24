@@ -76,3 +76,33 @@ export type PublishedCourseDto = {
   price: number;
   modules: PublishedModuleDto[];
 };
+
+// ============================================================
+// LEARNER MODULE QUIZ
+// ============================================================
+
+// GET /api/v1/learner/modules/{module_id}/quiz
+
+export type QuizOptionResponseDto = {
+  id: string;
+  question_id: string;
+  text: string;
+  position: number;
+};
+
+export type QuizQuestionResponseDto = {
+  id: string;
+  quiz_id: string;
+  question: string;
+  position: number;
+  options: QuizOptionResponseDto[];
+};
+
+export type LearnerQuizResponseDto = {
+  id: string;
+  title: string;
+  description: string;
+  is_exam: boolean;
+  questions: QuizQuestionResponseDto[];
+};
+

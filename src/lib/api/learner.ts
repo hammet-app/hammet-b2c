@@ -19,6 +19,9 @@ import {
   PublishedCourseDto,
   toEntitlementResponse,
   toPublishedCourse,
+  LearnerQuiz,
+  LearnerQuizResponseDto,
+  toLearnerQuiz,
 } from "./types/learner";
 
 export const learnerApi = {
@@ -122,5 +125,24 @@ export const learnerApi = {
     );
 
     return toEntitlementResponse(response);
+  },
+  /**
+   * Fetches the quiz questions and answer options for a published module.
+   * GET /api/v1/learner/modules/{module_id}/quiz
+   * Learner-authenticated route. The backend omits is_correct so learners
+   * cannot see the answers before submitting.
+   */
+  getModuleQuiz: async (
+    moduleId: string,
+    token: string,
+    onRefresh: () => Promise<string | null>,
+  ): Promise<LearnerQuiz> => {
+    const response = await apiClient.get<LearnerQuizResponseDto>(
+      `/learner/modules/${encodeURIComponent(moduleId)}/quiz`,
+      token,
+      { onRefresh, skipSessionExpired: true },
+    );
+
+    return toLearnerQuiz(response);
   },
 };

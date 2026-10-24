@@ -74,3 +74,33 @@ export type PublishedCourse = {
   price: number;
   modules: PublishedModule[];
 };
+
+// ============================================================
+// LEARNER MODULE QUIZ
+// ============================================================
+
+// GET /api/v1/learner/modules/{module_id}/quiz
+
+export type QuizOption = {
+  id: string;
+  questionId: string;
+  text: string;
+  position: number;
+};
+
+export type QuizQuestion = {
+  id: string;
+  quizId: string;
+  question: string;
+  position: number;
+  options: QuizOption[];
+};
+
+export type LearnerQuiz = {
+  id: string;
+  title: string;
+  description: string;
+  isExam: boolean;
+  questions: QuizQuestion[];
+};
+
