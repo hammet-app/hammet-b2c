@@ -27,6 +27,9 @@ import {
   FolderKanban,
   ArrowUpRight,
   Terminal,
+  Upload,
+  Loader2,
+  Send,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-context";
@@ -40,6 +43,7 @@ import type {
   PublishedModule,
   CourseModuleResource,
   CourseModuleProject,
+  ProjectSubmission,
 } from "@/lib/api/types/learner";
 
 type CourseDetailsPageProps = {
@@ -80,6 +84,81 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
   );
   const [showLockedModal, setShowLockedModal] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [modulePrimaryProject, setModulePrimaryProject] =
+    useState<CourseModuleProject | null>(null);
+  const [projectLinks, setProjectLinks] = useState<Record<string, string>>({});
+  const [submittingProjectId, setSubmittingProjectId] = useState<string | null>(
+    null,
+  );
+  const [projectSubmissions, setProjectSubmissions] = useState<
+    Record<string, ProjectSubmission>
+  >({});
+  const [projectErrors, setProjectErrors] = useState<
+    Record<string, string | null>
+  >({});
+
+  useEffect(() => {
+    let cancelled = false;
+    setModulePrimaryProject(null);
+
+    if (!activeModule || !accessToken) return;
+
+    if (!activeModule.projects || activeModule.projects.length === 0) {
+      learnerApi
+        .getModuleProject(activeModule.id, accessToken, refreshToken)
+        .then((project) => {
+          if (!cancelled && project) {
+            setModulePrimaryProject(project);
+          }
+        })
+        .catch(() => {
+          // Module may not have a project attached
+        });
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeModule, accessToken, refreshToken]);
+
+  async function handleProjectSubmit(projectId: string) {
+    const link = (projectLinks[projectId] ?? "").trim();
+    if (!link || !accessToken) return;
+
+    try {
+      setSubmittingProjectId(projectId);
+      setProjectErrors((prev) => ({ ...prev, [projectId]: null }));
+
+      const submission = await learnerApi.submitProject(
+        projectId,
+        link,
+        accessToken,
+        refreshToken,
+      );
+
+      setProjectSubmissions((prev) => ({
+        ...prev,
+        [projectId]: submission,
+      }));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setProjectErrors((prev) => ({
+        ...prev,
+        [projectId]: msg || "Failed to submit project. Please try again.",
+      }));
+    } finally {
+      setSubmittingProjectId(null);
+    }
+  }
+
+  const displayProjects = useMemo(() => {
+    if (!activeModule) return [];
+    const existing = activeModule.projects ?? [];
+    if (existing.length > 0) return existing;
+    if (modulePrimaryProject) return [modulePrimaryProject];
+    return [];
+  }, [activeModule, modulePrimaryProject]);
+
 
   useEffect(() => {
     if (!courseId || !accessToken) {
@@ -857,7 +936,7 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
                 )}
 
                 {/* ── MODULE PROJECTS: Hands-on Capstone Projects & Instructions ── */}
-                {activeModule.projects && activeModule.projects.length > 0 && (
+                {displayProjects.length > 0 && (
                   <div className="space-y-3 border-t border-slate-100 pt-5 dark:border-white/10">
                     <div className="flex items-center justify-between">
                       <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
@@ -865,15 +944,13 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
                         <span>Attached Capstone Projects</span>
                       </h3>
                       <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-[11px] font-bold text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">
-                        {activeModule.projects.length}{" "}
-                        {activeModule.projects.length === 1
-                          ? "Project"
-                          : "Projects"}
+                        {displayProjects.length}{" "}
+                        {displayProjects.length === 1 ? "Project" : "Projects"}
                       </span>
                     </div>
 
                     <div className="space-y-3">
-                      {activeModule.projects
+                      {displayProjects
                         .slice()
                         .sort((a, b) => a.position - b.position)
                         .map((project) => (
@@ -913,6 +990,77 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
                                 </p>
                               </div>
                             )}
+
+                            {/* ── PROJECT SUBMISSION: Link Input & Submission Feedback ── */}
+                            <div className="mt-4 rounded-xl border border-purple-200/60 bg-white p-4 dark:border-white/10 dark:bg-black/20">
+                              <div className="flex items-center justify-between gap-2 mb-2">
+                                <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                  <Upload className="h-3.5 w-3.5 text-purple-600 dark:text-cyan-400" />
+                                  <span>Submit Project Link</span>
+                                </span>
+                                {projectSubmissions[project.id] && (
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                    <span>
+                                      Submitted (
+                                      {projectSubmissions[project.id].status})
+                                    </span>
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2.5">
+                                Provide a URL to your GitHub repository, live demo, or external documentation for review.
+                              </p>
+                              <div className="flex flex-col sm:flex-row gap-2">
+                                <input
+                                  type="url"
+                                  placeholder="https://github.com/username/project"
+                                  value={projectLinks[project.id] ?? ""}
+                                  onChange={(e) =>
+                                    setProjectLinks((prev) => ({
+                                      ...prev,
+                                      [project.id]: e.target.value,
+                                    }))
+                                  }
+                                  className="flex-1 rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
+                                />
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  disabled={
+                                    !projectLinks[project.id]?.trim() ||
+                                    submittingProjectId === project.id
+                                  }
+                                  onClick={() => handleProjectSubmit(project.id)}
+                                  className="rounded-xl bg-purple-600 text-xs font-bold text-white hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 shrink-0"
+                                >
+                                  {submittingProjectId === project.id ? (
+                                    <>
+                                      <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                                      Submitting...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Send className="h-3.5 w-3.5 mr-1" />
+                                      {projectSubmissions[project.id]
+                                        ? "Update Link"
+                                        : "Submit Link"}
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                              {projectErrors[project.id] && (
+                                <p className="mt-1.5 text-[11px] font-medium text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                                  <AlertCircle className="h-3.5 w-3.5" />
+                                  <span>{projectErrors[project.id]}</span>
+                                </p>
+                              )}
+                              {projectSubmissions[project.id]?.content && (
+                                <p className="mt-2 text-[10px] text-slate-400 truncate">
+                                  Last submitted: {projectSubmissions[project.id].content}
+                                </p>
+                              )}
+                            </div>
                           </div>
                         ))}
                     </div>

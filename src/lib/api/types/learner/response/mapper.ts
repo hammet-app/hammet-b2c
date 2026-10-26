@@ -9,6 +9,10 @@ import {
   QuizOption,
   QuizQuestion,
   LearnerQuiz,
+  QuizAttempt,
+  SaveQuizAnswer,
+  ProjectSubmissionCreate,
+  ProjectSubmission,
 } from "@/lib/api/types/learner/response/types";
 
 import {
@@ -22,6 +26,10 @@ import {
   QuizOptionResponseDto,
   QuizQuestionResponseDto,
   LearnerQuizResponseDto,
+  QuizAttemptResponseDto,
+  SaveQuizAnswerDto,
+  ProjectSubmissionCreateDto,
+  ProjectSubmissionResponseDto,
 } from "@/lib/api/types/learner/response/types-dto";
 
 /**
@@ -157,4 +165,46 @@ export function toLearnerQuiz(dto: LearnerQuizResponseDto): LearnerQuiz {
     questions: dto.questions ? dto.questions.map(toQuizQuestion) : [],
   };
 }
+
+export function toQuizAttempt(dto: QuizAttemptResponseDto): QuizAttempt {
+  return {
+    id: dto.id,
+    quizId: dto.quiz_id,
+    attemptNumber: dto.attempt_number,
+    score: dto.score,
+    answers: dto.answers ?? {},
+    startedAt: dto.started_at,
+    submittedAt: dto.submitted_at,
+  };
+}
+
+export function fromSaveQuizAnswer(model: SaveQuizAnswer): SaveQuizAnswerDto {
+  return {
+    option_id: model.optionId,
+  };
+}
+
+export function fromProjectSubmissionCreate(
+  model: ProjectSubmissionCreate,
+): ProjectSubmissionCreateDto {
+  return {
+    link: model.link,
+  };
+}
+
+export function toProjectSubmission(
+  dto: ProjectSubmissionResponseDto,
+): ProjectSubmission {
+  return {
+    id: dto.id,
+    projectId: dto.project_id,
+    learnerId: dto.learner_id,
+    content: dto.content,
+    status: dto.status,
+    feedback: dto.feedback,
+    submittedAt: dto.submitted_at,
+    markedAt: dto.marked_at,
+  };
+}
+
 

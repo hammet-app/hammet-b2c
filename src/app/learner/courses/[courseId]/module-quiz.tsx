@@ -13,10 +13,15 @@ import {
   Sparkles,
   BookOpen,
   Send,
+  Loader2,
 } from "lucide-react";
 
 import { learnerApi } from "@/lib/api/learner";
-import type { LearnerQuiz, QuizQuestion } from "@/lib/api/types/learner";
+import type {
+  LearnerQuiz,
+  QuizQuestion,
+  QuizAttempt,
+} from "@/lib/api/types/learner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/utils";
 
@@ -34,6 +39,7 @@ export function ModuleQuiz({
   onRefresh,
 }: ModuleQuizProps) {
   const [quiz, setQuiz] = useState<LearnerQuiz | null>(null);
+  const [attempt, setAttempt] = useState<QuizAttempt | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -43,6 +49,7 @@ export function ModuleQuiz({
   const [selectedAnswers, setSelectedAnswers] = useState<
     Record<string, string>
   >({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   useEffect(() => {
@@ -78,6 +85,34 @@ export function ModuleQuiz({
           setCurrentQuestionIndex(0);
           setSelectedAnswers({});
           setIsSubmitted(false);
+
+          // If learner token is present, initialize or fetch active attempt session
+          if (token && data.id) {
+            try {
+              const attemptData = await learnerApi.startQuizAttempt(
+                data.id,
+                token,
+                onRefresh,
+              );
+              if (!cancelled) {
+                setAttempt(attemptData);
+                if (
+                  attemptData.answers &&
+                  Object.keys(attemptData.answers).length > 0
+                ) {
+                  setSelectedAnswers(attemptData.answers);
+                }
+                if (attemptData.submittedAt) {
+                  setIsSubmitted(true);
+                }
+              }
+            } catch (attemptErr) {
+              console.warn(
+                "Unable to start backend quiz attempt session:",
+                attemptErr,
+              );
+            }
+          }
         }
       } catch (err: unknown) {
         if (cancelled) return;
@@ -86,7 +121,10 @@ export function ModuleQuiz({
         if (
           msg.toLowerCase().includes("not found") ||
           msg.includes("404") ||
-          (err && typeof err === "object" && "status" in err && (err as { status: number }).status === 404)
+          (err &&
+            typeof err === "object" &&
+            "status" in err &&
+            (err as { status: number }).status === 404)
         ) {
           setNotFound(true);
           setQuiz(null);
@@ -116,17 +154,58 @@ export function ModuleQuiz({
   const isComplete = totalQuestions > 0 && answeredCount === totalQuestions;
 
   function handleSelectOption(questionId: string, optionId: string) {
-    if (isSubmitted) return;
+    if (isSubmitted || isSubmitting) return;
+
     setSelectedAnswers((prev) => ({
       ...prev,
       [questionId]: optionId,
     }));
+
+    // If an attempt session is active on the backend, record the chosen answer
+    if (attempt?.id && token) {
+      void learnerApi
+        .saveQuizAnswer(attempt.id, questionId, optionId, token, onRefresh)
+        .catch((err) => {
+          console.warn("Failed to persist quiz answer to attempt session:", err);
+        });
+    }
   }
 
-  function handleReset() {
+  async function handleSubmitQuiz() {
+    if (!quiz || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      if (attempt?.id && token) {
+        await learnerApi.submitQuizAttempt(attempt.id, token, onRefresh);
+      }
+      setIsSubmitted(true);
+    } catch (err) {
+      console.warn("Failed to submit quiz attempt to backend:", err);
+      // Still show the completed summary in the UI
+      setIsSubmitted(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleReset() {
     setSelectedAnswers({});
     setCurrentQuestionIndex(0);
     setIsSubmitted(false);
+
+    if (quiz?.id && token) {
+      try {
+        const newAttempt = await learnerApi.startQuizAttempt(
+          quiz.id,
+          token,
+          onRefresh,
+        );
+        setAttempt(newAttempt);
+      } catch (err) {
+        console.warn("Failed to create new attempt session on reset:", err);
+      }
+    }
   }
 
   if (loading) {
@@ -202,6 +281,11 @@ export function ModuleQuiz({
             <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
               {totalQuestions} {totalQuestions === 1 ? "Question" : "Questions"}
             </span>
+            {attempt && (
+              <span className="text-[11px] font-mono text-purple-600 dark:text-cyan-400 bg-purple-50 dark:bg-white/5 px-2 py-0.5 rounded-md">
+                Attempt #{attempt.attemptNumber}
+              </span>
+            )}
           </div>
           <h3 className="mt-1.5 text-base font-bold text-slate-900 dark:text-white">
             {quiz.title}
@@ -328,7 +412,7 @@ export function ModuleQuiz({
                   type="button"
                   variant="outline"
                   size="sm"
-                  disabled={currentQuestionIndex === 0}
+                  disabled={currentQuestionIndex === 0 || isSubmitting}
                   onClick={() =>
                     setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))
                   }
@@ -342,6 +426,7 @@ export function ModuleQuiz({
                   <Button
                     type="button"
                     size="sm"
+                    disabled={isSubmitting}
                     onClick={() =>
                       setCurrentQuestionIndex((prev) =>
                         Math.min(totalQuestions - 1, prev + 1),
@@ -356,12 +441,21 @@ export function ModuleQuiz({
                   <Button
                     type="button"
                     size="sm"
-                    disabled={!isComplete}
-                    onClick={() => setIsSubmitted(true)}
+                    disabled={!isComplete || isSubmitting}
+                    onClick={() => void handleSubmitQuiz()}
                     className="rounded-xl bg-purple-600 font-bold text-white hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 shadow-sm"
                   >
-                    <Send className="h-3.5 w-3.5 mr-1" />
-                    <span>Review &amp; Finish</span>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                        <span>Submitting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-3.5 w-3.5 mr-1.5" />
+                        <span>Review &amp; Finish</span>
+                      </>
+                    )}
                   </Button>
                 )}
               </div>
@@ -384,18 +478,26 @@ export function ModuleQuiz({
               </h4>
               <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 max-w-md mx-auto">
                 You have completed all {totalQuestions} questions for &ldquo;
-                {moduleTitle}&rdquo;. Your responses have been safely saved.
+                {moduleTitle}&rdquo;. Your responses have been safely saved to your
+                learning record.
               </p>
 
               <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300">
                   <CheckCircle2 className="h-3.5 w-3.5" />
-                  <span>{answeredCount} of {totalQuestions} Answered</span>
+                  <span>
+                    {answeredCount} of {totalQuestions} Answered
+                  </span>
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-3 py-1 text-xs font-bold text-purple-800 dark:bg-purple-500/20 dark:text-cyan-300">
                   <Sparkles className="h-3.5 w-3.5" />
                   <span>Assessment Completed</span>
                 </span>
+                {attempt && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-800 dark:bg-blue-500/20 dark:text-blue-300">
+                    <span>Attempt #{attempt.attemptNumber}</span>
+                  </span>
+                )}
               </div>
             </div>
 
@@ -404,7 +506,7 @@ export function ModuleQuiz({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={handleReset}
+                onClick={() => void handleReset()}
                 className="rounded-xl text-xs"
               >
                 <RotateCcw className="mr-1.5 h-3.5 w-3.5" />

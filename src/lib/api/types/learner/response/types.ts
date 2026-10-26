@@ -104,3 +104,36 @@ export type LearnerQuiz = {
   questions: QuizQuestion[];
 };
 
+// POST /api/v1/learner/quizzes/{quiz_id}/attempts
+export type QuizAttempt = {
+  id: string;
+  quizId: string;
+  attemptNumber: number;
+  score: number;
+  answers: Record<string, string>;
+  startedAt: string;
+  submittedAt: string | null;
+};
+
+// PUT /api/v1/learner/quiz-attempts/{attempt_id}/answers/{question_id}
+export type SaveQuizAnswer = {
+  optionId: string;
+};
+
+// POST /api/v1/learner/projects/{project_id}/submissions
+export type ProjectSubmissionCreate = {
+  link: string;
+};
+
+export type ProjectSubmission = {
+  id: string;
+  projectId: string;
+  learnerId: string;
+  content: string;
+  status: string;
+  feedback: string | null;
+  submittedAt: string;
+  markedAt: string | null;
+};
+
+
