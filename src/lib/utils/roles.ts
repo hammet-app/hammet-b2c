@@ -30,6 +30,7 @@ export interface AuthUser {
   schoolDetails: SchoolDetails | null;
   profileDetails: ProfileDetails | null;
   sessionDetails: SessionDetails | null;
+  profilePicture?: string | null;
 }
 
 /** Hammet admins with platform scope, or b2c scope plus course access, manage AI schools and their content. */

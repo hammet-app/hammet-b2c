@@ -31,8 +31,10 @@ import {
   X,
   ImageIcon,
   Crown,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { authApi } from "@/lib/api/auth";
 import { useLearnerStore } from "@/lib/store/use-learner-store";
 import { Button } from "@/components/ui/button";
 
@@ -61,7 +63,7 @@ const SUGGESTED_SKILLS = [
 ];
 
 export default function LearnerProfilePage() {
-  const { user } = useAuth();
+  const { user, accessToken, refreshToken, updateUser } = useAuth();
   const isPro = useLearnerStore((state) => state.isPro);
 
   const [activeTab, setActiveTab] = useState<"overview" | "edit" | "activity">("overview");
@@ -70,6 +72,8 @@ export default function LearnerProfilePage() {
   // Profile image states
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
@@ -120,16 +124,59 @@ export default function LearnerProfilePage() {
     if (savedLocation) setLocation(savedLocation);
   }, []);
 
-  const handleAvatarFile = (file: File) => {
-    if (!file || !file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      setAvatarUrl(result);
-      localStorage.setItem("hammet_user_avatar", result);
-      window.dispatchEvent(new Event("storage"));
-    };
-    reader.readAsDataURL(file);
+  const handleAvatarFile = async (file: File) => {
+    if (!file) return;
+
+    const supported = ["image/jpeg", "image/png", "image/webp"];
+    if (!supported.includes(file.type)) {
+      setAvatarError("Please select a JPEG, PNG, or WebP image.");
+      return;
+    }
+
+    setAvatarError(null);
+    setIsUploadingAvatar(true);
+
+    try {
+      if (accessToken) {
+        // Backend profile-picture contract flow:
+        // 1. POST /api/v1/auth/profile-picture/upload-url
+        // 2. PUT binary to Supabase Storage signed URL
+        // 3. POST /api/v1/auth/profile-picture/confirm-upload
+        const publicUrl = await authApi.uploadProfilePicture(
+          file,
+          accessToken,
+          refreshToken,
+        );
+
+        setAvatarUrl(publicUrl);
+        localStorage.setItem("hammet_user_avatar", publicUrl);
+        window.dispatchEvent(new Event("storage"));
+
+        updateUser({
+          profilePicture: publicUrl,
+          profileDetails: {
+            ...user?.profileDetails,
+            tier: user?.profileDetails?.tier ?? "free",
+            profilePicture: publicUrl,
+          },
+        });
+      } else {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          setAvatarUrl(result);
+          localStorage.setItem("hammet_user_avatar", result);
+          window.dispatchEvent(new Event("storage"));
+        };
+        reader.readAsDataURL(file);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn("Profile picture upload failed:", err);
+      setAvatarError(msg || "Failed to upload image. Please try again.");
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   };
 
   const handleCoverFile = (file: File) => {
@@ -188,7 +235,7 @@ export default function LearnerProfilePage() {
       <input
         ref={avatarInputRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];

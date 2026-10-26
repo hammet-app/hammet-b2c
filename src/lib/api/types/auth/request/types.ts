@@ -23,3 +23,8 @@ export type UpdatePassword = {
   currentPassword: string;
   newPassword: string;
 }
+
+// POST /auth/profile-picture/upload-url
+export type ProfilePictureUploadRequest = {
+  contentType: "image/jpeg" | "image/png" | "image/webp";
+};

@@ -1,5 +1,5 @@
-import { RegisterB2CRequest, ClaimAccountRequest, UpdatePassword } from "./types"
-import { RegisterB2CRequestDto, ClaimAccountRequestDto, UpdatePasswordDto } from "./types-dto"
+import { RegisterB2CRequest, ClaimAccountRequest, UpdatePassword, ProfilePictureUploadRequest } from "./types"
+import { RegisterB2CRequestDto, ClaimAccountRequestDto, UpdatePasswordDto, ProfilePictureUploadRequestDto } from "./types-dto"
 
 
 export function fromRegisterB2CRequest(model: RegisterB2CRequest): RegisterB2CRequestDto {
@@ -34,4 +34,11 @@ export function fromUpdatePassword(model: UpdatePassword): UpdatePasswordDto {
     current_password: model.currentPassword,
     new_password: model.newPassword
   }
+}
+export function fromProfilePictureUploadRequest(
+  model: ProfilePictureUploadRequest,
+): ProfilePictureUploadRequestDto {
+  return {
+    content_type: model.contentType,
+  };
 }

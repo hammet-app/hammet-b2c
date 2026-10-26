@@ -28,6 +28,7 @@ export type SchoolDetailsDto = {
 export type ProfileDetailsDto = {
   learning_mode?:  "guided" | "focus"
   tier: string | null;
+  profile_picture?: string | null;
 }
 
 export type LoginResponseDto = {
@@ -43,6 +44,7 @@ export type LoginResponseDto = {
     school_details: SchoolDetailsDto | null;
     profile_details: ProfileDetailsDto | null;
     session_details: SessionDetailsDto | null;
+    profile_picture?: string | null;
   };
 };
 
@@ -74,3 +76,17 @@ export type RefreshResponseDto = {
 export type forgotPasswordResponseDto = {
   is_admin: boolean;
 }
+// POST /auth/profile-picture/upload-url
+export type ProfilePictureUploadResponseDto = {
+  signed_url: string;
+  signedUrl: string;
+  token: string;
+  path: string;
+  public_url: string;
+  content_type: string;
+};
+
+// POST /auth/profile-picture/confirm-upload
+export type ProfilePictureResponseDto = {
+  profile_picture: string;
+};
