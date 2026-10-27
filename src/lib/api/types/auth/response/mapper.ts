@@ -6,7 +6,9 @@ import {
     ProfileDetailsDto,
     InviteInfoDto,
     LoginResponseDto,
-    RefreshResponseDto
+    RefreshResponseDto,
+    ProfilePictureUploadResponseDto,
+    ProfilePictureResponseDto
 } from "@/lib/api/types/auth/response/types-dto";
 import {
     ClaimAccountResponse,
@@ -15,7 +17,9 @@ import {
     RefreshResponse,
     SessionDetails,
     ProfileDetails,
-    SchoolDetails
+    SchoolDetails,
+    ProfilePictureUploadResponse,
+    ProfilePictureResponse
 } from "@/lib/api/types/auth/response/types";
 
 /**
@@ -54,7 +58,8 @@ function toSchoolDetails(dto: SchoolDetailsDto): SchoolDetails {
 function toProfileDetails(dto: ProfileDetailsDto): ProfileDetails {
     return {
         learningMode: dto.learning_mode,
-        tier: dto.tier
+        tier: dto.tier,
+        profilePicture: dto.profile_picture ?? null
     }
 }
 
@@ -107,4 +112,23 @@ export function toForgotPasswordResponse(dto: forgotPasswordResponseDto) {
     return {
         isAdmin: dto.is_admin
     }
+}
+export function toProfilePictureUploadResponse(
+    dto: ProfilePictureUploadResponseDto
+): ProfilePictureUploadResponse {
+    return {
+        signedUrl: dto.signed_url || dto.signedUrl,
+        token: dto.token,
+        path: dto.path,
+        publicUrl: dto.public_url,
+        contentType: dto.content_type,
+    };
+}
+
+export function toProfilePictureResponse(
+    dto: ProfilePictureResponseDto
+): ProfilePictureResponse {
+    return {
+        profilePicture: dto.profile_picture,
+    };
 }

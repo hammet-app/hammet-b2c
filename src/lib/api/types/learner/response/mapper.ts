@@ -4,6 +4,15 @@ import {
   EntitlementResponse,
   PublishedCourse,
   PublishedModule,
+  CourseModuleResource,
+  CourseModuleProject,
+  QuizOption,
+  QuizQuestion,
+  LearnerQuiz,
+  QuizAttempt,
+  SaveQuizAnswer,
+  ProjectSubmissionCreate,
+  ProjectSubmission,
 } from "@/lib/api/types/learner/response/types";
 
 import {
@@ -12,6 +21,15 @@ import {
   CourseEntitlementDto,
   AISchoolEntitlementDto,
   EntitlementResponseDto,
+  CourseModuleResourceDto,
+  CourseModuleProjectDto,
+  QuizOptionResponseDto,
+  QuizQuestionResponseDto,
+  LearnerQuizResponseDto,
+  QuizAttemptResponseDto,
+  SaveQuizAnswerDto,
+  ProjectSubmissionCreateDto,
+  ProjectSubmissionResponseDto,
 } from "@/lib/api/types/learner/response/types-dto";
 
 /**
@@ -62,6 +80,30 @@ export function toEntitlementResponse(
   };
 }
 
+export function toCourseModuleResource(
+  dto: CourseModuleResourceDto,
+): CourseModuleResource {
+  return {
+    id: dto.id,
+    title: dto.title,
+    resourceType: dto.resource_type,
+    url: dto.url,
+    position: dto.position,
+  };
+}
+
+export function toCourseModuleProject(
+  dto: CourseModuleProjectDto,
+): CourseModuleProject {
+  return {
+    id: dto.id,
+    title: dto.title,
+    description: dto.description,
+    instructions: dto.instructions,
+    position: dto.position,
+  };
+}
+
 export function toPublishedModule(dto: PublishedModuleDto): PublishedModule {
   return {
     id: dto.id,
@@ -74,6 +116,8 @@ export function toPublishedModule(dto: PublishedModuleDto): PublishedModule {
     description: dto.description,
     position: dto.position,
     masterclass: dto.masterclass,
+    resources: dto.resources ? dto.resources.map(toCourseModuleResource) : [],
+    projects: dto.projects ? dto.projects.map(toCourseModuleProject) : [],
   };
 }
 
@@ -89,6 +133,78 @@ export function toPublishedCourse(dto: PublishedCourseDto): PublishedCourse {
     description: dto.description,
     position: dto.position,
     price: dto.price,
-    modules: dto.modules.map(toPublishedModule),
+    modules: dto.modules ? dto.modules.map(toPublishedModule) : [],
   };
 }
+
+export function toQuizOption(dto: QuizOptionResponseDto): QuizOption {
+  return {
+    id: dto.id,
+    questionId: dto.question_id,
+    text: dto.text,
+    position: dto.position,
+  };
+}
+
+export function toQuizQuestion(dto: QuizQuestionResponseDto): QuizQuestion {
+  return {
+    id: dto.id,
+    quizId: dto.quiz_id,
+    question: dto.question,
+    position: dto.position,
+    options: dto.options ? dto.options.map(toQuizOption) : [],
+  };
+}
+
+export function toLearnerQuiz(dto: LearnerQuizResponseDto): LearnerQuiz {
+  return {
+    id: dto.id,
+    title: dto.title,
+    description: dto.description,
+    isExam: dto.is_exam,
+    questions: dto.questions ? dto.questions.map(toQuizQuestion) : [],
+  };
+}
+
+export function toQuizAttempt(dto: QuizAttemptResponseDto): QuizAttempt {
+  return {
+    id: dto.id,
+    quizId: dto.quiz_id,
+    attemptNumber: dto.attempt_number,
+    score: dto.score,
+    answers: dto.answers ?? {},
+    startedAt: dto.started_at,
+    submittedAt: dto.submitted_at,
+  };
+}
+
+export function fromSaveQuizAnswer(model: SaveQuizAnswer): SaveQuizAnswerDto {
+  return {
+    option_id: model.optionId,
+  };
+}
+
+export function fromProjectSubmissionCreate(
+  model: ProjectSubmissionCreate,
+): ProjectSubmissionCreateDto {
+  return {
+    link: model.link,
+  };
+}
+
+export function toProjectSubmission(
+  dto: ProjectSubmissionResponseDto,
+): ProjectSubmission {
+  return {
+    id: dto.id,
+    projectId: dto.project_id,
+    learnerId: dto.learner_id,
+    content: dto.content,
+    status: dto.status,
+    feedback: dto.feedback,
+    submittedAt: dto.submitted_at,
+    markedAt: dto.marked_at,
+  };
+}
+
+

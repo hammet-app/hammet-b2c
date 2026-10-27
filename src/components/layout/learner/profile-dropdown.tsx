@@ -24,6 +24,9 @@ export function ProfileDropdown() {
     return () => window.removeEventListener("storage", loadAvatar);
   }, []);
 
+  const activeAvatar =
+    user?.profilePicture ?? user?.profileDetails?.profilePicture ?? avatar;
+
   return (
     <div 
       className="relative z-50"
@@ -36,9 +39,9 @@ export function ProfileDropdown() {
         className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 text-xs font-bold text-white shadow-xs transition hover:ring-2 hover:ring-purple-500/30"
         aria-label="User profile menu"
       >
-        {avatar ? (
+        {activeAvatar ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={avatar} alt="Avatar" className="h-full w-full object-cover" />
+          <img src={activeAvatar} alt="Avatar" className="h-full w-full object-cover" />
         ) : (
           user?.fullName?.charAt(0)?.toUpperCase() ?? "U"
         )}
@@ -56,9 +59,9 @@ export function ProfileDropdown() {
             <div className="border-b border-black/[0.04] p-4 dark:border-white/[0.04]">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 text-sm font-bold text-white shadow-sm">
-                  {avatar ? (
+                  {activeAvatar ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={avatar} alt="Avatar" className="h-full w-full object-cover" />
+                    <img src={activeAvatar} alt="Avatar" className="h-full w-full object-cover" />
                   ) : (
                     user?.fullName?.charAt(0)?.toUpperCase() ?? "U"
                   )}
@@ -98,19 +101,21 @@ export function ProfileDropdown() {
                 <Heart className="h-4 w-4 text-slate-400" />
                 Wishlist
               </Link>
+
               <Link
                 href="/learner/support"
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-purple-600 dark:text-slate-200 dark:hover:bg-white/[0.05] dark:hover:text-cyan-400"
               >
                 <LifeBuoy className="h-4 w-4 text-slate-400" />
-                Support &amp; Help
+                Support &amp; Feedback
               </Link>
             </div>
 
             <div className="border-t border-black/[0.04] p-2 dark:border-white/[0.04]">
               <button
+                type="button"
                 onClick={() => void logout()}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10"
               >
                 <LogOut className="h-4 w-4" />
                 Sign out

@@ -10,7 +10,6 @@ import {
   ShoppingCart,
   Trash2,
   ArrowRight,
-  ArrowLeft,
   BookOpen,
   ShieldCheck,
   CheckCircle2,
@@ -21,14 +20,6 @@ import {
   AlertCircle,
   GraduationCap,
   CreditCard,
-  Building2,
-  Smartphone,
-  RefreshCw,
-  Clock,
-  QrCode,
-  Link2,
-  Check,
-  Copy,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils/utils";

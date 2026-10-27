@@ -23,6 +23,7 @@ export type SchoolDetails = {
 export type ProfileDetails = {
   learningMode?:  "guided" | "focus"
   tier: string | null;
+  profilePicture?: string | null;
 }
 
 export type LoginResponse = {
@@ -38,6 +39,7 @@ export type LoginResponse = {
     schoolDetails: SchoolDetails | null;
     profileDetails: ProfileDetails | null;
     sessionDetails: SessionDetails | null;
+    profilePicture?: string | null;
   };
 };
 
@@ -78,6 +80,7 @@ export type RefreshResponse = {
     schoolDetails: SchoolDetails | null;
     profileDetails: ProfileDetails | null;
     sessionDetails: SessionDetails | null;
+    profilePicture?: string | null;
   };
 };
 
@@ -88,3 +91,16 @@ export type ResetPassword = {
   token: string; // This is for either the code or token
   password: string;
 }
+// POST /auth/profile-picture/upload-url
+export type ProfilePictureUploadResponse = {
+  signedUrl: string;
+  token: string;
+  path: string;
+  publicUrl: string;
+  contentType: string;
+};
+
+// POST /auth/profile-picture/confirm-upload
+export type ProfilePictureResponse = {
+  profilePicture: string;
+};

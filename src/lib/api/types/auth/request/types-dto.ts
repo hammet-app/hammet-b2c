@@ -25,3 +25,8 @@ export type UpdatePasswordDto = {
   current_password: string;
   new_password: string;
 }
+
+// POST /auth/profile-picture/upload-url
+export type ProfilePictureUploadRequestDto = {
+  content_type: "image/jpeg" | "image/png" | "image/webp";
+};
