@@ -231,11 +231,14 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
     setActiveModule(module);
   }
 
-  function handleStartCourse() {
+  async function handleStartCourse() {
     if (!canAccessCourse) {
       setShowLockedModal(true);
       return;
     }
+    if (!accessToken) return;
+
+    await learnerApi.enrollCourse(courseId, accessToken, refreshToken)
 
     const nextModule = modules.find(
       (module) =>
