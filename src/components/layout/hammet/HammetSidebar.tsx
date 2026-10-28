@@ -14,6 +14,7 @@ import {
   LogOut,
   Menu,
   Settings,
+  ShieldCheck,
   Users,
   X,
 } from "lucide-react";
@@ -22,8 +23,9 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { getHammetAiSchools } from "@/lib/api/hammet";
 import type { AiSchool } from "@/lib/api/types";
 import { useTheme } from "@/lib/use-theme";
+import { canManageAdmins } from "@/lib/utils/roles";
 
-const navigation = [
+const baseNavigation = [
   {
     label: "Dashboard",
     href: "/hammet",
@@ -46,6 +48,12 @@ const navigation = [
   },
 ];
 
+const adminsNavigation = {
+  label: "Administrators",
+  href: "/hammet/admins",
+  icon: ShieldCheck,
+};
+
 const STORAGE_KEY = "hammet-admin-sidebar-collapsed";
 
 interface HammetShellProps {
@@ -56,6 +64,11 @@ export function HammetShell({ children }: HammetShellProps) {
   const pathname = usePathname();
   const { user, accessToken, refreshToken, logout } = useAuth();
   const { theme, toggle } = useTheme();
+
+  // Only admins who can manage other admins see the Administrators link.
+  const navigation = canManageAdmins(user)
+    ? [...baseNavigation, adminsNavigation]
+    : baseNavigation;
 
   const [schools, setSchools] = useState<AiSchool[]>([]);
   const [collapsed, setCollapsed] = useState(() => {
