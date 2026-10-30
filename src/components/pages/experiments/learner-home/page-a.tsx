@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 import { motion } from "motion/react";
 import {
   ArrowUpRight,
@@ -13,6 +14,14 @@ import { useAuth } from "@/lib/auth/auth-context";
 
 export default function LearnerHomePage() {
   const { user } = useAuth();
+
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+
+    if (hour < 12) return "Good Morning,";
+    if (hour < 17) return "Good Afternoon,";
+    return "Good Evening,";
+  }, []);
 
   const firstName = user?.fullName?.split(" ")[0] ?? "there";
 
@@ -31,7 +40,7 @@ export default function LearnerHomePage() {
           </p>
 
           <h1 className="text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-4xl dark:text-white">
-            Good evening, {firstName}.
+            {greeting} {firstName}.
           </h1>
 
           <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-400">
