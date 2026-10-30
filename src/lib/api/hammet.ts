@@ -46,6 +46,17 @@ import {
   toHammetAdmin,
   toHammetAdminsResponse,
   fromEditHammetAdminRequest,
+  type Coupon,
+  type CouponDto,
+  type CouponsResponse,
+  type CouponsResponseDto,
+  type CreateCouponRequest,
+  type EditCouponRequest,
+  type EditCouponRequestDto,
+  toCouponsResponse,
+  fromCreateCouponRequest,
+  fromEditCouponRequest,
+  toCoupon,
 } from "@/lib/api/types";
 
 // ------------------------------------------------------------
@@ -270,4 +281,74 @@ export async function getHammetAiCourse(
   );
 
   return toCreateAiCourseResponse(response);
+}
+
+export async function getHammetCoupons(
+  page: number,
+  pageSize: number,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<CouponsResponse> {
+  const query = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+  const response = await apiClient.get<CouponsResponseDto>(
+    `/hammet/coupon?${query.toString()}`,
+    token,
+    { onRefresh },
+  );
+  return toCouponsResponse(response);
+}
+
+export async function getHammetCoupon(
+  couponId: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<Coupon> {
+  const response = await apiClient.get<CouponDto>(
+    `/hammet/coupon/${encodeURIComponent(couponId)}`,
+    token,
+    { onRefresh },
+  );
+  return toCoupon(response);
+}
+
+export async function createHammetCoupon(
+  body: CreateCouponRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<Coupon> {
+  const payload = fromCreateCouponRequest(body);
+  const response = await apiClient.post<CouponDto>(
+    "/hammet/coupon/add",
+    payload,
+    token,
+    { onRefresh },
+  );
+  return toCoupon(response);
+}
+
+export async function editHammetCoupon(
+  couponId: string,
+  body: EditCouponRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<boolean> {
+  return apiClient.patch<boolean>(
+    `/hammet/coupon/${encodeURIComponent(couponId)}`,
+    fromEditCouponRequest(body),
+    token,
+    { onRefresh },
+  );
+}
+
+export async function deleteHammetCoupon(
+  couponId: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<boolean> {
+  return apiClient.delete<boolean>(
+    `/hammet/coupon/${encodeURIComponent(couponId)}`,
+    undefined,
+    token,
+    { onRefresh },
+  );
 }

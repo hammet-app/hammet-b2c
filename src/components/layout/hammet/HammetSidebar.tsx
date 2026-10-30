@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
 import {
   BookOpen,
+  TicketPercent,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -23,7 +24,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { getHammetAiSchools } from "@/lib/api/hammet";
 import type { AiSchool } from "@/lib/api/types";
 import { useTheme } from "@/lib/use-theme";
-import { canManageAdmins } from "@/lib/utils/roles";
+import { canManageAdmins, canManageCoupons } from "@/lib/utils/roles";
 
 const baseNavigation = [
   {
@@ -54,6 +55,12 @@ const adminsNavigation = {
   icon: ShieldCheck,
 };
 
+const couponsNavigation = {
+  label: "Coupons",
+  href: "/hammet/coupons",
+  icon: TicketPercent,
+};
+
 const STORAGE_KEY = "hammet-admin-sidebar-collapsed";
 
 interface HammetShellProps {
@@ -66,9 +73,11 @@ export function HammetShell({ children }: HammetShellProps) {
   const { theme, toggle } = useTheme();
 
   // Only admins who can manage other admins see the Administrators link.
-  const navigation = canManageAdmins(user)
-    ? [...baseNavigation, adminsNavigation]
-    : baseNavigation;
+  const navigation = [
+    ...baseNavigation,
+    ...(canManageCoupons(user) ? [couponsNavigation] : []),
+    ...(canManageAdmins(user) ? [adminsNavigation] : []),
+  ];
 
   const [schools, setSchools] = useState<AiSchool[]>([]);
   const [collapsed, setCollapsed] = useState(() => {
