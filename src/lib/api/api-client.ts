@@ -161,7 +161,7 @@ async function request<T>(
   }
 
   // 204 No Content
-  if (res.status === 204) return undefined as T;
+  if (res.status === 204 || res.status === 201) return undefined as T;
 
   return res.json() as Promise<T>;
 }
