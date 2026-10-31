@@ -282,8 +282,8 @@ export default function MyLearningPage() {
                   </div>
 
                   {/* Card Bottom Row: Badges & Action Link - Clean, no purple background clutter behind "Open school" */}
-                  <div className="relative z-10 mt-6 pt-4 border-t border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
-                    <div className="flex flex-wrap gap-2">
+                  <div className="relative z-10 mt-6 pt-4 border-t border-slate-100 dark:border-white/[0.06] flex flex-wrap items-center justify-between gap-2.5">
+                    <div className="flex flex-wrap items-center gap-2">
                       {school.isEnrolled && (
                         <span className="inline-flex items-center rounded-full bg-emerald-100/90 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
                           <CheckCircle2 className="mr-1 h-3 w-3" />
@@ -299,7 +299,7 @@ export default function MyLearningPage() {
 
                     <Link
                       href={`/learner/ai-schools/${school.id}`}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-purple-600 hover:text-purple-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors py-1 px-2 rounded-lg hover:bg-purple-50 dark:hover:bg-cyan-500/10"
+                      className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-purple-600 hover:text-purple-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors py-1 px-2.5 rounded-lg hover:bg-purple-50 dark:hover:bg-cyan-500/10 ml-auto sm:ml-0"
                     >
                       <span>Open school</span>
                       <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -444,13 +444,13 @@ export default function MyLearningPage() {
                             </div>
 
                             {/* Bottom row: clean, no purple watermark obstruction */}
-                            <div className="relative z-10 mt-5 pt-3.5 border-t border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                            <div className="relative z-10 mt-5 pt-3.5 border-t border-slate-100 dark:border-white/[0.06] flex flex-wrap items-center justify-between gap-2">
                               <span className="text-xs text-slate-400 font-medium">
                                 Self-paced course
                               </span>
                               <Link
                                 href={`/learner/courses/${course.slug}`}
-                                className="inline-flex items-center gap-1 text-xs font-bold text-purple-600 hover:text-purple-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors py-1 px-2 rounded-lg hover:bg-purple-50 dark:hover:bg-cyan-500/10"
+                                className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-purple-600 hover:text-purple-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors py-1 px-2.5 rounded-lg hover:bg-purple-50 dark:hover:bg-cyan-500/10 ml-auto sm:ml-0"
                               >
                                 <span>View course</span>
                                 <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

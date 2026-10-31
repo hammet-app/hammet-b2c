@@ -31,6 +31,7 @@ import {
   LifeBuoy,
 } from "lucide-react";
 
+import { cn } from "@/lib/utils/utils";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useTheme } from "@/lib/use-theme";
 //import { useCart } from "@/lib/store/use-cart";
@@ -751,37 +752,46 @@ export function LearnerShell({ children }: LearnerShellProps) {
           </div>
         </header>
 
-        <main>{children}</main>
+        <main className="pb-24 lg:pb-0">{children}</main>
 
         {/* Global Floating Community Chat Launcher & Widget */}
         {/* <ChatWidget /> */}
       </motion.div>
 
-      {/* Mobile bottom navigation with fluid horizontal touch swipe */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.06] bg-white/95 pb-[env(safe-area-inset-bottom)] pt-1.5 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#120E1D]/95 lg:hidden shadow-lg">
-        <div className="relative mx-auto flex w-full max-w-lg items-center gap-1.5 overflow-x-auto scroll-smooth px-3 py-1 overscroll-x-contain touch-pan-x [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      {/* Mobile bottom navigation: Centered, balanced, and responsive */}
+      <nav
+        aria-label="Mobile Navigation"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-black/[0.06] bg-white/95 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#120E1D]/95 lg:hidden shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.35)]"
+      >
+        <div className="relative mx-auto flex w-full max-w-md items-center justify-around px-2 py-0.5">
           {navigation.map((item) => {
             const Icon = item.icon;
             const active =
               item.href === "/learner"
                 ? pathname === "/learner"
-                : pathname.startsWith(item.href);
+                : pathname === item.href ||
+                  (item.href !== "/learner" && pathname.startsWith(item.href));
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={[
-                  "flex shrink-0 min-w-[62px] flex-col items-center justify-center gap-1 rounded-xl px-2 py-1.5 text-[10px] font-medium transition-all duration-150 active:scale-95",
+                className={cn(
+                  "flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl py-1.5 px-1 text-[11px] font-medium transition-all duration-150 active:scale-95 max-w-[84px] select-none",
                   active
-                    ? "text-purple-700 bg-purple-50 dark:text-cyan-300 dark:bg-purple-500/15 font-bold shadow-xs"
-                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200",
-                ].join(" ")}
+                    ? "text-purple-700 bg-purple-100/75 dark:text-cyan-300 dark:bg-cyan-500/15 font-bold shadow-xs"
+                    : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100/60 dark:hover:bg-white/[0.04]",
+                )}
               >
                 <Icon
-                  className={`h-[18px] w-[18px] transition-transform ${active ? "scale-110 text-purple-600 dark:text-cyan-400" : ""}`}
+                  className={cn(
+                    "h-5 w-5 transition-transform",
+                    active
+                      ? "scale-110 text-purple-600 dark:text-cyan-400"
+                      : "text-slate-400 dark:text-slate-400",
+                  )}
                 />
-                <span className="truncate max-w-[70px] whitespace-nowrap">
+                <span className="truncate max-w-[70px] whitespace-nowrap text-center leading-none">
                   {item.label}
                 </span>
               </Link>

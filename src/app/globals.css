@@ -250,3 +250,12 @@
   bottom: -220px;
   background: rgba(124, 58, 237, 0.16);
 }
+
+/* Ensure Next.js dev overlay indicator does not block mobile navigation */
+@media (max-width: 1024px) {
+  nextjs-portal,
+  [data-nextjs-toast-wrapper],
+  [data-nextjs-dialog-overlay] {
+    pointer-events: none !important;
+  }
+}
