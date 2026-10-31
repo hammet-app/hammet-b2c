@@ -249,4 +249,19 @@ export const learnerApi = {
 
     return toProjectSubmission(response);
   },
+  /**
+   * Enroll in a given course
+   */
+  enrollCourse: async(
+    courseId: string,
+    token: string,
+    onRefresh: () => Promise<string | null>,
+  ) => {
+    await apiClient.post(
+      `/learner/enrollment/${encodeURIComponent(courseId)}`,
+      undefined,
+      token,
+      { onRefresh, skipSessionExpired: true },
+    );
+  },
 };

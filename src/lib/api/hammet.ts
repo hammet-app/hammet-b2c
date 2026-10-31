@@ -37,6 +37,26 @@ import {
   toAiSchoolsResponse,
   CreateAiCourseResponseDto,
   toCreateAiCourseResponse,
+  type HammetAdmin,
+  type HammetAdminDto,
+  type HammetAdminsResponse,
+  type HammetAdminsResponseDto,
+  type GetHammetAdminsParams,
+  type EditHammetAdminRequest,
+  toHammetAdmin,
+  toHammetAdminsResponse,
+  fromEditHammetAdminRequest,
+  type Coupon,
+  type CouponDto,
+  type CouponsResponse,
+  type CouponsResponseDto,
+  type CreateCouponRequest,
+  type EditCouponRequest,
+  type EditCouponRequestDto,
+  toCouponsResponse,
+  fromCreateCouponRequest,
+  fromEditCouponRequest,
+  toCoupon,
 } from "@/lib/api/types";
 
 // ------------------------------------------------------------
@@ -58,6 +78,59 @@ export async function registerHammet(
   );
 
   return response;
+}
+
+export async function getHammetAdmins(
+  params: GetHammetAdminsParams,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<HammetAdminsResponse> {
+  const query = new URLSearchParams();
+  if (params.page) query.set("page", String(params.page));
+  if (params.pageSize) query.set("page_size", String(params.pageSize));
+  if (params.scope) query.set("scope", params.scope);
+  if (params.access) query.set("access", params.access);
+  if (params.search?.trim()) query.set("search", params.search.trim());
+
+  const queryString = query.toString();
+  const response = await apiClient.get<HammetAdminsResponseDto>(
+    `/hammet/admins${queryString ? `?${queryString}` : ""}`,
+    token,
+    { onRefresh },
+  );
+
+  return toHammetAdminsResponse(response);
+}
+
+export async function editHammetAdmin(
+  adminId: string,
+  body: EditHammetAdminRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<HammetAdmin> {
+  const payload = fromEditHammetAdminRequest(body);
+  const response = await apiClient.patch<HammetAdminDto>(
+    `/hammet/admins/${encodeURIComponent(adminId)}`,
+    payload,
+    token,
+    { onRefresh },
+  );
+
+  return toHammetAdmin(response);
+}
+
+// Deactivates the admin; the record stays and its status changes.
+export async function deactivateHammetAdmin(
+  adminId: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<boolean> {
+  return apiClient.delete<boolean>(
+    `/hammet/admins/${encodeURIComponent(adminId)}`,
+    undefined,
+    token,
+    { onRefresh },
+  );
 }
 
 // ------------------------------------------------------------
@@ -208,4 +281,74 @@ export async function getHammetAiCourse(
   );
 
   return toCreateAiCourseResponse(response);
+}
+
+export async function getHammetCoupons(
+  page: number,
+  pageSize: number,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<CouponsResponse> {
+  const query = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+  const response = await apiClient.get<CouponsResponseDto>(
+    `/hammet/coupon?${query.toString()}`,
+    token,
+    { onRefresh },
+  );
+  return toCouponsResponse(response);
+}
+
+export async function getHammetCoupon(
+  couponId: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<Coupon> {
+  const response = await apiClient.get<CouponDto>(
+    `/hammet/coupon/${encodeURIComponent(couponId)}`,
+    token,
+    { onRefresh },
+  );
+  return toCoupon(response);
+}
+
+export async function createHammetCoupon(
+  body: CreateCouponRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<Coupon> {
+  const payload = fromCreateCouponRequest(body);
+  const response = await apiClient.post<CouponDto>(
+    "/hammet/coupon/add",
+    payload,
+    token,
+    { onRefresh },
+  );
+  return toCoupon(response);
+}
+
+export async function editHammetCoupon(
+  couponId: string,
+  body: EditCouponRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<boolean> {
+  return apiClient.patch<boolean>(
+    `/hammet/coupon/${encodeURIComponent(couponId)}`,
+    fromEditCouponRequest(body),
+    token,
+    { onRefresh },
+  );
+}
+
+export async function deleteHammetCoupon(
+  couponId: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<boolean> {
+  return apiClient.delete<boolean>(
+    `/hammet/coupon/${encodeURIComponent(couponId)}`,
+    undefined,
+    token,
+    { onRefresh },
+  );
 }

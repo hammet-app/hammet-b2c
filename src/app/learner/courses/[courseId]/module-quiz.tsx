@@ -512,9 +512,6 @@ export function ModuleQuiz({
                 <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
                 Retake Quiz
               </Button>
-              <span className="text-[11px] text-slate-400">
-                Backend route: /learner/modules/{moduleId}/quiz
-              </span>
             </div>
           </motion.div>
         )}
