@@ -300,11 +300,11 @@ export default function LearnerHomePage() {
                 <div className="mt-5 flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400">
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    60+ Hours of Content
+                    Hours of Content
                   </span>
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    44 Hands-on Projects
+                    Hands-on Projects
                   </span>
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />

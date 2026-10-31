@@ -410,11 +410,11 @@ export default function AiSchoolsPage() {
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <Clock className="h-4 w-4 text-purple-600 dark:text-cyan-400" />
-                                <span>60+ Hours of Curriculum</span>
+                                <span>Hours of Curriculum</span>
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <Layers className="h-4 w-4 text-purple-600 dark:text-cyan-400" />
-                                <span>44 Practical Labs & Projects</span>
+                                <span>Practical Labs & Projects</span>
                               </div>
                             </div>
                           </div>

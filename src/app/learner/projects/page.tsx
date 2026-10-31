@@ -178,7 +178,7 @@ export default function ProjectsPage() {
         >
           <div className="inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-3.5 py-1 text-xs font-semibold text-purple-700 dark:border-cyan-400/30 dark:bg-cyan-400/10 dark:text-cyan-300">
             <TerminalDoodleIcon size="sm" />
-            PROJECT WORKSPACE // CAPSTONE LABS
+            Project Workspace
           </div>
 
           <h1 className="mt-3 text-3xl font-extrabold tracking-[-0.04em] text-slate-950 sm:text-4xl lg:text-5xl dark:text-white">
