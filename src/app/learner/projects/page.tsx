@@ -87,12 +87,10 @@ export default function ProjectsPage() {
 
   const tracks = [
     "All Tracks",
-    "Neural Foundations",
-    "Transformer Latent Space",
-    "Neural Fine-Tuning",
-    "Vector RAG",
-    "Agent Workflows",
-    "Stateful Systems",
+    "AI Foundations",
+    "Generative AI",
+    "AI at Work",
+    "AI Applications",
   ];
 
   const filteredProjects = projects.filter((p) => {
@@ -418,7 +416,7 @@ export default function ProjectsPage() {
                     <div className="mt-4 rounded-xl border border-black/[0.05] bg-slate-50/70 p-3.5 dark:border-white/[0.05] dark:bg-white/[0.02]">
                       <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
                         <CheckCircle2 className="h-3.5 w-3.5 text-purple-600 dark:text-cyan-400" />
-                        Automated Acceptance Rubric:
+                        Acceptance criteria:
                       </p>
                       <ul className="space-y-1.5 text-[10.5px] text-slate-500 dark:text-slate-400">
                         {project.rubric.map((item, idx) => (

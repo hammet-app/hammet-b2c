@@ -782,9 +782,9 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative flex h-[min(92vh,780px)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-black/[0.08] bg-white shadow-2xl dark:border-white/10 dark:bg-[#120E1F]"
+              className="relative flex h-[min(92dvh,780px)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-black/[0.08] bg-white shadow-2xl dark:border-white/10 dark:bg-[#120E1F]"
             >
-              <header className="flex items-center justify-between gap-4 border-b border-slate-100 px-6 py-4 dark:border-white/10">
+              <header className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-100 px-6 py-4 dark:border-white/10">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="rounded-md bg-purple-100 px-2 py-0.5 font-mono text-xs font-bold text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">
@@ -815,7 +815,10 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
                 </button>
               </header>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div
+                data-lenis-prevent
+                className="min-h-0 flex-1 overflow-y-auto overscroll-contain touch-pan-y p-6 space-y-6 [-webkit-overflow-scrolling:touch]"
+              >
                 <div>
                   <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
                     {activeModule.hasFinished ? (
@@ -1081,7 +1084,7 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
                 </div>
               </div>
 
-              <footer className="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/50 px-6 py-4 dark:border-white/10 dark:bg-white/[0.02]">
+              <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/50 px-6 py-4 dark:border-white/10 dark:bg-white/[0.02]">
                 <Button
                   variant="outline"
                   onClick={() => setActiveModule(null)}

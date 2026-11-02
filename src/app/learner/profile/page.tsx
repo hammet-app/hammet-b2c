@@ -390,8 +390,6 @@ export default function LearnerProfilePage() {
               <div className="inline-flex items-center gap-2.5 rounded-full border border-purple-400/40 bg-purple-50 px-3.5 py-1 text-xs font-poppins font-semibold text-purple-800 dark:border-purple-500/30 dark:bg-purple-950/40 dark:text-purple-200">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                 <span>Cohort 2026</span>
-                <span className="h-1 w-1 rounded-full bg-purple-400/60" />
-                <span className="text-cyan-600 dark:text-cyan-300 font-bold">Neural Intelligence Lab</span>
               </div>
 
               <div className="flex items-center gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400 font-poppins">
