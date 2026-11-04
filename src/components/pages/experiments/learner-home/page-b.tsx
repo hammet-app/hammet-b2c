@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -13,14 +13,25 @@ import {
   CheckCircle2,
   HelpCircle,
   Lock,
+  ShieldCheck,
+  Workflow,
 } from "lucide-react";
 import { GlowingMagicSparkle } from "@/components/ui/vibrant-ai-icons";
+import { TitleIcon, DoodleKicker } from "@/components/ui/section-title";
+import {
+  KnowledgeAppleIcon,
+  MilestoneSignIcon,
+  TerminalDoodleIcon,
+  NeuroBotIcon,
+} from "@/components/ui/character-icons";
+import { LearningSnapshot } from "@/components/learner/learning-snapshot";
 
 import { useAuth } from "@/lib/auth/auth-context";
 
 export default function LearnerHomePage() {
   const { user } = useAuth();
   const firstName = user?.fullName?.split(" ")[0] ?? "there";
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <div className="relative min-h-screen px-5 pb-28 pt-8 sm:px-7 sm:pt-10 lg:px-10 lg:pb-16 lg:pt-10">
@@ -46,8 +57,29 @@ export default function LearnerHomePage() {
             </span>
           </div>
 
-          <h1 className="mt-3 text-3xl font-extrabold tracking-[-0.04em] text-slate-950 sm:text-4xl lg:text-5xl dark:text-white">
-            Welcome back, {firstName}.
+          <h1 className="mt-3 flex flex-wrap items-center gap-2.5 text-3xl font-extrabold tracking-[-0.04em] text-slate-950 sm:gap-3 sm:text-4xl lg:text-5xl dark:text-white">
+            <motion.span
+              aria-hidden="true"
+              className="inline-flex shrink-0 items-center justify-center"
+              animate={
+                shouldReduceMotion
+                  ? undefined
+                  : { rotate: [0, 18, -10, 16, -6, 0], y: [0, -3, 0, -2, 0] }
+              }
+              transition={{
+                duration: 1.1,
+                ease: "easeInOut",
+                repeat: Infinity,
+                repeatDelay: 2.6,
+              }}
+            >
+              <img
+                src="/waving-hand.png"
+                alt=""
+                className="h-9 w-9 select-none object-contain drop-shadow-[0_6px_10px_rgba(139,92,246,0.32)] sm:h-11 sm:w-11 lg:h-13 lg:w-13"
+              />
+            </motion.span>
+            <span>Welcome back, {firstName}.</span>
           </h1>
 
           <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-400 sm:text-base">
@@ -55,8 +87,8 @@ export default function LearnerHomePage() {
           </p>
         </motion.section>
 
-        {/* Learning hero with AI sketched bot welcoming you - Flush with top border */}
-        <div className="relative mb-14 mt-36 sm:mt-48">
+        {/* Learning hero with AI sketched bot welcoming you */}
+        <div className="relative mb-14 mt-12 sm:mt-16">
           {/* Learning hero card */}
           <motion.section
             initial={{ opacity: 0, y: 18 }}
@@ -64,25 +96,25 @@ export default function LearnerHomePage() {
             transition={{ duration: 0.5, delay: 0.05 }}
             className="relative rounded-[28px] bg-[#160B30] p-7 text-white shadow-[0_24px_80px_rgba(76,29,149,0.28)] border border-purple-500/30 sm:p-9 lg:p-11"
           >
-            {/* AI sketched bot hanging on top right border welcoming you - Mathematically flush on card top border */}
+            {/* AI sketched bot sitting exactly on the top-right border line */}
             <motion.div
-              initial={{ opacity: 0, y: -25, scale: 0.9 }}
+              initial={{ opacity: 0, y: -18, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ type: "spring", stiffness: 220, damping: 18, delay: 0.2 }}
-              className="absolute top-0 right-6 sm:right-14 -translate-y-[calc(100%-1px)] z-20 pointer-events-none flex flex-col items-end"
+              className="absolute top-0 right-4 sm:right-12 -translate-y-full z-20 pointer-events-none flex items-end gap-2"
             >
               <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 5 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
+                initial={{ opacity: 0, scale: 0.8, x: 6 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
                 transition={{ delay: 0.45 }}
-                className="mr-3 mb-1.5 rounded-full border border-purple-200/50 bg-white/95 px-3.5 py-1 text-[11px] font-semibold text-slate-800 shadow-[0_4px_16px_rgba(0,0,0,0.12)] backdrop-blur dark:border-cyan-500/30 dark:bg-slate-900/95 dark:text-cyan-300"
+                className="mb-5 hidden rounded-2xl rounded-br-sm border border-purple-200/50 bg-white/95 px-3.5 py-1.5 text-[11px] font-semibold text-slate-800 shadow-[0_4px_16px_rgba(0,0,0,0.12)] backdrop-blur sm:block dark:border-cyan-500/30 dark:bg-slate-900/95 dark:text-cyan-300"
               >
                 Welcome! Let&apos;s build AI 🤖
               </motion.div>
               <img
                 src="/ai-bot-welcome.png"
-                alt="AI Assistant bot hanging and welcoming you"
-                className="h-20 sm:h-32 w-auto object-contain filter drop-shadow-[0_12px_20px_rgba(0,0,0,0.2)] select-none pointer-events-none"
+                alt="AI Assistant bot welcoming you"
+                className="h-20 sm:h-28 w-auto object-contain filter drop-shadow-[0_12px_20px_rgba(0,0,0,0.2)] select-none pointer-events-none"
               />
             </motion.div>
 
@@ -131,7 +163,13 @@ export default function LearnerHomePage() {
                 </div>
 
                 <h2 className="max-w-xl text-3xl font-bold tracking-[-0.045em] sm:text-4xl lg:text-5xl">
-                  School of AI Foundations
+                  School of{" "}
+                  <span className="bg-gradient-to-r from-fuchsia-300 via-violet-300 to-cyan-300 bg-clip-text font-black text-transparent">
+                    AI
+                  </span>{" "}
+                  <span className="bg-gradient-to-r from-violet-200 via-cyan-200 to-emerald-200 bg-clip-text text-transparent">
+                    Foundations
+                  </span>
                 </h2>
 
                 <p className="mt-4 max-w-xl text-sm leading-6 text-purple-100/80 sm:text-base">
@@ -170,11 +208,12 @@ export default function LearnerHomePage() {
         <div className="mb-14">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-purple-700 dark:text-cyan-400">
+              <DoodleKicker tone="violet" icon={<KnowledgeAppleIcon size="sm" />}>
                 Explore Academies
-              </p>
-              <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
-                Available AI Schools
+              </DoodleKicker>
+              <h2 className="mt-2 flex items-center gap-2.5 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
+                <TitleIcon icon={BookOpen} tone="indigo" size="sm" />
+                <span>Available AI Schools</span>
               </h2>
             </div>
             <Link
@@ -299,26 +338,28 @@ export default function LearnerHomePage() {
           </motion.div>
         </div>
 
-        {/* ── NEW BENTO GRID: AI where your learning happens (from Image 3) ── */}
+        {/* ── DATA-DRIVEN SNAPSHOT + LEARNING LOOP ── */}
         <div className="mb-16">
-          <div className="mb-8">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-purple-700 dark:text-cyan-400">
+          <div className="mb-6">
+            <DoodleKicker tone="cyan" icon={<MilestoneSignIcon size="sm" />}>
               The learning loop
-            </p>
-            <h2 className="mt-1 text-3xl font-extrabold tracking-[-0.035em] text-slate-950 sm:text-4xl dark:text-white">
-              From your first module to your final project.
+            </DoodleKicker>
+            <h2 className="mt-2 flex items-center gap-2.5 text-3xl font-extrabold tracking-[-0.035em] text-slate-950 sm:text-4xl dark:text-white">
+              <TitleIcon icon={Workflow} tone="violet" size="md" />
+              <span>From your first module to your final project.</span>
             </h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 sm:text-base max-w-2xl">
+            <p className="mt-2 max-w-2xl text-sm text-slate-600 dark:text-slate-400 sm:text-base">
               Schools, courses, modules, quizzes, and project submissions — one workspace, one path forward.
             </p>
           </div>
+
+          <LearningSnapshot />
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
             {/* Card 1: Courses & modules */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
               className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-black/[0.06] bg-white p-7 shadow-sm transition-all hover:shadow-md dark:border-white/[0.06] dark:bg-white/[0.02]"
             >
@@ -422,8 +463,7 @@ export default function LearnerHomePage() {
             {/* Card 2: Module quizzes */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
               className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-black/[0.06] bg-white p-7 shadow-sm transition-all hover:shadow-md dark:border-white/[0.06] dark:bg-white/[0.02]"
             >
@@ -499,8 +539,7 @@ export default function LearnerHomePage() {
             {/* Card 3: Project workspace */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.15 }}
               className="group relative md:col-span-2 overflow-hidden rounded-3xl border border-black/[0.06] bg-white p-7 shadow-sm transition-all hover:shadow-md dark:border-white/[0.06] dark:bg-white/[0.02]"
             >
@@ -571,11 +610,12 @@ export default function LearnerHomePage() {
           >
             <div className="mb-4 flex items-end justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                <DoodleKicker tone="indigo" icon={<TerminalDoodleIcon size="sm" />}>
                   Evidence
-                </p>
-                <h2 className="mt-1 text-xl font-semibold tracking-[-0.03em]">
-                  Your work
+                </DoodleKicker>
+                <h2 className="mt-2 flex items-center gap-2 text-xl font-semibold tracking-[-0.03em]">
+                  <TitleIcon icon={FolderKanban} tone="indigo" size="sm" />
+                  <span>Your work</span>
                 </h2>
               </div>
 
@@ -639,11 +679,12 @@ export default function LearnerHomePage() {
             transition={{ duration: 0.45, delay: 0.18 }}
           >
             <div className="mb-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+              <DoodleKicker tone="amber" icon={<NeuroBotIcon size="sm" />}>
                 Identity
-              </p>
-              <h2 className="mt-1 text-xl font-semibold tracking-[-0.03em]">
-                Digital Passport
+              </DoodleKicker>
+              <h2 className="mt-2 flex items-center gap-2 text-xl font-semibold tracking-[-0.03em]">
+                <TitleIcon icon={ShieldCheck} tone="amber" size="sm" />
+                <span>Digital Passport</span>
               </h2>
             </div>
 

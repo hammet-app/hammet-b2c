@@ -9,12 +9,11 @@ import {
 import {
   Search,
   Filter,
-  MessageSquare,
-  Paperclip,
   Clock,
   X,
   AlertCircle,
   Plus,
+  Info,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -49,10 +48,9 @@ export function TicketList() {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchId = ticket.id.toLowerCase().includes(q);
-      const matchTitle = ticket.title.toLowerCase().includes(q);
-      const matchDesc = ticket.description.toLowerCase().includes(q);
-      const matchAgent = ticket.assignedAgent.name.toLowerCase().includes(q);
-      if (!matchId && !matchTitle && !matchDesc && !matchAgent) return false;
+      const matchSubject = ticket.subject.toLowerCase().includes(q);
+      const matchMessage = ticket.message.toLowerCase().includes(q);
+      if (!matchId && !matchSubject && !matchMessage) return false;
     }
 
     // Status filter
@@ -78,15 +76,14 @@ export function TicketList() {
     return tickets.filter((t) => t.status === statusId).length;
   };
 
-  const formatRelativeTime = (isoString: string) => {
-    const diff = Date.now() - new Date(isoString).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "Just now";
-    if (mins < 60) return `${mins}m ago`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
+  const formatTicketDate = (isoString: string) => {
+    const date = new Date(isoString);
+    if (Number.isNaN(date.getTime())) return "—";
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   };
 
   return (
@@ -177,8 +174,8 @@ export function TicketList() {
           )}
         </div>
 
-        {/* Status Horizontal Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pt-0.5">
+        {/* Status Tabs */}
+        <div className="flex flex-wrap items-center gap-1 pt-0.5">
           {statusTabs.map((tab) => {
             const active = filterStatus === tab.id;
             const count = getStatusCount(tab.id);
@@ -208,6 +205,15 @@ export function TicketList() {
         </div>
       </div>
 
+      {/* ── Local reference notice ─────────────────────────────── */}
+      <div className="flex items-start gap-2 border-b border-black/[0.05] bg-amber-50/60 px-3 py-2 text-[10.5px] leading-relaxed text-amber-800 dark:border-white/[0.06] dark:bg-amber-500/10 dark:text-amber-200">
+        <Info className="mt-0.5 h-3 w-3 shrink-0" />
+        <span>
+          This list only contains tickets created from this browser. The support
+          API does not provide history sync or status updates.
+        </span>
+      </div>
+
       {/* ── Ticket List Scrollable Container ───────────────────── */}
       <div className="overflow-y-auto divide-y divide-slate-100 dark:divide-white/5 max-h-[580px]">
         <AnimatePresence mode="popLayout">
@@ -222,31 +228,40 @@ export function TicketList() {
                 <AlertCircle className="h-5 w-5" />
               </div>
               <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                No support tickets found
+                {tickets.length === 0
+                  ? "No tickets logged yet"
+                  : "No support tickets found"}
               </h4>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-xs">
-                No tickets match your active filter criteria. Try adjusting your
-                search or reset your filters.
+                {tickets.length === 0
+                  ? "Create your first ticket and the backend will record it against your learner account."
+                  : "No tickets match your active filter criteria. Try adjusting your search or reset your filters."}
               </p>
-              <button
-                onClick={() => {
-                  setFilterCategory("all");
-                  setFilterPriority("all");
-                  setFilterStatus("all");
-                  setSearchQuery("");
-                }}
-                className="mt-3.5 rounded-xl bg-purple-50 px-3.5 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-100 dark:bg-purple-950/40 dark:text-purple-300 dark:border dark:border-purple-500/20"
-              >
-                Clear all filters
-              </button>
+              {tickets.length === 0 ? (
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Create your first ticket
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setFilterCategory("all");
+                    setFilterPriority("all");
+                    setFilterStatus("all");
+                    setSearchQuery("");
+                  }}
+                  className="mt-3.5 rounded-xl bg-purple-50 px-3.5 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-100 dark:bg-purple-950/40 dark:text-purple-300 dark:border dark:border-purple-500/20"
+                >
+                  Clear all filters
+                </button>
+              )}
             </motion.div>
           ) : (
             filteredTickets.map((ticket) => {
               const isSelected = selectedTicketId === ticket.id;
-              const hasAttachments = Boolean(ticket.attachments && ticket.attachments.length > 0);
-              const commentCount = ticket.comments?.length || 0;
-              const displaySubject = ticket.subject || ticket.title || "Support Inquiry";
-              const displayMessage = ticket.message || ticket.description || "";
 
               return (
                 <motion.button
@@ -285,45 +300,23 @@ export function TicketList() {
 
                   {/* Title */}
                   <h4 className="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
-                    {displaySubject}
+                    {ticket.subject}
                   </h4>
 
                   {/* Excerpt */}
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                    {displayMessage}
+                    {ticket.message}
                   </p>
 
-                  {/* Bottom Row: Category, Assigned Agent, Time, Badges */}
+                  {/* Bottom Row: Category and date */}
                   <div className="mt-1 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 pt-1 border-t border-black/[0.03] dark:border-white/[0.04]">
                     <CategoryBadge category={ticket.category} />
 
                     <div className="flex items-center gap-3">
-                      {/* Attachments indicator */}
-                      {hasAttachments && (
-                        <span
-                          className="flex items-center gap-0.5"
-                          title={`${ticket.attachments?.length || 0} attachment(s)`}
-                        >
-                          <Paperclip className="h-3 w-3" />
-                          <span>{ticket.attachments?.length || 0}</span>
-                        </span>
-                      )}
-
-                      {/* Comments indicator */}
-                      {commentCount > 0 && (
-                        <span
-                          className="flex items-center gap-0.5"
-                          title={`${commentCount} update(s)`}
-                        >
-                          <MessageSquare className="h-3 w-3" />
-                          <span>{commentCount}</span>
-                        </span>
-                      )}
-
                       {/* Timestamp */}
                       <span className="flex items-center gap-0.5 font-mono text-[10px]">
                         <Clock className="h-2.5 w-2.5" />
-                        {formatRelativeTime(ticket.updatedAt || ticket.createdAt)}
+                        {formatTicketDate(ticket.updatedAt || ticket.createdAt)}
                       </span>
                     </div>
                   </div>

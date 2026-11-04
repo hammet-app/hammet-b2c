@@ -13,8 +13,11 @@ import {
   CheckCircle2,
   HelpCircle,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Clock,
   ExternalLink,
+  GraduationCap,
   Layers,
   Lock,
   Play,
@@ -25,6 +28,7 @@ import {
   Video,
   Globe,
   FolderKanban,
+  ArrowRight,
   ArrowUpRight,
   Terminal,
   Upload,
@@ -37,7 +41,7 @@ import { learnerApi } from "@/lib/api/learner";
 import { cartApi } from "@/lib/api/cart";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/utils";
-import { ModuleQuiz } from "./module-quiz";
+import { TitleIcon } from "@/components/ui/section-title";
 import type {
   PublishedCourse,
   PublishedModule,
@@ -70,6 +74,18 @@ function getResourceTypeBadgeClass(type: string) {
   return "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 border-amber-200 dark:border-amber-500/30";
 }
 
+function extractYouTubeId(url: string): string | null {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/watch\?.*v=([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+}
+
 export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
   const { courseId } = use(params);
   const router = useRouter();
@@ -96,6 +112,7 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
   const [projectErrors, setProjectErrors] = useState<
     Record<string, string | null>
   >({});
+  const [expandedModuleId, setExpandedModuleId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -315,7 +332,7 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
         </button>
 
         <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
-          <section className="min-w-0">
+          <section className="order-2 min-w-0 lg:order-1">
             <motion.div
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
@@ -345,8 +362,9 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
                 )}
               </div>
 
-              <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl lg:text-4xl">
-                {course.title}
+              <h1 className="flex items-start gap-3 text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl lg:text-4xl">
+                <TitleIcon icon={GraduationCap} tone="violet" size="md" />
+                <span>{course.title}</span>
               </h1>
 
               <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300 sm:text-base">
@@ -380,8 +398,9 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
 
             <section className="space-y-4">
               <div className="mb-2 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                  Course Curriculum &amp; Modules
+                <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
+                  <TitleIcon icon={BookOpen} tone="indigo" size="sm" />
+                  <span>Course Curriculum &amp; Modules</span>
                 </h2>
                 <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                   {completedCount} of {modules.length} Completed
@@ -595,28 +614,201 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
                               </Link>
                             )}
                             {moduleCanOpen && (
-                              <button
-                                type="button"
-                                onClick={() => handleOpenModule(module)}
+                              <Link
+                                href={`/learner/quizzes/${courseId}/${module.id}`}
                                 className="inline-flex items-center gap-1.5 rounded-xl border border-purple-200/80 bg-purple-50/50 px-3 py-1.5 text-xs font-bold text-purple-700 transition hover:bg-purple-100/70 dark:border-purple-500/20 dark:bg-purple-500/10 dark:text-cyan-300"
                               >
                                 <HelpCircle className="h-3.5 w-3.5" />
-                                <span>Quiz</span>
-                              </button>
+                                <span>Take Quiz</span>
+                              </Link>
                             )}
 
                           </div>
                         </div>
 
+                        {/* Dropdown toggle button */}
                         <button
                           type="button"
-                          onClick={() => handleOpenModule(module)}
-                          aria-label={`View ${module.title}`}
-                          className="hidden self-center text-slate-300 transition hover:text-purple-600 dark:text-slate-600 dark:hover:text-cyan-400 sm:flex"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedModuleId(
+                              expandedModuleId === module.id ? null : module.id
+                            );
+                          }}
+                          aria-label={
+                            expandedModuleId === module.id
+                              ? `Collapse ${module.title}`
+                              : `Expand ${module.title}`
+                          }
+                          aria-expanded={expandedModuleId === module.id}
+                          className="self-center text-slate-300 transition hover:text-purple-600 dark:text-slate-600 dark:hover:text-cyan-400"
                         >
-                          <ChevronRight className="h-5 w-5" />
+                          {expandedModuleId === module.id ? (
+                            <ChevronUp className="h-5 w-5" />
+                          ) : (
+                            <ChevronDown className="h-5 w-5" />
+                          )}
                         </button>
                       </div>
+
+                      {/* Expanded content */}
+                      <AnimatePresence>
+                        {expandedModuleId === module.id && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.25, ease: "easeInOut" }}
+                            className="mt-4 pt-4 border-t border-black/[0.04] dark:border-white/[0.05] space-y-4"
+                          >
+                            {/* Masterclass */}
+                            {module.masterclass && (
+                              <div className="rounded-2xl border border-purple-200/80 bg-purple-50/50 p-4 dark:border-purple-500/20 dark:bg-purple-950/20">
+                                <div className="flex items-center gap-2 text-sm font-bold text-purple-900 dark:text-purple-200 mb-3">
+                                  <Video className="h-4 w-4" />
+                                  <span>Masterclass</span>
+                                </div>
+                                {(() => {
+                                  const youtubeId = extractYouTubeId(module.masterclass!);
+                                  if (youtubeId) {
+                                    return (
+                                      <div className="aspect-video w-full rounded-xl overflow-hidden border border-purple-200/50 dark:border-purple-500/30">
+                                        <iframe
+                                          src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1`}
+                                          title="Masterclass video"
+                                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                          allowFullScreen
+                                          className="w-full h-full"
+                                        />
+                                      </div>
+                                    );
+                                  }
+                                  return (
+                                    <a
+                                      href={module.masterclass!}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="inline-flex items-center gap-2 text-sm font-semibold text-purple-700 underline hover:text-purple-900 dark:text-cyan-300 dark:hover:text-white"
+                                    >
+                                      Open masterclass video <ExternalLink className="h-4 w-4" />
+                                    </a>
+                                  );
+                                })()}
+                              </div>
+                            )}
+
+                            {/* Resources */}
+                            {resources.length > 0 && (
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
+                                    <FileText className="h-4 w-4 text-purple-600 dark:text-cyan-400" />
+                                    <span>Curated Module Resources</span>
+                                  </h4>
+                                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600 dark:bg-white/10 dark:text-slate-300">
+                                    {resources.length} Links
+                                  </span>
+                                </div>
+
+                                <div className="space-y-2.5">
+                                  {resources
+                                    .slice()
+                                    .sort((a, b) => a.position - b.position)
+                                    .map((resource) => {
+                                      const ResIcon = getResourceIcon(
+                                        resource.resourceType,
+                                      );
+                                      return (
+                                        <div
+                                          key={resource.id}
+                                          className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-black/[0.06] bg-slate-50/70 p-4 transition-all hover:border-purple-300 hover:bg-white hover:shadow-xs dark:border-white/[0.06] dark:bg-white/[0.02] dark:hover:border-cyan-500/30 dark:hover:bg-white/[0.04]"
+                                        >
+                                          <div className="flex items-start gap-3 min-w-0">
+                                            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-100 text-purple-700 shadow-2xs dark:bg-cyan-500/15 dark:text-cyan-300">
+                                              <ResIcon className="h-4 w-4" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                              <a
+                                                href={resource.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-900 transition hover:text-purple-600 dark:text-white dark:hover:text-cyan-300 group-hover:underline"
+                                              >
+                                                <span className="break-words">
+                                                  {resource.title}
+                                                </span>
+                                                <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-70 group-hover:opacity-100" />
+                                              </a>
+                                              <div className="mt-1 flex flex-wrap items-center gap-2">
+                                                <span
+                                                  className={cn(
+                                                    "rounded-md border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                                                    getResourceTypeBadgeClass(
+                                                      resource.resourceType,
+                                                    ),
+                                                  )}
+                                                >
+                                                  {resource.resourceType || "resource"}
+                                                </span>
+                                                <a
+                                                  href={resource.url}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="truncate font-mono text-[11px] text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+                                                >
+                                                  {resource.url}
+                                                </a>
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          <a
+                                            href={resource.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-purple-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400 transition"
+                                          >
+                                            <span>Open</span>
+                                            <ExternalLink className="h-3.5 w-3.5" />
+                                          </a>
+                                        </div>
+                                      );
+                                    })}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Quiz link */}
+                            {moduleCanOpen && (
+                              <Link
+                                href={`/learner/quizzes/${courseId}/${module.id}`}
+                                className="inline-flex items-center gap-2 rounded-xl border border-purple-200/80 bg-purple-50/50 px-4 py-2.5 text-sm font-bold text-purple-700 transition hover:bg-purple-100/70 dark:border-purple-500/20 dark:bg-purple-500/10 dark:text-cyan-300"
+                              >
+                                <HelpCircle className="h-4 w-4" />
+                                <span>Take Quiz</span>
+                                <ChevronRight className="h-4 w-4" />
+                              </Link>
+                            )}
+
+                            {/* Projects - remain in modal (existing behavior) */}
+                            {projects.length > 0 && (
+                              <Link
+                                href="/learner/projects"
+                                className="inline-flex items-center gap-2 rounded-xl border border-indigo-200/80 bg-indigo-50/50 px-4 py-2.5 text-sm font-bold text-indigo-700 transition hover:bg-indigo-100/70 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300"
+                              >
+                                <FolderKanban className="h-4 w-4" />
+                                <span>
+                                  {projects.length}{" "}
+                                  {projects.length === 1
+                                    ? "Project"
+                                    : "Projects"}
+                                </span>
+                                <ArrowUpRight className="h-4 w-4" />
+                              </Link>
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </motion.article>
                   );
                 })
@@ -624,8 +816,8 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
             </section>
           </section>
 
-          <aside>
-            <div className="sticky top-24 rounded-3xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02]">
+          <aside className="order-1 lg:order-2">
+            <div className="rounded-3xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02] lg:sticky lg:top-24">
               <div className="mb-6">
                 {canAccessCourse ? (
                   <>
@@ -1073,14 +1265,36 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
                   </div>
                 )}
 
-                {/* ── MODULE QUIZ: Assessment Questions & Options (GET /api/v1/learner/modules/{module_id}/quiz) ── */}
+                {/* ── MODULE QUIZ: Opens the dedicated full-page assessment ── */}
                 <div className="border-t border-slate-100 pt-5 dark:border-white/10">
-                  <ModuleQuiz
-                    moduleId={activeModule.id}
-                    moduleTitle={activeModule.title}
-                    token={accessToken}
-                    onRefresh={refreshToken}
-                  />
+                  <div className="relative overflow-hidden rounded-2xl border border-purple-200/70 bg-gradient-to-br from-purple-50 via-white to-cyan-50/60 p-5 dark:border-cyan-500/20 dark:from-purple-500/10 dark:via-white/[0.02] dark:to-cyan-500/[0.06]">
+                    <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-purple-500/10 blur-2xl dark:bg-cyan-400/10" />
+                    <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-start gap-3">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-purple-600 text-white shadow-sm shadow-purple-600/25 dark:bg-cyan-400 dark:text-slate-950">
+                          <HelpCircle className="h-5 w-5" />
+                        </span>
+                        <div>
+                          <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                            Module assessment
+                          </h3>
+                          <p className="mt-1 max-w-md text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                            Open this module&apos;s quiz in its own focused page.
+                            Your answers save as you go, and you can retake it
+                            any time.
+                          </p>
+                        </div>
+                      </div>
+                      <Link
+                        href={`/learner/quizzes/${courseId}/${activeModule.id}`}
+                        onClick={() => setActiveModule(null)}
+                        className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-purple-700 dark:bg-cyan-400 dark:text-slate-950 dark:hover:bg-cyan-300"
+                      >
+                        Take the quiz
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               </div>
 

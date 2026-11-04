@@ -15,6 +15,7 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  ClipboardCheck,
   FolderKanban,
   Home,
   LogOut,
@@ -23,11 +24,7 @@ import {
   Sun,
   Moon,
   Crown,
-  Briefcase,
-  Settings,
-  Bell,
   GraduationCap,
-  MessageSquare,
   LifeBuoy,
 } from "lucide-react";
 
@@ -38,7 +35,7 @@ import { useTheme } from "@/lib/use-theme";
 import { useLearnerStore } from "@/lib/store/use-learner-store";
 import { CartDropdown } from "./cart-dropdown";
 import { ProfileDropdown } from "./profile-dropdown";
-import { ChatWidget } from "./chat-widget";
+import { LearnerAmbientBackground } from "@/components/ui/learner-ambient-background";
 
 const navigation = [
   {
@@ -52,6 +49,11 @@ const navigation = [
     icon: BookOpen,
   },
   {
+    label: "Quizzes",
+    href: "/learner/quizzes",
+    icon: ClipboardCheck,
+  },
+  {
     label: "Schools",
     href: "/learner/ai-schools",
     icon: GraduationCap,
@@ -60,6 +62,11 @@ const navigation = [
     label: "Projects",
     href: "/learner/projects",
     icon: FolderKanban,
+  },
+  {
+    label: "Support",
+    href: "/learner/support",
+    icon: LifeBuoy,
   },
   // {
   //   label: "Portfolio",
@@ -206,6 +213,9 @@ export function LearnerShell({ children }: LearnerShellProps) {
 
   return (
     <div className="min-h-screen bg-[#F5F3FF] text-slate-950 transition-colors dark:bg-[#0D0A17] dark:text-white">
+      {/* Lightweight ambient motion, painted behind all learner content */}
+      <LearnerAmbientBackground />
+
       {/* Desktop sidebar with snappy GPU-accelerated Motion animation */}
       <motion.aside
         initial={false}
@@ -675,7 +685,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
           paddingLeft: isDesktop ? (collapsed ? 76 : 248) : 0,
         }}
         transition={sidebarTransition}
-        className="min-h-screen will-change-[padding-left]"
+        className="relative z-10 min-h-screen will-change-[padding-left]"
       >
         {/* Top bar */}
         <header className="sticky top-0 z-30 h-16 border-b border-black/[0.06] bg-[#F5F3FF]/85 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#0D0A17]/85">

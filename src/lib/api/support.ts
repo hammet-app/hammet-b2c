@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api/api-client";
+import { apiClient, ApiError } from "@/lib/api/api-client";
 import {
   CreateSupportTicket,
   SupportTicketResponse,
@@ -51,10 +51,22 @@ export const supportApi = {
         data: toSupportTicketResponse(response),
       };
     } catch (err: unknown) {
-      const msg =
+      let msg =
         err instanceof Error
           ? err.message
           : "Failed to submit ticket to support desk. Please try again.";
+
+      if (err instanceof ApiError) {
+        if (err.status === 401) {
+          msg = "Your session has expired. Please sign in again and resubmit your ticket.";
+        } else if (err.status === 403) {
+          msg = "This account is not allowed to create support tickets.";
+        } else if (err.status === 422) {
+          msg =
+            "Some ticket details are invalid. Check the subject, message, category, and priority.";
+        }
+      }
+
       return {
         success: false,
         error: msg,

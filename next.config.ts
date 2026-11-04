@@ -47,7 +47,7 @@ const securityHeaders = [
       "img-src 'self' data: blob: https://images.unsplash.com https://*.unsplash.com https://accounts.google.com https://*.googleusercontent.com https://*.supabase.co",
       "font-src 'self' data: https://fonts.gstatic.com",
       `connect-src 'self' ${connectSrc}`,
-      "frame-src 'self' https://accounts.google.com",
+      "frame-src 'self' https://accounts.google.com https://www.youtube.com https://youtube.com",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self' https://accounts.google.com",

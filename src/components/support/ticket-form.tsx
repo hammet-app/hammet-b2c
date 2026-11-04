@@ -5,6 +5,7 @@ import {
   useTicketStore,
   TicketCategory,
   TicketPriority,
+  TicketStatus,
   HAMMET_SUPPORT_EMAIL,
 } from "@/lib/store/use-ticket-store";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -22,7 +23,6 @@ import {
   Check,
   AlertCircle,
   PlusCircle,
-  FileText,
 } from "lucide-react";
 import { GlowingMagicSparkle } from "@/components/ui/vibrant-ai-icons";
 import { motion, AnimatePresence } from "motion/react";
@@ -33,8 +33,16 @@ interface TicketFormProps {
   isEmbedded?: boolean;
 }
 
+const VALID_STATUSES: TicketStatus[] = [
+  "open",
+  "in-progress",
+  "pending",
+  "resolved",
+  "closed",
+];
+
 export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFormProps) {
-  const { createTicket, addTicket, setSelectedTicketId } = useTicketStore();
+  const { addTicket, setSelectedTicketId } = useTicketStore();
   const { accessToken } = useAuth();
 
   const [subject, setSubject] = useState("");
@@ -48,6 +56,7 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
     subject: string;
     category: TicketCategory;
     priority: TicketPriority;
+    status: TicketStatus;
     createdAt: string;
   } | null>(null);
 
@@ -126,7 +135,8 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
     setIsSubmitting(true);
 
     try {
-      // 1. Trigger backend endpoint: POST /api/v1/learner/support/tickets
+      // Single source of truth: the backend creates the ticket. There is no
+      // silent local fallback, so a failure is always surfaced to the learner.
       const apiRes = await supportApi.createTicket(
         {
           subject: cleanSubject,
@@ -137,61 +147,49 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
         accessToken
       );
 
-      let finalTicketId = `HMT-${Math.floor(1000 + Math.random() * 9000)}`;
-      let finalCreatedAt = new Date().toISOString();
-
-      if (apiRes.success && apiRes.data) {
-        finalTicketId = apiRes.data.id || finalTicketId;
-        finalCreatedAt = 
-          (apiRes.data as any).created_at ||
-          finalCreatedAt;
-
-        // Persist ticket into store with backend-assigned data
-        addTicket({
-          id: finalTicketId,
-          subject: apiRes.data.subject || cleanSubject,
-          title: apiRes.data.subject || cleanSubject,
-          message: apiRes.data.message || cleanMessage,
-          description: apiRes.data.message || cleanMessage,
-          category: (apiRes.data.category as TicketCategory) || category,
-          priority: (apiRes.data.priority as TicketPriority) || priority,
-          status: "open",
-          assignedAgent: {
-            id: "hammet_support_desk",
-            name: "Hammet Email Support",
-            role: "Direct Help Desk",
-            department: "Support & Operations",
-            email: HAMMET_SUPPORT_EMAIL,
-            isOnline: true,
-          },
-          createdAt: finalCreatedAt,
-          updatedAt: 
-            (apiRes.data as any).updated_at ||
-            finalCreatedAt,
-          slaTarget: "Within 24 Hours",
-        });
-      } else {
-        // If endpoint is still being deployed or offline, record locally
-        finalTicketId = createTicket({
-          subject: cleanSubject,
-          message: cleanMessage,
-          category,
-          priority,
-        });
+      if (!apiRes.success || !apiRes.data) {
+        setErrorMessage(
+          apiRes.error ??
+            "We could not submit your ticket right now. Please try again."
+        );
+        return;
       }
 
-      setSubmittedTicket({
-        id: finalTicketId,
-        subject: cleanSubject,
-        category,
-        priority,
-        createdAt: finalCreatedAt,
+      const created = apiRes.data;
+      const resolvedStatus = VALID_STATUSES.includes(
+        created.status as TicketStatus
+      )
+        ? (created.status as TicketStatus)
+        : "open";
+
+      // Cache the exact ticket returned by the backend for this browser only.
+      addTicket({
+        id: created.id,
+        subject: created.subject,
+        message: created.message,
+        category: created.category,
+        priority: created.priority,
+        status: resolvedStatus,
+        createdAt: created.createdAt,
+        updatedAt: created.updatedAt,
       });
 
-      setSelectedTicketId(finalTicketId);
-      onSuccess?.(finalTicketId);
+      setSubmittedTicket({
+        id: created.id,
+        subject: created.subject,
+        category: created.category,
+        priority: created.priority,
+        status: resolvedStatus,
+        createdAt: created.createdAt,
+      });
+
+      setSelectedTicketId(created.id);
+      onSuccess?.(created.id);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to submit ticket.";
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Failed to submit ticket. Please try again.";
       setErrorMessage(msg);
     } finally {
       setIsSubmitting(false);
@@ -235,7 +233,7 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
               <span>Ticket #{submittedTicket.id}</span>
               <span className="text-slate-300 dark:text-slate-600">•</span>
               <span className="uppercase text-[10px] text-emerald-600 dark:text-emerald-400 font-sans tracking-wide">
-                Dispatched
+                Created
               </span>
             </div>
 
@@ -244,11 +242,12 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
             </h3>
 
             <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-md leading-relaxed">
-              Your inquiry has been submitted and forwarded directly to{" "}
+              Your ticket was created on the Hammet backend. Keep the reference
+              above for follow-up, or contact the team at{" "}
               <strong className="font-mono text-purple-700 dark:text-purple-300">
                 {HAMMET_SUPPORT_EMAIL}
               </strong>
-              . Our staff will review your request and reply to your registered email address.
+              .
             </p>
 
             {/* Ticket Summary Card */}
@@ -266,8 +265,8 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
                 <span className="rounded-md bg-slate-200/70 dark:bg-white/10 px-2 py-0.5 font-medium text-slate-700 dark:text-slate-300 capitalize">
                   Priority: {submittedTicket.priority}
                 </span>
-                <span className="rounded-md bg-emerald-100 dark:bg-emerald-950/40 px-2 py-0.5 font-semibold text-emerald-700 dark:text-emerald-400">
-                  Status: Open
+                <span className="rounded-md bg-emerald-100 dark:bg-emerald-950/40 px-2 py-0.5 font-semibold text-emerald-700 dark:text-emerald-400 capitalize">
+                  Status: {submittedTicket.status}
                 </span>
               </div>
             </div>
@@ -417,13 +416,13 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
                   <span className="text-purple-600 font-bold">*</span>
                 </label>
                 <span className="text-[10px] text-slate-400 font-mono">
-                  {subject.length}/120
+                  {subject.length}/200
                 </span>
               </div>
               <input
                 type="text"
                 required
-                maxLength={120}
+                maxLength={200}
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="e.g., Can't access Module 3 quiz"
@@ -439,13 +438,13 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
                   <span className="text-purple-600 font-bold">*</span>
                 </label>
                 <span className="text-[10px] text-slate-400 font-mono">
-                  {message.length}/2000
+                  {message.length}/10000
                 </span>
               </div>
               <textarea
                 required
                 rows={4}
-                maxLength={2000}
+                maxLength={10000}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Every time I finish lecture 3.4 and click Start Quiz, I get a session error..."
@@ -453,12 +452,14 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
               />
             </div>
 
-            {/* Direct Email Dispatch Notice */}
+            {/* Contract notice */}
             <div className="flex items-center gap-2 rounded-xl bg-purple-50/60 px-3 py-2 text-[11px] text-purple-700 dark:bg-purple-950/30 dark:text-purple-300">
               <GlowingMagicSparkle className="h-3.5 w-3.5 shrink-0" />
               <span>
-                When submitted, your ticket is emailed directly to{" "}
-                <strong className="font-mono">{HAMMET_SUPPORT_EMAIL}</strong>. Responses will be sent to your registered email.
+                Submitted to the learner tickets API. Need to add context later?
+                Write to{" "}
+                <strong className="font-mono">{HAMMET_SUPPORT_EMAIL}</strong>{" "}
+                and include your ticket reference.
               </span>
             </div>
 
@@ -482,7 +483,7 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Dispatching Ticket...</span>
+                    <span>Submitting Ticket...</span>
                   </>
                 ) : (
                   <>

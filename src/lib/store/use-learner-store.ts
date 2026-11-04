@@ -483,6 +483,42 @@ export const useLearnerStore = create<LearnerState>()(
     }),
     {
       name: "hammet-learner-master-store",
+      version: 2,
+      /**
+       * Older builds shipped a much larger project catalogue. Persisted state
+       * would otherwise keep resurrecting those projects after the catalogue was
+       * simplified to six. Keep the learner's progress for projects that still
+       * exist, and drop the rest.
+       */
+      migrate: (persistedState, version) => {
+        const state = persistedState as Partial<LearnerState> | undefined;
+        if (!state) {
+          return state as unknown as LearnerState;
+        }
+
+        if (version >= 2) {
+          return state as LearnerState;
+        }
+
+        const persistedProjects = Array.isArray(state.projects)
+          ? state.projects
+          : [];
+
+        const projects = INITIAL_PROJECTS.map((base) => {
+          const saved = persistedProjects.find((project) => project.id === base.id);
+          if (!saved) return base;
+
+          return {
+            ...base,
+            status: saved.status ?? base.status,
+            progress: saved.progress ?? base.progress,
+            submission: saved.submission ?? base.submission,
+            earnedBadgeId: saved.earnedBadgeId ?? base.earnedBadgeId,
+          };
+        });
+
+        return { ...state, projects } as LearnerState;
+      },
     }
   )
 );
