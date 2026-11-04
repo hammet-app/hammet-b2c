@@ -250,3 +250,73 @@
   bottom: -220px;
   background: rgba(124, 58, 237, 0.16);
 }
+
+/* ── Learner ambient background ─────────────────────────────────────────
+   Transform-only drift keeps these orbs on the compositor. */
+.learner-orb {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+@keyframes learner-drift-one {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(38px, 26px, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(-18px, 48px, 0) scale(1.02);
+  }
+}
+
+@keyframes learner-drift-two {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-46px, 34px, 0) scale(1.04);
+  }
+  100% {
+    transform: translate3d(24px, -22px, 0) scale(1.08);
+  }
+}
+
+@keyframes learner-drift-three {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(30px, -38px, 0) scale(1.05);
+  }
+  100% {
+    transform: translate3d(-34px, 20px, 0) scale(1.02);
+  }
+}
+
+.learner-orb-one {
+  animation: learner-drift-one 30s ease-in-out infinite alternate;
+}
+
+.learner-orb-two {
+  animation: learner-drift-two 36s ease-in-out infinite alternate;
+}
+
+.learner-orb-three {
+  animation: learner-drift-three 42s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learner-orb {
+    animation: none !important;
+  }
+}
+
+/* Ensure Next.js dev overlay indicator does not block mobile navigation */
+@media (max-width: 1024px) {
+  nextjs-portal,
+  [data-nextjs-toast-wrapper],
+  [data-nextjs-dialog-overlay] {
+    pointer-events: none !important;
+  }
+}

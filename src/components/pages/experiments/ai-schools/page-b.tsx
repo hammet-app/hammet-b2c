@@ -24,7 +24,8 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { learnerApi } from "@/lib/api/learner";
 import { AiSchool } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
-import { QuantumBulbIcon } from "@/components/ui/character-icons";
+import { QuantumBulbIcon, KnowledgeAppleIcon } from "@/components/ui/character-icons";
+import { DoodleKicker, TitleIcon } from "@/components/ui/section-title";
 import { cartApi } from "@/lib/api/cart";
 import type { CartItemResponse, CartItem } from "@/lib/api/types";
 import Link from "next/link";
@@ -180,13 +181,13 @@ export default function AiSchoolsPage() {
           transition={{ duration: 0.45 }}
           className="mb-10 max-w-2xl"
         >
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-purple-500/20 bg-purple-500/10 px-3.5 py-1 text-xs font-bold uppercase tracking-[0.16em] text-purple-700 dark:border-cyan-400/20 dark:bg-cyan-400/10 dark:text-cyan-300">
-            <GraduationCap className="h-4 w-4" />
+          <DoodleKicker icon={<KnowledgeAppleIcon size="sm" />} tone="violet">
             AI Academy Tracks
-          </div>
+          </DoodleKicker>
 
-          <h1 className="text-3xl font-extrabold tracking-[-0.04em] text-slate-950 sm:text-4xl lg:text-5xl dark:text-white">
-            Available AI Schools
+          <h1 className="mt-3 flex items-center gap-3 text-3xl font-extrabold tracking-[-0.04em] text-slate-950 sm:text-4xl lg:text-5xl dark:text-white">
+            <TitleIcon icon={GraduationCap} tone="violet" size="md" />
+            <span>Available AI Schools</span>
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base dark:text-slate-400">
@@ -410,11 +411,11 @@ export default function AiSchoolsPage() {
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <Clock className="h-4 w-4 text-purple-600 dark:text-cyan-400" />
-                                <span>60+ Hours of Curriculum</span>
+                                <span>Hours of Curriculum</span>
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <Layers className="h-4 w-4 text-purple-600 dark:text-cyan-400" />
-                                <span>44 Practical Labs & Projects</span>
+                                <span>Practical Labs & Projects</span>
                               </div>
                             </div>
                           </div>

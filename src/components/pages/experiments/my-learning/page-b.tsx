@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { motion, useReducedMotion } from "motion/react";
 import {
   AlertCircle,
   BookOpen,
@@ -10,7 +11,6 @@ import {
   ChevronRight,
   GraduationCap,
   Search,
-  Sparkles,
   Award,
   Zap,
 } from "lucide-react";
@@ -23,14 +23,17 @@ import { learnerApi } from "@/lib/api/learner";
 import {
   HugeAcademicWatermark,
   HugeCourseAcademicWatermark,
+  HugeEducationalHeroIllustration,
 } from "@/components/ui/educational-illustrations";
 import {
   SchoolVibrantIcon,
   GlowingMagicSparkle,
 } from "@/components/ui/vibrant-ai-icons";
+import { TitleIcon } from "@/components/ui/section-title";
 
 export default function MyLearningPage() {
   const { accessToken, refreshToken } = useAuth();
+  const reduceMotion = useReducedMotion();
   const [schools, setSchools] = useState<AISchoolEntitlement[]>([]);
   const [courses, setCourses] = useState<CourseEntitlement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -143,14 +146,16 @@ export default function MyLearningPage() {
           </div>
 
           {/* Banner Inner Content */}
-          <div className="relative z-10 max-w-3xl">
+          <div className="relative z-10 grid items-center gap-6 xl:grid-cols-[minmax(0,1fr)_300px] 2xl:grid-cols-[minmax(0,1fr)_340px]">
+            <div className="max-w-3xl">
             <div className="mb-3.5 inline-flex items-center gap-2 rounded-full border border-purple-500/25 bg-purple-500/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-purple-700 shadow-sm dark:border-cyan-400/25 dark:bg-cyan-400/10 dark:text-cyan-300">
               <GlowingMagicSparkle size="xs" />
               <span>AI Learner Portal</span>
             </div>
 
-            <h1 className="text-3xl font-extrabold tracking-[-0.035em] text-slate-950 dark:text-white sm:text-4xl lg:text-5xl">
-              My learning
+            <h1 className="flex items-center gap-3 text-3xl font-extrabold tracking-[-0.035em] text-slate-950 dark:text-white sm:text-4xl lg:text-5xl">
+              <TitleIcon icon={BookOpen} tone="violet" size="md" />
+              <span>My learning</span>
             </h1>
 
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-600 dark:text-slate-300 sm:text-base">
@@ -174,6 +179,39 @@ export default function MyLearningPage() {
                 <span>Verified Credentials</span>
               </span>
             </div>
+            </div>
+
+            {/* Animated academic centerpiece for the open desktop space */}
+            <motion.div
+              aria-hidden="true"
+              initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={
+                reduceMotion
+                  ? undefined
+                  : { duration: 0.6, ease: "easeOut" }
+              }
+              className="relative hidden aspect-[340/300] w-full xl:block"
+            >
+              <div className="pointer-events-none absolute inset-x-8 bottom-4 h-20 rounded-full bg-purple-500/20 blur-2xl dark:bg-cyan-400/15" />
+              <motion.div
+                animate={
+                  reduceMotion ? undefined : { y: [0, -10, 0] }
+                }
+                transition={
+                  reduceMotion
+                    ? undefined
+                    : {
+                        duration: 6,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }
+                }
+                className="relative h-full w-full"
+              >
+                <HugeEducationalHeroIllustration className="h-full w-full" />
+              </motion.div>
+            </motion.div>
           </div>
         </header>
 
@@ -182,9 +220,7 @@ export default function MyLearningPage() {
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100 text-purple-700 dark:bg-cyan-500/15 dark:text-cyan-300">
-                  <Brain className="h-4 w-4" />
-                </span>
+                <TitleIcon icon={Brain} tone="violet" size="sm" />
                 <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                   My AI Schools
                 </h2>
@@ -282,8 +318,8 @@ export default function MyLearningPage() {
                   </div>
 
                   {/* Card Bottom Row: Badges & Action Link - Clean, no purple background clutter behind "Open school" */}
-                  <div className="relative z-10 mt-6 pt-4 border-t border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
-                    <div className="flex flex-wrap gap-2">
+                  <div className="relative z-10 mt-6 pt-4 border-t border-slate-100 dark:border-white/[0.06] flex flex-wrap items-center justify-between gap-2.5">
+                    <div className="flex flex-wrap items-center gap-2">
                       {school.isEnrolled && (
                         <span className="inline-flex items-center rounded-full bg-emerald-100/90 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
                           <CheckCircle2 className="mr-1 h-3 w-3" />
@@ -299,7 +335,7 @@ export default function MyLearningPage() {
 
                     <Link
                       href={`/learner/ai-schools/${school.id}`}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-purple-600 hover:text-purple-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors py-1 px-2 rounded-lg hover:bg-purple-50 dark:hover:bg-cyan-500/10"
+                      className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-purple-600 hover:text-purple-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors py-1 px-2.5 rounded-lg hover:bg-purple-50 dark:hover:bg-cyan-500/10 ml-auto sm:ml-0"
                     >
                       <span>Open school</span>
                       <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -444,13 +480,13 @@ export default function MyLearningPage() {
                             </div>
 
                             {/* Bottom row: clean, no purple watermark obstruction */}
-                            <div className="relative z-10 mt-5 pt-3.5 border-t border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                            <div className="relative z-10 mt-5 pt-3.5 border-t border-slate-100 dark:border-white/[0.06] flex flex-wrap items-center justify-between gap-2">
                               <span className="text-xs text-slate-400 font-medium">
                                 Self-paced course
                               </span>
                               <Link
                                 href={`/learner/courses/${course.slug}`}
-                                className="inline-flex items-center gap-1 text-xs font-bold text-purple-600 hover:text-purple-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors py-1 px-2 rounded-lg hover:bg-purple-50 dark:hover:bg-cyan-500/10"
+                                className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-purple-600 hover:text-purple-700 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors py-1 px-2.5 rounded-lg hover:bg-purple-50 dark:hover:bg-cyan-500/10 ml-auto sm:ml-0"
                               >
                                 <span>View course</span>
                                 <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

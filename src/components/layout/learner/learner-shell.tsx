@@ -15,6 +15,7 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  ClipboardCheck,
   FolderKanban,
   Home,
   LogOut,
@@ -23,23 +24,27 @@ import {
   Sun,
   Moon,
   Crown,
-  Briefcase,
-  Settings,
-  Bell,
   GraduationCap,
-  MessageSquare,
+  type LucideIcon,
   LifeBuoy,
 } from "lucide-react";
 
+import { cn } from "@/lib/utils/utils";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useTheme } from "@/lib/use-theme";
+import { useFeatureFlag } from "@/lib/features/use-feature-flag";
 //import { useCart } from "@/lib/store/use-cart";
 import { useLearnerStore } from "@/lib/store/use-learner-store";
 import { CartDropdown } from "./cart-dropdown";
 import { ProfileDropdown } from "./profile-dropdown";
-import { ChatWidget } from "./chat-widget";
+import { LearnerAmbientBackground } from "@/components/ui/learner-ambient-background";
 
-const navigation = [
+const navigation: {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  featureFlag?: string;
+}[] = [
   {
     label: "Home",
     href: "/learner",
@@ -51,14 +56,30 @@ const navigation = [
     icon: BookOpen,
   },
   {
+    label: "Quizzes",
+    href: "/learner/quizzes",
+    icon: ClipboardCheck,
+  },
+  {
+    label: "Exams",
+    href: "/learner/exams",
+    icon: GraduationCap,
+    featureFlag: "exam",
+  },
+  {
     label: "Schools",
     href: "/learner/ai-schools",
     icon: GraduationCap,
   },
+  //{
+  //  label: "Projects",
+  //  href: "/learner/projects",
+  //  icon: FolderKanban,
+  //},
   {
-    label: "Projects",
-    href: "/learner/projects",
-    icon: FolderKanban,
+    label: "Support",
+    href: "/learner/support",
+    icon: LifeBuoy,
   },
   // {
   //   label: "Portfolio",
@@ -131,6 +152,10 @@ export function LearnerShell({ children }: LearnerShellProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { theme, toggle } = useTheme();
+  const examsEnabled = useFeatureFlag("exam");
+  const visibleNavigation = navigation.filter(
+    (item) => item.featureFlag !== "exam" || examsEnabled,
+  );
 
   //const cartItems = useCart((state) => state.items);
   const syncAccountState = useLearnerStore((state) => state.syncAccountState);
@@ -205,6 +230,9 @@ export function LearnerShell({ children }: LearnerShellProps) {
 
   return (
     <div className="min-h-screen bg-[#F5F3FF] text-slate-950 transition-colors dark:bg-[#0D0A17] dark:text-white">
+      {/* Lightweight ambient motion, painted behind all learner content */}
+      <LearnerAmbientBackground />
+
       {/* Desktop sidebar with snappy GPU-accelerated Motion animation */}
       <motion.aside
         initial={false}
@@ -311,7 +339,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
               />
             </motion.div>
 
-            {navigation.map((item) => {
+            {visibleNavigation.map((item) => {
               const Icon = item.icon;
               const active =
                 item.href === "/learner"
@@ -503,7 +531,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
               </div>
 
               <nav className="space-y-1 px-4">
-                {navigation.map((item) => {
+                {visibleNavigation.map((item) => {
                   const Icon = item.icon;
                   const active =
                     item.href === "/learner"
@@ -674,7 +702,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
           paddingLeft: isDesktop ? (collapsed ? 76 : 248) : 0,
         }}
         transition={sidebarTransition}
-        className="min-h-screen will-change-[padding-left]"
+        className="relative z-10 min-h-screen will-change-[padding-left]"
       >
         {/* Top bar */}
         <header className="sticky top-0 z-30 h-16 border-b border-black/[0.06] bg-[#F5F3FF]/85 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#0D0A17]/85">
@@ -751,37 +779,46 @@ export function LearnerShell({ children }: LearnerShellProps) {
           </div>
         </header>
 
-        <main>{children}</main>
+        <main className="pb-24 lg:pb-0">{children}</main>
 
         {/* Global Floating Community Chat Launcher & Widget */}
         {/* <ChatWidget /> */}
       </motion.div>
 
-      {/* Mobile bottom navigation with fluid horizontal touch swipe */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.06] bg-white/95 pb-[env(safe-area-inset-bottom)] pt-1.5 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#120E1D]/95 lg:hidden shadow-lg">
-        <div className="relative mx-auto flex w-full max-w-lg items-center gap-1.5 overflow-x-auto scroll-smooth px-3 py-1 overscroll-x-contain touch-pan-x [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-          {navigation.map((item) => {
+      {/* Mobile bottom navigation: Centered, balanced, and responsive */}
+      <nav
+        aria-label="Mobile Navigation"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-black/[0.06] bg-white/95 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#120E1D]/95 lg:hidden shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.35)]"
+      >
+        <div className="relative mx-auto flex w-full max-w-md items-center justify-around px-2 py-0.5">
+          {visibleNavigation.map((item) => {
             const Icon = item.icon;
             const active =
               item.href === "/learner"
                 ? pathname === "/learner"
-                : pathname.startsWith(item.href);
+                : pathname === item.href ||
+                  (item.href !== "/learner" && pathname.startsWith(item.href));
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={[
-                  "flex shrink-0 min-w-[62px] flex-col items-center justify-center gap-1 rounded-xl px-2 py-1.5 text-[10px] font-medium transition-all duration-150 active:scale-95",
+                className={cn(
+                  "flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl py-1.5 px-1 text-[11px] font-medium transition-all duration-150 active:scale-95 max-w-[84px] select-none",
                   active
-                    ? "text-purple-700 bg-purple-50 dark:text-cyan-300 dark:bg-purple-500/15 font-bold shadow-xs"
-                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200",
-                ].join(" ")}
+                    ? "text-purple-700 bg-purple-100/75 dark:text-cyan-300 dark:bg-cyan-500/15 font-bold shadow-xs"
+                    : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100/60 dark:hover:bg-white/[0.04]",
+                )}
               >
                 <Icon
-                  className={`h-[18px] w-[18px] transition-transform ${active ? "scale-110 text-purple-600 dark:text-cyan-400" : ""}`}
+                  className={cn(
+                    "h-5 w-5 transition-transform",
+                    active
+                      ? "scale-110 text-purple-600 dark:text-cyan-400"
+                      : "text-slate-400 dark:text-slate-400",
+                  )}
                 />
-                <span className="truncate max-w-[70px] whitespace-nowrap">
+                <span className="truncate max-w-[70px] whitespace-nowrap text-center leading-none">
                   {item.label}
                 </span>
               </Link>

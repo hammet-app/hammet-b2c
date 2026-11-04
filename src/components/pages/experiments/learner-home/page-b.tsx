@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -10,52 +9,29 @@ import {
   FolderKanban,
   Brain,
   Sparkles,
-  Cpu,
   GraduationCap,
-  Play,
-  Pause,
-  Send,
   CheckCircle2,
-  Bot,
-  Terminal,
-  Activity,
-  Layers,
-  Award,
-  Zap,
+  HelpCircle,
+  Lock,
+  ShieldCheck,
+  Workflow,
 } from "lucide-react";
 import { GlowingMagicSparkle } from "@/components/ui/vibrant-ai-icons";
+import { TitleIcon, DoodleKicker } from "@/components/ui/section-title";
+import {
+  KnowledgeAppleIcon,
+  MilestoneSignIcon,
+  TerminalDoodleIcon,
+  NeuroBotIcon,
+} from "@/components/ui/character-icons";
+import { LearningSnapshot } from "@/components/learner/learning-snapshot";
 
 import { useAuth } from "@/lib/auth/auth-context";
-import {
-  NeuroBotIcon,
-  TensorCubieIcon,
-  MilestoneSignIcon,
-  KnowledgeAppleIcon,
-  QuantumBulbIcon,
-  TerminalDoodleIcon,
-} from "@/components/ui/character-icons";
 
 export default function LearnerHomePage() {
   const { user } = useAuth();
   const firstName = user?.fullName?.split(" ")[0] ?? "there";
-
-  // State for interactive Bento components
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const [searchPrompt, setSearchPrompt] = useState("");
-  const [aiAnswer, setAiAnswer] = useState<string | null>(null);
-  const [isAnswering, setIsAnswering] = useState(false);
-
-  const handleAskAi = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchPrompt.trim()) return;
-    setIsAnswering(true);
-    setTimeout(() => {
-      setAiAnswer(
-        "Self-attention allows the model to weigh the relevance of all tokens dynamically: Attention(Q,K,V) = softmax(QKᵀ / √dₖ)V. In multi-head setups, this enables parallel representation subspaces."
-      );
-      setIsAnswering(false);
-    }, 600);
-  };
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <div className="relative min-h-screen px-5 pb-28 pt-8 sm:px-7 sm:pt-10 lg:px-10 lg:pb-16 lg:pt-10">
@@ -75,18 +51,35 @@ export default function LearnerHomePage() {
             <span className="font-poppins text-xs font-semibold tracking-tight text-purple-950 dark:text-purple-200">
               Cohort 2026
             </span>
-            <span className="h-1 w-1 rounded-full bg-purple-300 dark:bg-cyan-400/60" />
-            <span className="font-poppins text-xs font-medium text-purple-700 dark:text-cyan-300">
-              Neural Intelligence Lab
-            </span>
             <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500/15 to-cyan-500/15 px-2.5 py-0.5 font-poppins text-[10.5px] font-semibold text-purple-800 dark:text-cyan-200 border border-purple-300/30 dark:border-cyan-400/30">
               <GlowingMagicSparkle size="xs" />
               Active Lab
             </span>
           </div>
 
-          <h1 className="mt-3 text-3xl font-extrabold tracking-[-0.04em] text-slate-950 sm:text-4xl lg:text-5xl dark:text-white">
-            Welcome back, {firstName}.
+          <h1 className="mt-3 flex flex-wrap items-center gap-2.5 text-3xl font-extrabold tracking-[-0.04em] text-slate-950 sm:gap-3 sm:text-4xl lg:text-5xl dark:text-white">
+            <motion.span
+              aria-hidden="true"
+              className="inline-flex shrink-0 items-center justify-center"
+              animate={
+                shouldReduceMotion
+                  ? undefined
+                  : { rotate: [0, 18, -10, 16, -6, 0], y: [0, -3, 0, -2, 0] }
+              }
+              transition={{
+                duration: 1.1,
+                ease: "easeInOut",
+                repeat: Infinity,
+                repeatDelay: 2.6,
+              }}
+            >
+              <img
+                src="/waving-hand.png"
+                alt=""
+                className="h-9 w-9 select-none object-contain drop-shadow-[0_6px_10px_rgba(139,92,246,0.32)] sm:h-11 sm:w-11 lg:h-13 lg:w-13"
+              />
+            </motion.span>
+            <span>Welcome back, {firstName}.</span>
           </h1>
 
           <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-400 sm:text-base">
@@ -94,8 +87,8 @@ export default function LearnerHomePage() {
           </p>
         </motion.section>
 
-        {/* Learning hero with AI sketched bot welcoming you - Flush with top border */}
-        <div className="relative mb-14 mt-20 sm:mt-24">
+        {/* Learning hero with AI sketched bot welcoming you */}
+        <div className="relative mb-14 mt-12 sm:mt-16">
           {/* Learning hero card */}
           <motion.section
             initial={{ opacity: 0, y: 18 }}
@@ -103,25 +96,25 @@ export default function LearnerHomePage() {
             transition={{ duration: 0.5, delay: 0.05 }}
             className="relative rounded-[28px] bg-[#160B30] p-7 text-white shadow-[0_24px_80px_rgba(76,29,149,0.28)] border border-purple-500/30 sm:p-9 lg:p-11"
           >
-            {/* AI sketched bot hanging on top right border welcoming you - Mathematically flush on card top border */}
+            {/* AI sketched bot sitting exactly on the top-right border line */}
             <motion.div
-              initial={{ opacity: 0, y: -25, scale: 0.9 }}
+              initial={{ opacity: 0, y: -18, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ type: "spring", stiffness: 220, damping: 18, delay: 0.2 }}
-              className="absolute top-0 right-6 sm:right-14 -translate-y-[calc(100%-1px)] z-20 pointer-events-none flex flex-col items-end"
+              className="absolute top-0 right-4 sm:right-12 -translate-y-full z-20 pointer-events-none flex items-end gap-2"
             >
               <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 5 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
+                initial={{ opacity: 0, scale: 0.8, x: 6 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
                 transition={{ delay: 0.45 }}
-                className="mr-3 mb-1.5 rounded-full border border-purple-200/50 bg-white/95 px-3.5 py-1 text-[11px] font-semibold text-slate-800 shadow-[0_4px_16px_rgba(0,0,0,0.12)] backdrop-blur dark:border-cyan-500/30 dark:bg-slate-900/95 dark:text-cyan-300"
+                className="mb-5 hidden rounded-2xl rounded-br-sm border border-purple-200/50 bg-white/95 px-3.5 py-1.5 text-[11px] font-semibold text-slate-800 shadow-[0_4px_16px_rgba(0,0,0,0.12)] backdrop-blur sm:block dark:border-cyan-500/30 dark:bg-slate-900/95 dark:text-cyan-300"
               >
                 Welcome! Let&apos;s build AI 🤖
               </motion.div>
               <img
                 src="/ai-bot-welcome.png"
-                alt="AI Assistant bot hanging and welcoming you"
-                className="h-28 sm:h-36 w-auto object-contain filter drop-shadow-[0_12px_20px_rgba(0,0,0,0.2)] select-none pointer-events-none"
+                alt="AI Assistant bot welcoming you"
+                className="h-20 sm:h-28 w-auto object-contain filter drop-shadow-[0_12px_20px_rgba(0,0,0,0.2)] select-none pointer-events-none"
               />
             </motion.div>
 
@@ -170,7 +163,13 @@ export default function LearnerHomePage() {
                 </div>
 
                 <h2 className="max-w-xl text-3xl font-bold tracking-[-0.045em] sm:text-4xl lg:text-5xl">
-                  School of AI Foundations
+                  School of{" "}
+                  <span className="bg-gradient-to-r from-fuchsia-300 via-violet-300 to-cyan-300 bg-clip-text font-black text-transparent">
+                    AI
+                  </span>{" "}
+                  <span className="bg-gradient-to-r from-violet-200 via-cyan-200 to-emerald-200 bg-clip-text text-transparent">
+                    Foundations
+                  </span>
                 </h2>
 
                 <p className="mt-4 max-w-xl text-sm leading-6 text-purple-100/80 sm:text-base">
@@ -209,11 +208,12 @@ export default function LearnerHomePage() {
         <div className="mb-14">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-purple-700 dark:text-cyan-400">
+              <DoodleKicker tone="violet" icon={<KnowledgeAppleIcon size="sm" />}>
                 Explore Academies
-              </p>
-              <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
-                Available AI Schools
+              </DoodleKicker>
+              <h2 className="mt-2 flex items-center gap-2.5 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
+                <TitleIcon icon={BookOpen} tone="indigo" size="sm" />
+                <span>Available AI Schools</span>
               </h2>
             </div>
             <Link
@@ -300,11 +300,11 @@ export default function LearnerHomePage() {
                 <div className="mt-5 flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400">
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    60+ Hours of Content
+                    Hours of Content
                   </span>
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    44 Hands-on Projects
+                    Hands-on Projects
                   </span>
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -338,35 +338,37 @@ export default function LearnerHomePage() {
           </motion.div>
         </div>
 
-        {/* ── NEW BENTO GRID: AI where your learning happens (from Image 3) ── */}
+        {/* ── DATA-DRIVEN SNAPSHOT + LEARNING LOOP ── */}
         <div className="mb-16">
-          <div className="mb-8">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-purple-700 dark:text-cyan-400">
-              Interactive Platform
-            </p>
-            <h2 className="mt-1 text-3xl font-extrabold tracking-[-0.035em] text-slate-950 sm:text-4xl dark:text-white">
-              AI where your learning happens.
+          <div className="mb-6">
+            <DoodleKicker tone="cyan" icon={<MilestoneSignIcon size="sm" />}>
+              The learning loop
+            </DoodleKicker>
+            <h2 className="mt-2 flex items-center gap-2.5 text-3xl font-extrabold tracking-[-0.035em] text-slate-950 sm:text-4xl dark:text-white">
+              <TitleIcon icon={Workflow} tone="violet" size="md" />
+              <span>From your first module to your final project.</span>
             </h2>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 sm:text-base max-w-2xl">
-              Turn lecture theories into working production code with intelligent agentic workspaces.
+            <p className="mt-2 max-w-2xl text-sm text-slate-600 dark:text-slate-400 sm:text-base">
+              Schools, courses, modules, quizzes, and project submissions — one workspace, one path forward.
             </p>
           </div>
 
+          <LearningSnapshot />
+
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
-            {/* Card 1: AI Research & Lab Notebooks */}
+            {/* Card 1: Courses & modules */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
               className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-black/[0.06] bg-white p-7 shadow-sm transition-all hover:shadow-md dark:border-white/[0.06] dark:bg-white/[0.02]"
             >
               <div>
                 <div className="flex items-start justify-between">
                   <div>
-                    <span className="text-xs font-semibold text-purple-600 dark:text-cyan-400">AI Research & Labs</span>
+                    <span className="text-xs font-semibold text-purple-600 dark:text-cyan-400">Courses & modules</span>
                     <h3 className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
-                      Bring models, datasets, and prompt runs into one system of record.
+                      Follow a structured path, not a playlist.
                     </h3>
                   </div>
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition group-hover:bg-purple-600 group-hover:text-white dark:bg-white/10 dark:text-slate-300">
@@ -374,117 +376,103 @@ export default function LearnerHomePage() {
                   </div>
                 </div>
 
-                {/* AI Research & Experiment Runs Table */}
+                {/* Course progress list */}
                 <div className="mt-6 rounded-2xl border border-black/[0.06] bg-slate-50/70 p-4 dark:border-white/[0.06] dark:bg-white/[0.02]">
-                  <div className="flex items-center gap-2 border-b border-black/[0.05] pb-2.5 text-xs font-semibold text-slate-600 dark:border-white/[0.05] dark:text-slate-300">
-                    <span className="flex items-center gap-1.5">
-                      <TerminalDoodleIcon size="sm" />
-                      Model Checkpoints
+                  <div className="flex items-center justify-between gap-2 border-b border-black/[0.05] pb-2.5 dark:border-white/[0.05]">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                      <GraduationCap className="h-4 w-4 text-purple-600 dark:text-cyan-400" />
+                      School of AI Foundations
+                    </div>
+                    <span className="shrink-0 whitespace-nowrap rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-bold text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+                      4 courses
                     </span>
-                    <span className="rounded bg-purple-100 px-1.5 py-0.5 text-[10px] text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
-                      LoRA weights
-                    </span>
-                    <span className="text-slate-400">• 3 active runs</span>
                   </div>
 
                   <div className="divide-y divide-black/[0.04] text-xs dark:divide-white/[0.04]">
-                    <div className="flex items-center justify-between py-2.5">
+                    <div className="flex items-center justify-between gap-3 py-2.5">
                       <div className="flex items-center gap-2">
-                        <span>🧪</span>
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
                         <span className="font-medium text-slate-800 dark:text-slate-200">
-                          Neural Fine-Tuning Lab (Llama-3 8B)
+                          Module 01 · Foundations
                         </span>
                       </div>
-                      <div className="flex gap-1.5">
-                        <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-                          PyTorch
-                        </span>
-                        <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
-                          LoRA
-                        </span>
-                      </div>
+                      <span className="shrink-0 whitespace-nowrap text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                        Completed
+                      </span>
                     </div>
 
-                    <div className="flex items-center justify-between py-2.5">
+                    <div className="flex items-center justify-between gap-3 py-2.5">
                       <div className="flex items-center gap-2">
-                        <span>⚡</span>
+                        <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+                          <span className="h-2.5 w-2.5 rounded-full bg-purple-600 ring-4 ring-purple-100 dark:bg-cyan-400 dark:ring-cyan-500/20" />
+                        </span>
                         <span className="font-medium text-slate-800 dark:text-slate-200">
-                          Autonomous Agent Swarms & MCP Server Traces
+                          Module 02 · Prompt engineering
                         </span>
                       </div>
-                      <div className="flex gap-1.5">
-                        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-                          LangGraph
-                        </span>
-                        <span className="rounded bg-cyan-100 px-1.5 py-0.5 text-[10px] font-bold text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">
-                          Tools
-                        </span>
-                      </div>
+                      <span className="shrink-0 whitespace-nowrap text-[10px] font-bold text-purple-600 dark:text-cyan-400">
+                        In progress
+                      </span>
                     </div>
 
-                    <div className="flex items-center justify-between py-2.5">
+                    <div className="flex items-center justify-between gap-3 py-2.5">
                       <div className="flex items-center gap-2">
-                        <span>📊</span>
-                        <span className="font-medium text-slate-800 dark:text-slate-200">
-                          RAG Retrieval Benchmark: Contextual vs Chunking
+                        <Lock className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" />
+                        <span className="font-medium text-slate-500 dark:text-slate-400">
+                          Module 03 · Model evaluation
                         </span>
                       </div>
-                      <div className="flex gap-1.5">
-                        <span className="rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-bold text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
-                          Milvus
-                        </span>
-                        <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                          Eval
-                        </span>
-                      </div>
+                      <span className="shrink-0 whitespace-nowrap text-[10px] font-bold text-slate-400">Up next</span>
                     </div>
+
+                    <div className="flex items-center justify-between gap-3 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <Lock className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" />
+                        <span className="font-medium text-slate-500 dark:text-slate-400">
+                          Module 04 · Applied project
+                        </span>
+                      </div>
+                      <span className="shrink-0 whitespace-nowrap text-[10px] font-bold text-slate-400">Locked</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between text-[10px] font-semibold">
+                    <span className="text-slate-500 dark:text-slate-400">
+                      1 of 7 modules complete
+                    </span>
+                    <span className="text-purple-600 dark:text-cyan-400">14%</span>
+                  </div>
+                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200/80 dark:bg-white/10">
+                    <div className="h-full w-[14%] rounded-full bg-purple-600 dark:bg-cyan-400" />
                   </div>
                 </div>
               </div>
 
-              {/* Floating audio lecture pill */}
-              <div className="mt-5 flex items-center justify-between rounded-full border border-black/[0.08] bg-white px-4 py-2.5 shadow-sm dark:border-white/10 dark:bg-slate-900/90">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setIsPlayingAudio(!isPlayingAudio)}
-                    className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-600 text-white transition hover:scale-105"
-                  >
-                    {isPlayingAudio ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5 ml-0.5" />}
-                  </button>
-                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                    Lecture 04: Attention & KV-Cache Compression
-                  </span>
-                </div>
-
-                {/* Animated waveform bars */}
-                <div className="flex items-center gap-0.5 h-4">
-                  {[4, 10, 6, 14, 8, 12, 16, 8, 6, 10].map((height, i) => (
-                    <motion.span
-                      key={i}
-                      animate={isPlayingAudio ? { height: [4, 16, 6, 14, 4] } : { height }}
-                      transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.08 }}
-                      className="w-0.5 rounded-full bg-purple-500"
-                      style={{ height }}
-                    />
-                  ))}
-                </div>
-              </div>
+              <Link
+                href="/learner/ai-schools"
+                className="mt-5 flex items-center justify-between rounded-full border border-black/[0.08] bg-white px-4 py-2.5 shadow-sm transition hover:border-purple-300 dark:border-white/10 dark:bg-slate-900/90 dark:hover:border-cyan-500/40"
+              >
+                <span className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                  <BookOpen className="h-4 w-4 text-purple-600 dark:text-cyan-400" />
+                  Continue your curriculum
+                </span>
+                <ArrowRight className="h-3.5 w-3.5 text-purple-600 transition-transform group-hover:translate-x-0.5 dark:text-cyan-400" />
+              </Link>
             </motion.div>
 
-            {/* Card 2: AI Diagnostics / Evaluation & Citations */}
+            {/* Card 2: Module quizzes */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
               className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-black/[0.06] bg-white p-7 shadow-sm transition-all hover:shadow-md dark:border-white/[0.06] dark:bg-white/[0.02]"
             >
               <div>
                 <div className="flex items-start justify-between">
                   <div>
-                    <span className="text-xs font-semibold text-cyan-600 dark:text-cyan-400">Model Diagnostics</span>
+                    <span className="text-xs font-semibold text-cyan-600 dark:text-cyan-400">Module quizzes</span>
                     <h3 className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
-                      Get answers, instantly—with citations.
+                      Check what you know before moving on.
                     </h3>
                   </div>
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition group-hover:bg-purple-600 group-hover:text-white dark:bg-white/10 dark:text-slate-300">
@@ -492,126 +480,119 @@ export default function LearnerHomePage() {
                   </div>
                 </div>
 
-                {/* AI Benchmark Dashboard Visual */}
+                {/* Sample quiz question */}
                 <div className="mt-6 rounded-2xl border border-black/[0.06] bg-slate-50/70 p-4 dark:border-white/[0.06] dark:bg-white/[0.02]">
-                  <div className="flex items-center justify-between border-b border-black/[0.05] pb-2 text-xs font-semibold dark:border-white/[0.05]">
-                    <div className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
-                      <TensorCubieIcon size="sm" />
-                      <span>LLM Benchmark & Accuracy Diagnostics</span>
+                  <div className="flex items-center justify-between gap-2 border-b border-black/[0.05] pb-2 dark:border-white/[0.05]">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
+                      <HelpCircle className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                      Module quiz
                     </div>
-                    <span className="flex items-center gap-1 rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      Live Sync
+                    <span className="rounded bg-slate-200/70 px-1.5 py-0.5 font-mono text-[10px] font-bold text-slate-600 dark:bg-white/10 dark:text-slate-300">
+                      Question 3 of 5
                     </span>
                   </div>
 
-                  <div className="mt-3 flex items-center justify-around gap-4 py-2">
-                    {/* Gauge */}
-                    <div className="flex flex-col items-center">
-                      <div className="relative flex h-14 w-14 items-center justify-center rounded-full border-4 border-emerald-400/40 border-t-emerald-500">
-                        <span className="text-xs font-extrabold text-slate-900 dark:text-white">98.4%</span>
-                      </div>
-                      <span className="mt-1 text-[10px] font-semibold text-slate-400">GSM8K Eval</span>
-                    </div>
+                  <p className="mt-3 text-xs font-semibold leading-relaxed text-slate-800 dark:text-slate-200">
+                    Which of these best describes supervised learning?
+                  </p>
 
-                    {/* Bar Chart Visual */}
-                    <div className="flex items-end gap-1.5 h-14">
-                      <div className="w-2.5 h-8 bg-blue-500 rounded-t" />
-                      <div className="w-2.5 h-12 bg-emerald-500 rounded-t" />
-                      <div className="w-2.5 h-6 bg-amber-500 rounded-t" />
-                      <div className="w-2.5 h-10 bg-purple-500 rounded-t" />
-                      <div className="w-2.5 h-14 bg-cyan-400 rounded-t" />
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center gap-2.5 rounded-xl border border-purple-300 bg-white px-3 py-2 text-[11px] font-medium text-purple-950 dark:border-cyan-500/40 dark:bg-cyan-500/10 dark:text-cyan-100">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-purple-600 font-mono text-[10px] font-bold text-white dark:bg-cyan-400 dark:text-slate-950">
+                        A
+                      </span>
+                      Learning from labelled examples
                     </div>
+                    <div className="flex items-center gap-2.5 rounded-xl border border-black/[0.05] bg-white px-3 py-2 text-[11px] font-medium text-slate-600 dark:border-white/[0.06] dark:bg-white/[0.02] dark:text-slate-400">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-slate-100 font-mono text-[10px] font-bold text-slate-500 dark:bg-white/10 dark:text-slate-400">
+                        B
+                      </span>
+                      Learning from rewards and penalties
+                    </div>
+                    <div className="flex items-center gap-2.5 rounded-xl border border-black/[0.05] bg-white px-3 py-2 text-[11px] font-medium text-slate-600 dark:border-white/[0.06] dark:bg-white/[0.02] dark:text-slate-400">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-slate-100 font-mono text-[10px] font-bold text-slate-500 dark:bg-white/10 dark:text-slate-400">
+                        C
+                      </span>
+                      Learning without any training data
+                    </div>
+                  </div>
 
-                    {/* Line Sparkline */}
-                    <div className="flex flex-col items-center">
-                      <svg width="60" height="30" viewBox="0 0 60 30" fill="none" className="text-cyan-500">
-                        <path d="M2 24L15 14L28 20L42 6L58 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                      </svg>
-                      <span className="mt-1 text-[10px] font-semibold text-slate-400">14ms P95 (-34%)</span>
-                    </div>
+                  <div className="mt-3 flex items-center gap-1.5 text-[10px] font-semibold text-slate-400">
+                    <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                    Answers save as you go
                   </div>
                 </div>
               </div>
 
-              {/* Interactive Search / Chat Pill */}
-              <div className="mt-5">
-                <form
-                  onSubmit={handleAskAi}
-                  className="relative flex items-center rounded-full border border-black/[0.08] bg-white px-3.5 py-1.5 shadow-sm dark:border-white/10 dark:bg-slate-900/90"
-                >
-                  <input
-                    type="text"
-                    value={searchPrompt}
-                    onChange={(e) => setSearchPrompt(e.target.value)}
-                    placeholder="Ask Hammet AI: 'Explain backpropagation in transformer feedforward layers...'"
-                    className="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none dark:text-white pr-2"
-                  />
-                  <button
-                    type="submit"
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-purple-600 text-white transition hover:bg-purple-700 hover:scale-105"
-                  >
-                    <Send className="h-3 w-3" />
-                  </button>
-                </form>
-
-                <AnimatePresence>
-                  {aiAnswer && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      className="mt-2 rounded-xl bg-purple-50 p-2.5 text-[11px] leading-relaxed text-purple-900 dark:bg-purple-950/40 dark:text-purple-200"
-                    >
-                      <span className="font-bold">AI Citation: </span>
-                      {aiAnswer}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              <Link
+                href="/learner/ai-schools"
+                className="mt-5 flex items-center justify-between rounded-full border border-black/[0.08] bg-white px-4 py-2.5 shadow-sm transition hover:border-cyan-300 dark:border-white/10 dark:bg-slate-900/90 dark:hover:border-cyan-500/40"
+              >
+                <span className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                  <Sparkles className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                  Open a course to take a quiz
+                </span>
+                <ArrowRight className="h-3.5 w-3.5 text-cyan-600 transition-transform group-hover:translate-x-0.5 dark:text-cyan-400" />
+              </Link>
             </motion.div>
 
-            {/* Card 3: Automate busywork / 24/7 Coding Agents (Spanning full width or 2 cols) */}
+            {/* Card 3: Project workspace */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.15 }}
-              className="group relative md:col-span-2 overflow-hidden rounded-3xl border border-black/[0.06] bg-amber-50/40 p-7 shadow-sm transition-all hover:shadow-md dark:border-white/[0.06] dark:bg-white/[0.02]"
+              className="group relative md:col-span-2 overflow-hidden rounded-3xl border border-black/[0.06] bg-white p-7 shadow-sm transition-all hover:shadow-md dark:border-white/[0.06] dark:bg-white/[0.02]"
             >
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div>
-                  <span className="text-xs font-semibold text-slate-400">Automate busywork</span>
+              <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
+                <div className="max-w-xl">
+                  <span className="text-xs font-semibold text-purple-600 dark:text-cyan-400">
+                    Project workspace
+                  </span>
                   <h3 className="mt-1 text-xl font-bold text-slate-900 dark:text-white">
-                    Keep work moving 24/7 with agents.
+                    Turn each module into something you can show.
                   </h3>
-                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 max-w-lg">
-                    Autonomous agents review student code, run test harnesses, and scaffold full-stack applications in the background.
+                  <p className="mt-1 max-w-lg text-xs text-slate-600 dark:text-slate-400">
+                    Submit your project link, track your progress, and keep every build in one place.
                   </p>
+                  <Link
+                    href="/learner/projects"
+                    className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-purple-700 transition-colors hover:text-purple-800 dark:text-cyan-400 dark:hover:text-cyan-300"
+                  >
+                    Open project workspace
+                    <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                  </Link>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
-                  {/* Mini Coding Agent Card */}
-                  <div className="flex items-center gap-3 rounded-2xl border border-amber-200/60 bg-white/90 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-slate-900/80">
-                    <NeuroBotIcon size="md" />
-                    <div>
-                      <p className="text-xs font-bold text-slate-900 dark:text-white">Coding Agent</p>
-                      <p className="text-[10px] text-slate-400">Generates AST & tests</p>
+                {/* Sample project submission card */}
+                <div className="w-full max-w-sm rounded-2xl border border-black/[0.06] bg-slate-50/70 p-4 shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02]">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-cyan-300">
+                        <FolderKanban className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">
+                          Prompt evaluation harness
+                        </p>
+                        <p className="text-[10px] text-slate-400">Project submission</p>
+                      </div>
                     </div>
-                    <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
-                      Active
+                    <span className="shrink-0 whitespace-nowrap rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+                      In progress
                     </span>
                   </div>
 
-                  {/* Mini Tasks Pill */}
-                  <div className="flex items-center gap-2 rounded-2xl border border-black/[0.06] bg-white/90 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-slate-900/80">
-                    <QuantumBulbIcon size="sm" />
-                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                      Agent Swarm Traces
-                    </span>
-                    <span className="rounded bg-purple-100 px-1.5 py-0.2 text-[10px] font-bold text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
-                      3 running
-                    </span>
+                  <div className="mt-3 flex items-center gap-1.5 rounded-lg border border-black/[0.05] bg-white px-2.5 py-1.5 text-[10px] text-slate-500 dark:border-white/[0.06] dark:bg-white/[0.03] dark:text-slate-400">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                    github.com/your-name/project
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between text-[10px] font-semibold text-slate-400">
+                    <span>Progress</span>
+                    <span className="text-purple-600 dark:text-cyan-400">65%</span>
+                  </div>
+                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200/80 dark:bg-white/10">
+                    <div className="h-full w-[65%] rounded-full bg-purple-600 dark:bg-cyan-400" />
                   </div>
                 </div>
               </div>
@@ -629,11 +610,12 @@ export default function LearnerHomePage() {
           >
             <div className="mb-4 flex items-end justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                <DoodleKicker tone="indigo" icon={<TerminalDoodleIcon size="sm" />}>
                   Evidence
-                </p>
-                <h2 className="mt-1 text-xl font-semibold tracking-[-0.03em]">
-                  Your work
+                </DoodleKicker>
+                <h2 className="mt-2 flex items-center gap-2 text-xl font-semibold tracking-[-0.03em]">
+                  <TitleIcon icon={FolderKanban} tone="indigo" size="sm" />
+                  <span>Your work</span>
                 </h2>
               </div>
 
@@ -697,11 +679,12 @@ export default function LearnerHomePage() {
             transition={{ duration: 0.45, delay: 0.18 }}
           >
             <div className="mb-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+              <DoodleKicker tone="amber" icon={<NeuroBotIcon size="sm" />}>
                 Identity
-              </p>
-              <h2 className="mt-1 text-xl font-semibold tracking-[-0.03em]">
-                Digital Passport
+              </DoodleKicker>
+              <h2 className="mt-2 flex items-center gap-2 text-xl font-semibold tracking-[-0.03em]">
+                <TitleIcon icon={ShieldCheck} tone="amber" size="sm" />
+                <span>Digital Passport</span>
               </h2>
             </div>
 

@@ -1,10 +1,11 @@
 import type { NextConfig } from "next";
+import withSerwistInit from "@serwist/next";
 
 const isDev = process.env.NODE_ENV == "development"
 
 const connectSrc = [
   "'self'",
-  ...(isDev ? ["http://localhost:8000", "https://dev-api.hammetedu.com"] : []),
+  ...(isDev ? ["http://localhost:8000", "https://dev-api.hammetedu.com", "https://cdn.growthbook.io"] : []),
   "https://dev-api.hammetedu.com",
   "https://staging-api.hammetedu.com",
   "https://api.hammetedu.com",
@@ -47,7 +48,7 @@ const securityHeaders = [
       "img-src 'self' data: blob: https://images.unsplash.com https://*.unsplash.com https://accounts.google.com https://*.googleusercontent.com https://*.supabase.co",
       "font-src 'self' data: https://fonts.gstatic.com",
       `connect-src 'self' ${connectSrc}`,
-      "frame-src 'self' https://accounts.google.com",
+      "frame-src 'self' https://accounts.google.com https://www.youtube.com https://youtube.com",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self' https://accounts.google.com",
@@ -56,7 +57,15 @@ const securityHeaders = [
   },
 ];
 
+const withSerwist = withSerwistInit({
+  swSrc: "src/app/sw.ts",
+  swDest: "public/sw.js",
+  disable: isDev,
+  register: false,
+  globPublicPatterns: ["manifest.json", "icons/**/*"],
+});
 const nextConfig: NextConfig = {
+  devIndicators: false,
   poweredByHeader: false,
   images: {
     remotePatterns: [
@@ -76,4 +85,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSerwist(nextConfig);

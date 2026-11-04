@@ -747,8 +747,6 @@ export default function HomePage() {
                           <div className="inline-flex items-center gap-2 rounded-full border border-purple-400/40 bg-purple-950/60 px-3 py-1 font-poppins text-[10.5px] font-semibold text-purple-200">
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
                             <span>Cohort 2026</span>
-                            <span className="h-1 w-1 rounded-full bg-purple-400/60" />
-                            <span className="text-cyan-300 font-medium">Neural Intelligence Lab</span>
                           </div>
                           <h3 className="mt-1 text-lg sm:text-xl font-extrabold text-white">
                             Welcome back, Alex.

@@ -36,6 +36,8 @@ import {
   QuantumBulbIcon,
   TerminalDoodleIcon,
 } from "@/components/ui/character-icons";
+import { DoodleKicker, TitleIcon } from "@/components/ui/section-title";
+
 import { useLearnerStore, LearnerProject } from "@/lib/store/use-learner-store";
 //import { useCart } from "@/lib/store/use-cart";
 import { BadgeCelebrationModal } from "@/components/ui/badge-celebration-modal";
@@ -60,7 +62,8 @@ export default function ProjectsPage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const frame = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   const [statusFilter, setStatusFilter] = useState<
@@ -87,12 +90,10 @@ export default function ProjectsPage() {
 
   const tracks = [
     "All Tracks",
-    "Neural Foundations",
-    "Transformer Latent Space",
-    "Neural Fine-Tuning",
-    "Vector RAG",
-    "Agent Workflows",
-    "Stateful Systems",
+    "AI Foundations",
+    "Generative AI",
+    "AI at Work",
+    "AI Applications",
   ];
 
   const filteredProjects = projects.filter((p) => {
@@ -176,13 +177,13 @@ export default function ProjectsPage() {
           transition={{ duration: 0.45 }}
           className="mb-8"
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-3.5 py-1 text-xs font-semibold text-purple-700 dark:border-cyan-400/30 dark:bg-cyan-400/10 dark:text-cyan-300">
-            <TerminalDoodleIcon size="sm" />
-            PROJECT WORKSPACE // CAPSTONE LABS
-          </div>
+          <DoodleKicker icon={<KnowledgeAppleIcon size="sm" />} tone="violet">
+            Project Workspace
+          </DoodleKicker>
 
-          <h1 className="mt-3 text-3xl font-extrabold tracking-[-0.04em] text-slate-950 sm:text-4xl lg:text-5xl dark:text-white">
-            Hands-on AI Engineering Projects
+          <h1 className="mt-3 flex items-center gap-3 text-3xl font-extrabold tracking-[-0.04em] text-slate-950 sm:text-4xl lg:text-5xl dark:text-white">
+            <TitleIcon icon={Terminal} tone="violet" size="md" />
+            <span>Hands-on AI Engineering Projects</span>
           </h1>
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400 sm:text-base">
@@ -418,7 +419,7 @@ export default function ProjectsPage() {
                     <div className="mt-4 rounded-xl border border-black/[0.05] bg-slate-50/70 p-3.5 dark:border-white/[0.05] dark:bg-white/[0.02]">
                       <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
                         <CheckCircle2 className="h-3.5 w-3.5 text-purple-600 dark:text-cyan-400" />
-                        Automated Acceptance Rubric:
+                        Acceptance criteria:
                       </p>
                       <ul className="space-y-1.5 text-[10.5px] text-slate-500 dark:text-slate-400">
                         {project.rubric.map((item, idx) => (

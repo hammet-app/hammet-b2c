@@ -161,7 +161,20 @@ async function request<T>(
   }
 
   // 204 No Content
-  if (res.status === 204 || res.status === 201) return undefined as T;
+  if (res.status === 204) return undefined as T;
+
+  // 201 Created usually carries the created resource, so parse it. Some
+  // endpoints still return an empty 201 body, in which case there is nothing
+  // to deserialize.
+  if (res.status === 201) {
+    const text = await res.text();
+    if (!text) return undefined as T;
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      return undefined as T;
+    }
+  }
 
   return res.json() as Promise<T>;
 }

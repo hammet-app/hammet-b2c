@@ -1,52 +1,51 @@
 "use client";
 
 import { useTicketStore, HAMMET_SUPPORT_EMAIL } from "@/lib/store/use-ticket-store";
-import {
-  LifeBuoy,
-  Clock,
-  CheckCircle2,
-  Mail,
-  ShieldCheck,
-} from "lucide-react";
+import { LifeBuoy, Clock, Hash } from "lucide-react";
 import { motion } from "motion/react";
 
 export function TicketStats() {
   const tickets = useTicketStore((state) => state.tickets);
 
   const total = tickets.length;
-  const inProgress = tickets.filter(
-    (t) => t.status === "in-progress" || t.status === "open" || t.status === "pending"
-  ).length;
+  const latest = tickets[0];
 
   const stats = [
     {
       label: "Support Channel",
-      value: "Email Desk",
+      value: "Learner Tickets",
       sublabel: HAMMET_SUPPORT_EMAIL,
-      icon: Mail,
-      color: "from-purple-500/15 to-indigo-500/10 text-purple-600 dark:text-purple-400",
+      icon: LifeBuoy,
+      color:
+        "from-purple-500/15 to-indigo-500/10 text-purple-600 dark:text-purple-400",
       border: "border-purple-200/60 dark:border-purple-500/20",
     },
     {
-      label: "My Logged Inquiries",
+      label: "Tickets Logged",
       value: total,
-      sublabel: inProgress > 0 ? `${inProgress} active / awaiting reply` : "All inquiries up to date",
+      sublabel:
+        total === 0
+          ? "None submitted from this device yet"
+          : "Browser-local reference copies",
       icon: Clock,
-      color: "from-amber-500/15 to-orange-500/10 text-amber-600 dark:text-amber-400",
+      color:
+        "from-amber-500/15 to-orange-500/10 text-amber-600 dark:text-amber-400",
       border: "border-amber-200/60 dark:border-amber-500/20",
     },
     {
-      label: "Response SLA",
-      value: "< 24 Hours",
-      sublabel: "Direct academic & tech review",
-      icon: CheckCircle2,
-      color: "from-emerald-500/15 to-teal-500/10 text-emerald-600 dark:text-emerald-400",
+      label: "Latest Reference",
+      value: latest?.id ?? "—",
+      sublabel:
+        latest?.subject ?? "Create a ticket to receive a backend reference",
+      icon: Hash,
+      color:
+        "from-emerald-500/15 to-teal-500/10 text-emerald-600 dark:text-emerald-400",
       border: "border-emerald-200/60 dark:border-emerald-500/20",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       {stats.map((stat, idx) => {
         const Icon = stat.icon;
         return (
@@ -55,10 +54,10 @@ export function TicketStats() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, delay: idx * 0.04 }}
-            className={`relative overflow-hidden rounded-2xl border ${stat.border} bg-white p-3.5 sm:p-4 shadow-xs transition hover:shadow-md dark:bg-slate-900/60`}
+            className={`relative overflow-hidden rounded-2xl border ${stat.border} bg-white p-3.5 shadow-xs transition hover:shadow-md dark:bg-slate-900/60 sm:p-4`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 sm:text-[11px]">
                 {stat.label}
               </span>
               <div
@@ -69,12 +68,12 @@ export function TicketStats() {
             </div>
 
             <div className="mt-2 flex items-baseline gap-2">
-              <span className="font-mono text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+              <span className="truncate font-mono text-xl font-black tracking-tight text-slate-900 dark:text-white sm:text-2xl">
                 {stat.value}
               </span>
             </div>
 
-            <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 truncate font-sans">
+            <p className="mt-0.5 truncate font-sans text-[11px] text-slate-500 dark:text-slate-400">
               {stat.sublabel}
             </p>
           </motion.div>

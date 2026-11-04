@@ -6,7 +6,6 @@ import {
   TicketCategory,
 } from "@/lib/store/use-ticket-store";
 import {
-  AlertTriangle,
   Flame,
   Clock,
   CheckCircle2,

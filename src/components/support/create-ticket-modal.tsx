@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useTicketStore, HAMMET_SUPPORT_EMAIL } from "@/lib/store/use-ticket-store";
+import { useTicketStore } from "@/lib/store/use-ticket-store";
 import { TicketForm } from "./ticket-form";
 import { X, Mail } from "lucide-react";
 import { GlowingMagicSparkle } from "@/components/ui/vibrant-ai-icons";
@@ -13,7 +13,10 @@ export function CreateTicketModal() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    // Defer to the next frame so hydration completes before mounting the
+    // portal; this avoids a synchronous state update inside the effect.
+    const frame = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {
@@ -74,7 +77,7 @@ export function CreateTicketModal() {
                     <GlowingMagicSparkle className="h-3.5 w-3.5 text-purple-600" />
                   </h2>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Dispatched to: <strong className="font-mono text-purple-700 dark:text-purple-300">{HAMMET_SUPPORT_EMAIL}</strong>
+                    Submits your inquiry to our support team
                   </p>
                 </div>
               </div>

@@ -1,0 +1,515 @@
+
+> hammet-demo@0.1.0 dev
+> next dev --webpack
+
+▲ Next.js 16.3.8 (webpack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.123:3000
+- Environments: .env.local
+✓ Ready in 21.6s
+⚠ Warning: Next.js ignored package-lock.json in C:\Users\HP 1030 G3 because it is outside the current Git repository (C:\Users\HP 1030 G3\Downloads\hammet-b2c).
+ To use this directory, set `outputFileTracingRoot` in your Next.js config.
+
+✓ Running next.config.ts took 782ms
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead.
+
+  To migrate automatically, run:
+  npx @next/codemod@canary middleware-to-proxy .
+
+  Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+○ Compiling middleware ...
+○ Compiling /learner/quizzes ...
+(node:4628) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP%201030%20G3/Downloads/hammet-b2c/tailwind.config.ts?id=1793781212503 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\HP 1030 G3\Downloads\hammet-b2c\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ GET /learner/support 200 in 8.8s (next.js: 6.0s, proxy.ts: 208ms, application-code: 2.6s)
+ GET /learner/quizzes 200 in 106s (next.js: 103s, proxy.ts: 328ms, application-code: 2.9s)
+ GET /learner/support 200 in 595ms (next.js: 59ms, proxy.ts: 60ms, application-code: 476ms)
+ GET /learner/quizzes 200 in 545ms (next.js: 65ms, proxy.ts: 23ms, application-code: 457ms)
+○ Compiling /learner/projects ...
+ GET /learner/projects 200 in 18.1s (next.js: 14.9s, proxy.ts: 146ms, application-code: 3.1s)
+⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /learner/support 200 in 2.0s (next.js: 396ms, proxy.ts: 267ms, application-code: 1341ms)
+ GET /learner/quizzes 200 in 1100ms (next.js: 155ms, proxy.ts: 131ms, application-code: 813ms)
+ GET /learner/projects 200 in 1107ms (next.js: 13ms, proxy.ts: 157ms, application-code: 937ms)
+ GET /learner/support 200 in 468ms (next.js: 15ms, proxy.ts: 32ms, application-code: 421ms)
+ GET /learner/quizzes 200 in 492ms (next.js: 29ms, proxy.ts: 47ms, application-code: 417ms)
+ GET /learner/support 200 in 570ms (next.js: 20ms, proxy.ts: 28ms, application-code: 522ms)
+ GET /learner/quizzes 200 in 735ms (next.js: 21ms, proxy.ts: 37ms, application-code: 678ms)
+ GET /learner/projects 200 in 438ms (next.js: 11ms, proxy.ts: 21ms, application-code: 406ms)
+ GET /learner/support 200 in 662ms (next.js: 14ms, proxy.ts: 32ms, application-code: 617ms)
+ GET /learner/quizzes 200 in 496ms (next.js: 14ms, proxy.ts: 21ms, application-code: 461ms)
+ GET /learner/projects 200 in 574ms (next.js: 122ms, proxy.ts: 167ms, application-code: 285ms)
+ GET /learner/support 200 in 592ms (next.js: 38ms, proxy.ts: 79ms, application-code: 475ms)
+ GET /learner/quizzes 200 in 1104ms (next.js: 140ms, proxy.ts: 136ms, application-code: 827ms)
+ GET /learner/projects 200 in 1847ms (next.js: 70ms, proxy.ts: 265ms, application-code: 1512ms)
+ GET /learner/quizzes 200 in 2.1s (next.js: 348ms, proxy.ts: 501ms, application-code: 1296ms)
+ GET /learner/support 200 in 3.6s (next.js: 317ms, proxy.ts: 420ms, application-code: 2.9s)
+ GET /learner/quizzes 200 in 824ms (next.js: 48ms, proxy.ts: 187ms, application-code: 590ms)
+ GET /learner/projects 200 in 5.7s (next.js: 809ms, proxy.ts: 757ms, application-code: 4.1s)
+○ Compiling /learner ...
+⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /learner 200 in 68s (next.js: 59s, proxy.ts: 591ms, application-code: 7.9s)
+ GET /learner/quizzes 200 in 3.6s (next.js: 1371ms, proxy.ts: 1338ms, application-code: 858ms)
+ GET /learner/quizzes 200 in 3.5s (next.js: 188ms, proxy.ts: 811ms, application-code: 2.5s)
+ GET /learner/quizzes 200 in 3.2s (next.js: 293ms, proxy.ts: 869ms, application-code: 2.1s)
+○ Compiling /learner/learn ...
+ GET /learner/learn 200 in 4.1s (next.js: 4.0s, proxy.ts: 24ms, application-code: 132ms)
+ GET /learner/projects 200 in 3.5s (next.js: 697ms, proxy.ts: 973ms, application-code: 1857ms)
+○ Compiling /learner/ai-schools ...
+ GET /learner/ai-schools 200 in 29.5s (next.js: 27.5s, proxy.ts: 179ms, application-code: 1809ms)
+ GET /learner/learn 200 in 527ms (next.js: 148ms, proxy.ts: 187ms, application-code: 193ms)
+ GET /learner 200 in 2.4s (next.js: 338ms, proxy.ts: 1106ms, application-code: 995ms)
+[browser] ./src/app/learner/support/page.tsx:11:1
+Module not found: Can't resolve '@/components/ui/support-illustration-image'
+   9 | import { TicketDetailView } from "@/components/support/ticket-detail-view";
+  10 | import { CreateTicketModal } from "@/components/support/create-ticket-modal";
+> 11 | import { SupportIllustration } from "@/components/ui/support-illustration-image";
+     | ^
+  12 | import { SectionKicker, TitleIcon } from "@/components/ui/section-title";
+  13 | import { LifeBuoy, Plus, Mail, Inbox, MessagesSquare } from "lucide-react";
+  14 |
+
+https://nextjs.org/docs/messages/module-not-found 
+[browser] ./src/app/learner/support/page.tsx:11:1
+Module not found: Can't resolve '@/components/ui/support-illustration-image'
+   9 | import { TicketDetailView } from "@/components/support/ticket-detail-view";
+  10 | import { CreateTicketModal } from "@/components/support/create-ticket-modal";
+> 11 | import { SupportIllustration } from "@/components/ui/support-illustration-image";
+     | ^
+  12 | import { SectionKicker, TitleIcon } from "@/components/ui/section-title";
+  13 | import { LifeBuoy, Plus, Mail, Inbox, MessagesSquare } from "lucide-react";
+  14 |
+
+https://nextjs.org/docs/messages/module-not-found 
+[browser] ./src/app/learner/projects/page.tsx:40:1
+Module not found: Can't resolve '@/components/ui/project-illustration-image'
+  38 | } from "@/components/ui/character-icons";
+  39 | import { DoodleKicker, TitleIcon } from "@/components/ui/section-title";
+> 40 | import { BuildingIllustration } from "@/components/ui/project-illustration-image";
+     | ^
+  41 | import { useLearnerStore, LearnerProject } from "@/lib/store/use-learner-store";
+  42 | //import { useCart } from "@/lib/store/use-cart";
+  43 | import { BadgeCelebrationModal } from "@/components/ui/badge-celebration-modal";
+
+https://nextjs.org/docs/messages/module-not-found 
+[browser] ./src/app/learner/projects/page.tsx:40:1
+Module not found: Can't resolve '@/components/ui/project-illustration-image'
+  38 | } from "@/components/ui/character-icons";
+  39 | import { DoodleKicker, TitleIcon } from "@/components/ui/section-title";
+> 40 | import { BuildingIllustration } from "@/components/ui/project-illustration-image";
+     | ^
+  41 | import { useLearnerStore, LearnerProject } from "@/lib/store/use-learner-store";
+  42 | //import { useCart } from "@/lib/store/use-cart";
+  43 | import { BadgeCelebrationModal } from "@/components/ui/badge-celebration-modal";
+
+https://nextjs.org/docs/messages/module-not-found 
+⨯ ./src/app/learner/projects/page.tsx:40:1
+Module not found: Can't resolve '@/components/ui/project-illustration-image'
+  38 | } from "@/components/ui/character-icons";
+  39 | import { DoodleKicker, TitleIcon } from "@/components/ui/section-title";
+> 40 | import { BuildingIllustration } from "@/components/ui/project-illustration-image";
+     | ^
+  41 | import { useLearnerStore, LearnerProject } from "@/lib/store/use-learner-store";
+  42 | //import { useCart } from "@/lib/store/use-cart";
+  43 | import { BadgeCelebrationModal } from "@/components/ui/badge-celebration-modal";
+
+https://nextjs.org/docs/messages/module-not-found
+[browser] ./src/app/learner/projects/page.tsx:40:1
+Module not found: Can't resolve '@/components/ui/project-illustration-image'
+  38 | } from "@/components/ui/character-icons";
+  39 | import { DoodleKicker, TitleIcon } from "@/components/ui/section-title";
+> 40 | import { BuildingIllustration } from "@/components/ui/project-illustration-image";
+     | ^
+  41 | import { useLearnerStore, LearnerProject } from "@/lib/store/use-learner-store";
+  42 | //import { useCart } from "@/lib/store/use-cart";
+  43 | import { BadgeCelebrationModal } from "@/components/ui/badge-celebration-modal";
+
+https://nextjs.org/docs/messages/module-not-found 
+○ Compiling /_error ...
+ GET /learner/learn 500 in 78s (next.js: 71s, proxy.ts: 628ms, application-code: 6.7s)
+ GET /learner/ai-schools 500 in 69s (next.js: 64s, proxy.ts: 483ms, application-code: 4.3s)
+ GET /learner/learn 500 in 49s (next.js: 45s, proxy.ts: 58ms, application-code: 3.7s)
+ GET /learner/ai-schools 200 in 44s (next.js: 36.3s, proxy.ts: 986ms, application-code: 6.7s)
+ GET /learner/learn 200 in 30.8s (next.js: 22.5s, proxy.ts: 383ms, application-code: 7.9s)
+ GET /learner/learn 200 in 30.8s (next.js: 24.4s, proxy.ts: 383ms, application-code: 6.0s)
+ GET /learner/learn 200 in 6.8s (next.js: 345ms, proxy.ts: 393ms, application-code: 6.0s)
+ GET /learner/ai-schools 200 in 6.8s (next.js: 1152ms, proxy.ts: 396ms, application-code: 5.2s)
+ GET /learner/learn 200 in 6.4s (next.js: 386ms, proxy.ts: 2.1s, application-code: 3.9s)
+ GET /learner/ai-schools 200 in 3.6s (next.js: 571ms, proxy.ts: 2.3s, application-code: 806ms)
+ GET /learner/ai-schools 200 in 419ms (next.js: 39ms, proxy.ts: 23ms, application-code: 357ms)
+ GET /learner/ai-schools 200 in 10.3s (next.js: 145ms, proxy.ts: 59ms, application-code: 10.1s)
+ GET /learner/support 200 in 2.5s (next.js: 1488ms, proxy.ts: 174ms, application-code: 794ms)
+[browser] State loaded from storage couldn't be migrated since no migrate function was provided 
+    at eval (src\lib\store\use-ticket-store.ts:74:37)
+    at (app-pages-browser)/./src/lib/store/use-ticket-store.ts (file://C:/Users/HP 1030 G3/Downloads/hammet-b2c/.next/dev/static/chunks/app/learner/support/page.js:6037:1)
+    at eval (webpack-internal:///(app-pages-browser)/./src/app/learner/support/page.tsx:6:85)
+    at (app-pages-browser)/./src/app/learner/support/page.tsx (file://C:/Users/HP 1030 G3/Downloads/hammet-b2c/.next/dev/static/chunks/app/learner/support/page.js:5465:1)
+  72 | } as const;
+  73 |
+> 74 | export const useTicketStore = create<TicketStoreState>()(
+     |                                     ^
+  75 |   persist(
+  76 |     (set) => ({
+  77 |       tickets: [], (src\lib\store\use-ticket-store.ts:74:37)
+⨯ The directory at "C:\Users\HP 1030 G3\Downloads\hammet-b2c\.next\dev" was deleted.
+
+Deleting this directory while Next.js is running can lead to undefined behavior. Restarting the server to recover...
+▲ Next.js 16.3.8 (webpack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.123:3000
+- Environments: .env.local
+✓ Ready in 3.1s
+⚠ Warning: Next.js ignored package-lock.json in C:\Users\HP 1030 G3 because it is outside the current Git repository (C:\Users\HP 1030 G3\Downloads\hammet-b2c).
+ To use this directory, set `outputFileTracingRoot` in your Next.js config.
+
+✓ Running next.config.ts took 197ms
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead.
+
+  To migrate automatically, run:
+  npx @next/codemod@canary middleware-to-proxy .
+
+  Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+○ Compiling middleware ...
+[browser] Image with src "/illustrations/support-agent.png" has "fill" and parent element with invalid "position". Provided "static" should be one of absolute,fixed,relative.
+○ Compiling /learner/learn ...
+(node:21532) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP%201030%20G3/Downloads/hammet-b2c/tailwind.config.ts?id=1793783937960 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\HP 1030 G3\Downloads\hammet-b2c\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ GET /learner/learn 200 in 4.7min (next.js: 4.6min, proxy.ts: 2.3s, application-code: 2.6s)
+ GET /learner/support 200 in 4.7min (next.js: 4.6min, proxy.ts: 2.3s, application-code: 2.6s)
+ GET /learner/learn 200 in 778ms (next.js: 497ms, proxy.ts: 66ms, application-code: 216ms)
+ GET /learner/learn 200 in 438ms (next.js: 23ms, proxy.ts: 32ms, application-code: 382ms)
+ GET /learner/learn 200 in 366ms (next.js: 20ms, proxy.ts: 33ms, application-code: 313ms)
+ GET /learner/support 200 in 2.6s (next.js: 74ms, proxy.ts: 364ms, application-code: 2.1s)
+ GET /learner/support 200 in 948ms (next.js: 24ms, proxy.ts: 130ms, application-code: 794ms)
+○ Compiling /learner/quizzes ...
+ GET /learner/quizzes 200 in 32.5s (next.js: 29.5s, proxy.ts: 122ms, application-code: 2.9s)
+⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+○ Compiling /learner/projects ...
+ GET /learner/projects 200 in 12.1s (next.js: 9.8s, proxy.ts: 179ms, application-code: 2.2s)
+⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+[browser] Image with src "/illustrations/developer.png" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /learner/support 200 in 1475ms (next.js: 366ms, proxy.ts: 202ms, application-code: 907ms)
+ GET /learner/quizzes 200 in 1204ms (next.js: 365ms, proxy.ts: 210ms, application-code: 630ms)
+ GET /learner/projects 200 in 1413ms (next.js: 131ms, proxy.ts: 267ms, application-code: 1014ms)
+[browser] Image with src "/illustrations/developer.png" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+ GET /learner/quizzes 200 in 438ms (next.js: 19ms, proxy.ts: 35ms, application-code: 383ms)
+ GET /learner/support 200 in 666ms (next.js: 17ms, proxy.ts: 30ms, application-code: 618ms)
+ GET /learner/quizzes 200 in 384ms (next.js: 14ms, proxy.ts: 22ms, application-code: 349ms)
+ GET /learner/projects 200 in 718ms (next.js: 18ms, proxy.ts: 30ms, application-code: 670ms)
+ GET /learner/support 200 in 7.1s (next.js: 612ms, proxy.ts: 1225ms, application-code: 5.3s)
+ GET /learner/support 200 in 536ms (next.js: 21ms, proxy.ts: 35ms, application-code: 479ms)
+ GET /learner/quizzes 200 in 540ms (next.js: 37ms, proxy.ts: 32ms, application-code: 470ms)
+ GET /learner/projects 200 in 908ms (next.js: 70ms, proxy.ts: 25ms, application-code: 813ms)
+ GET /learner/quizzes 200 in 4.4s (next.js: 418ms, proxy.ts: 1787ms, application-code: 2.2s)
+ GET /learner/support 200 in 540ms (next.js: 16ms, proxy.ts: 38ms, application-code: 486ms)
+ GET /learner/quizzes 200 in 358ms (next.js: 28ms, proxy.ts: 25ms, application-code: 305ms)
+ GET /learner/projects 200 in 317ms (next.js: 13ms, proxy.ts: 36ms, application-code: 268ms)
+○ Compiling /learner ...
+⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /learner 200 in 38.8s (next.js: 36.0s, proxy.ts: 27ms, application-code: 2.8s)
+ GET /learner/quizzes 200 in 2.1s (next.js: 51ms, proxy.ts: 22ms, application-code: 2.0s)
+ GET /learner/quizzes 200 in 627ms (next.js: 43ms, proxy.ts: 53ms, application-code: 531ms)
+ GET /learner 200 in 2.3s (next.js: 1313ms, proxy.ts: 143ms, application-code: 876ms)
+ GET /learner 200 in 2.1s (next.js: 423ms, proxy.ts: 33ms, application-code: 1606ms)
+ GET /learner 200 in 1586ms (next.js: 362ms, proxy.ts: 23ms, application-code: 1200ms)
+ GET /learner 200 in 891ms (next.js: 470ms, proxy.ts: 43ms, application-code: 378ms)
+ GET /learner 200 in 1446ms (next.js: 696ms, proxy.ts: 32ms, application-code: 717ms)
+ GET /learner 200 in 299ms (next.js: 23ms, proxy.ts: 31ms, application-code: 246ms)
+ GET /learner 200 in 8.3s (next.js: 834ms, proxy.ts: 1723ms, application-code: 5.7s)
+[browser] Uncaught ChunkLoadError: Loading chunk app/learner/quizzes/page failed.
+(timeout: http://localhost:3000/_next/static/chunks/app/learner/quizzes/page.js)
+ GET /learner/quizzes 200 in 381ms (next.js: 81ms, proxy.ts: 38ms, application-code: 262ms)
+ GET /learner/support 200 in 767ms (next.js: 81ms, proxy.ts: 22ms, application-code: 665ms)
+ GET /learner/quizzes 200 in 295ms (next.js: 20ms, proxy.ts: 32ms, application-code: 243ms)
+ GET /learner/quizzes 200 in 683ms (next.js: 32ms, proxy.ts: 316ms, application-code: 336ms)
+ GET /learner/projects 200 in 291ms (next.js: 68ms, proxy.ts: 30ms, application-code: 192ms)
+ GET /learner/quizzes 200 in 487ms (next.js: 19ms, proxy.ts: 29ms, application-code: 440ms)
+ GET /learner/support 200 in 466ms (next.js: 12ms, proxy.ts: 19ms, application-code: 435ms)
+ GET /learner/quizzes 200 in 446ms (next.js: 19ms, proxy.ts: 18ms, application-code: 409ms)
+ GET /learner/projects 200 in 425ms (next.js: 52ms, proxy.ts: 25ms, application-code: 348ms)
+ GET /learner 200 in 305ms (next.js: 12ms, proxy.ts: 29ms, application-code: 264ms)
+ GET /learner/support 200 in 461ms (next.js: 29ms, proxy.ts: 28ms, application-code: 404ms)
+ GET /learner/quizzes 200 in 419ms (next.js: 25ms, proxy.ts: 83ms, application-code: 311ms)
+ GET /learner/projects 200 in 514ms (next.js: 20ms, proxy.ts: 20ms, application-code: 475ms)
+ GET /learner 200 in 336ms (next.js: 14ms, proxy.ts: 26ms, application-code: 295ms)
+ GET /learner/quizzes 200 in 727ms (next.js: 65ms, proxy.ts: 80ms, application-code: 582ms)
+ GET /learner/support 200 in 324ms (next.js: 37ms, proxy.ts: 60ms, application-code: 226ms)
+[browser] State loaded from storage couldn't be migrated since no migrate function was provided 
+    at eval (src\lib\store\use-ticket-store.ts:74:37)
+    at (app-pages-browser)/./src/lib/store/use-ticket-store.ts (file://C:/Users/HP 1030 G3/Downloads/hammet-b2c/.next/dev/static/chunks/app/learner/support/page.js:5851:1)
+    at eval (webpack-internal:///(app-pages-browser)/./src/app/learner/support/page.tsx:6:85)
+    at (app-pages-browser)/./src/app/learner/support/page.tsx (file://C:/Users/HP 1030 G3/Downloads/hammet-b2c/.next/dev/static/chunks/app/learner/support/page.js:5290:1)
+  72 | } as const;
+  73 |
+> 74 | export const useTicketStore = create<TicketStoreState>()(
+     |                                     ^
+  75 |   persist(
+  76 |     (set) => ({
+  77 |       tickets: [], (src\lib\store\use-ticket-store.ts:74:37)
+ GET /learner/quizzes 200 in 271ms (next.js: 34ms, proxy.ts: 60ms, application-code: 177ms)
+ GET /learner/projects 200 in 353ms (next.js: 35ms, proxy.ts: 73ms, application-code: 245ms)
+ GET /learner/quizzes 200 in 222ms (next.js: 28ms, proxy.ts: 50ms, application-code: 144ms)
+ GET /learner/support 200 in 13.2s (next.js: 3.5s, proxy.ts: 2.0s, application-code: 7.6s)
+ GET /learner/support 200 in 12.2s (next.js: 1745ms, proxy.ts: 5.2s, application-code: 5.3s)
+ GET /learner 200 in 13.6s (next.js: 3.6s, proxy.ts: 5.2s, application-code: 4.9s)
+ GET /learner/support 200 in 14.3s (next.js: 2.5s, proxy.ts: 5.2s, application-code: 6.6s)
+ GET /learner 200 in 2.6s (next.js: 1556ms, proxy.ts: 102ms, application-code: 978ms)
+ GET /learner/support 200 in 2.6s (next.js: 1031ms, proxy.ts: 101ms, application-code: 1510ms)
+ GET /learner 200 in 1767ms (next.js: 946ms, proxy.ts: 92ms, application-code: 729ms)
+ GET /learner/support 200 in 436ms (next.js: 119ms, proxy.ts: 84ms, application-code: 233ms)
+ GET /learner 200 in 6.1s (next.js: 1309ms, proxy.ts: 1221ms, application-code: 3.5s)
+ GET /learner/learn 200 in 5.1s (next.js: 3.2s, proxy.ts: 580ms, application-code: 1311ms)
+[browser] ./src/app/learner/quizzes/page.tsx
+Error:   x Expected corresponding JSX closing tag for <article>
+     ,-[C:\Users\HP 1030 G3\Downloads\hammet-b2c\src\app\learner\quizzes\page.tsx:695:1]
+ 692 |         className="absolute inset-0 z-10 rounded-2xl"
+ 693 |         aria-label={`Start ${item.quiz.title} for ${item.moduleTitle}`}
+ 694 |       />
+ 695 |     </motion.article>
+     :       ^^^^^^^^^^^^^^
+ 696 |   );
+ 697 | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/learner/quizzes/page.tsx 
+[browser] ./src/app/learner/quizzes/page.tsx
+Error:   x Expected corresponding JSX closing tag for <article>
+     ,-[C:\Users\HP 1030 G3\Downloads\hammet-b2c\src\app\learner\quizzes\page.tsx:695:1]
+ 692 |         className="absolute inset-0 z-10 rounded-2xl"
+ 693 |         aria-label={`Start ${item.quiz.title} for ${item.moduleTitle}`}
+ 694 |       />
+ 695 |     </motion.article>
+     :       ^^^^^^^^^^^^^^
+ 696 |   );
+ 697 | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/learner/quizzes/page.tsx 
+⨯ ./src/app/learner/quizzes/page.tsx
+Error:   x Expected corresponding JSX closing tag for <article>
+     ,-[C:\Users\HP 1030 G3\Downloads\hammet-b2c\src\app\learner\quizzes\page.tsx:695:1]
+ 692 |         className="absolute inset-0 z-10 rounded-2xl"
+ 693 |         aria-label={`Start ${item.quiz.title} for ${item.moduleTitle}`}
+ 694 |       />
+ 695 |     </motion.article>
+     :       ^^^^^^^^^^^^^^
+ 696 |   );
+ 697 | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/learner/quizzes/page.tsx
+[browser] ./src/app/learner/quizzes/page.tsx
+Error:   x Expected corresponding JSX closing tag for <article>
+     ,-[C:\Users\HP 1030 G3\Downloads\hammet-b2c\src\app\learner\quizzes\page.tsx:695:1]
+ 692 |         className="absolute inset-0 z-10 rounded-2xl"
+ 693 |         aria-label={`Start ${item.quiz.title} for ${item.moduleTitle}`}
+ 694 |       />
+ 695 |     </motion.article>
+     :       ^^^^^^^^^^^^^^
+ 696 |   );
+ 697 | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/learner/quizzes/page.tsx 
+[browser] ./src/app/learner/quizzes/page.tsx
+Error:   x Expected corresponding JSX closing tag for <article>
+     ,-[C:\Users\HP 1030 G3\Downloads\hammet-b2c\src\app\learner\quizzes\page.tsx:695:1]
+ 692 |         className="absolute inset-0 z-10 rounded-2xl"
+ 693 |         aria-label={`Start ${item.quiz.title} for ${item.moduleTitle}`}
+ 694 |       />
+ 695 |     </motion.article>
+     :       ^^^^^^^^^^^^^^
+ 696 |   );
+ 697 | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/learner/quizzes/page.tsx 
+○ Compiling /_error ...
+ GET /learner 500 in 4.8min (next.js: 4.6min, proxy.ts: 186ms, application-code: 15.5s)
+ GET /learner/projects 500 in 4.5min (next.js: 4.2min, proxy.ts: 12.8s, application-code: 3.7s)
+ GET /learner/quizzes 500 in 4.3min (next.js: 4.1min, proxy.ts: 8.9s, application-code: 3.3s)
+ GET /learner/support 200 in 2.6min (next.js: 2.6min, proxy.ts: 669ms, application-code: 1119ms)
+ GET /learner 200 in 51s (next.js: 46s, proxy.ts: 271ms, application-code: 4.8s)
+ GET /learner 200 in 51s (next.js: 47s, proxy.ts: 272ms, application-code: 3.7s)
+ GET /learner 200 in 6.2s (next.js: 482ms, proxy.ts: 155ms, application-code: 5.6s)
+ GET /learner 200 in 6.2s (next.js: 165ms, proxy.ts: 1383ms, application-code: 4.7s)
+ GET /learner/support 200 in 1030ms (next.js: 259ms, proxy.ts: 282ms, application-code: 489ms)
+ GET /learner/support 200 in 4.2s (next.js: 59ms, proxy.ts: 375ms, application-code: 3.8s)
+ GET /learner/support 200 in 4.4s (next.js: 580ms, proxy.ts: 150ms, application-code: 3.7s)
+ GET /learner/support 200 in 2.4s (next.js: 535ms, proxy.ts: 139ms, application-code: 1743ms)
+⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /learner 200 in 10.1s (next.js: 2.8s, proxy.ts: 1291ms, application-code: 6.0s)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'C:\Users\HP 1030 G3\Downloads\hammet-b2c\.next\dev\cache\webpack\client-development-fallback\0.pack.gz_' -> 'C:\Users\HP 1030 G3\Downloads\hammet-b2c\.next\dev\cache\webpack\client-development-fallback\0.pack.gz'
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'C:\Users\HP 1030 G3\Downloads\hammet-b2c\.next\dev\cache\webpack\client-development-fallback\2.pack.gz_' -> 'C:\Users\HP 1030 G3\Downloads\hammet-b2c\.next\dev\cache\webpack\client-development-fallback\2.pack.gz'
+ GET /learner 200 in 3.2s (next.js: 481ms, proxy.ts: 964ms, application-code: 1801ms)
+ GET /learner/support 200 in 257ms (next.js: 19ms, proxy.ts: 23ms, application-code: 215ms)
+ GET /learner/quizzes 200 in 348ms (next.js: 71ms, proxy.ts: 21ms, application-code: 255ms)
+ GET /learner/projects 200 in 229ms (next.js: 51ms, proxy.ts: 39ms, application-code: 139ms)
+ GET /learner/projects 200 in 1330ms (next.js: 738ms, proxy.ts: 38ms, application-code: 554ms)
+ GET /learner 200 in 617ms (next.js: 71ms, proxy.ts: 314ms, application-code: 232ms)
+ GET /learner 200 in 734ms (next.js: 469ms, proxy.ts: 28ms, application-code: 236ms)
+ GET /learner/projects 200 in 744ms (next.js: 590ms, proxy.ts: 28ms, application-code: 125ms)
+ GET /learner 200 in 719ms (next.js: 519ms, proxy.ts: 44ms, application-code: 157ms)
+ GET /learner/projects 200 in 742ms (next.js: 341ms, proxy.ts: 43ms, application-code: 357ms)
+ GET /learner/quizzes 200 in 622ms (next.js: 160ms, proxy.ts: 130ms, application-code: 333ms)
+ GET /learner/support 200 in 648ms (next.js: 188ms, proxy.ts: 108ms, application-code: 352ms)
+[browser] State loaded from storage couldn't be migrated since no migrate function was provided 
+    at eval (src\lib\store\use-ticket-store.ts:74:37)
+    at (app-pages-browser)/./src/lib/store/use-ticket-store.ts (file://C:/Users/HP 1030 G3/Downloads/hammet-b2c/.next/dev/static/chunks/app/learner/support/page.js:5851:1)
+    at eval (webpack-internal:///(app-pages-browser)/./src/app/learner/support/page.tsx:6:85)
+    at (app-pages-browser)/./src/app/learner/support/page.tsx (file://C:/Users/HP 1030 G3/Downloads/hammet-b2c/.next/dev/static/chunks/app/learner/support/page.js:5290:1)
+  72 | } as const;
+  73 |
+> 74 | export const useTicketStore = create<TicketStoreState>()(
+     |                                     ^
+  75 |   persist(
+  76 |     (set) => ({
+  77 |       tickets: [], (src\lib\store\use-ticket-store.ts:74:37)
+ GET /learner 200 in 1389ms (next.js: 27ms, proxy.ts: 44ms, application-code: 1318ms)
+ GET /learner 200 in 429ms (next.js: 26ms, proxy.ts: 34ms, application-code: 369ms)
+ GET /learner/support 200 in 7.1s (next.js: 1474ms, proxy.ts: 706ms, application-code: 5.0s)
+ GET /learner/projects 200 in 3.7s (next.js: 813ms, proxy.ts: 1214ms, application-code: 1635ms)
+ GET /learner/support 200 in 5.4s (next.js: 1107ms, proxy.ts: 1027ms, application-code: 3.3s)
+○ Compiling /learner/ai-schools ...
+ GET /learner/ai-schools 200 in 73s (next.js: 70s, proxy.ts: 830ms, application-code: 2.0s)
+ GET /learner/quizzes 200 in 68s (next.js: 64s, proxy.ts: 2.8s, application-code: 1497ms)
+ GET /learner/quizzes 200 in 52s (next.js: 49s, proxy.ts: 737ms, application-code: 3.1s)
+ GET /learner/quizzes 200 in 717ms (next.js: 189ms, proxy.ts: 134ms, application-code: 394ms)
+ GET /learner/quizzes 200 in 1044ms (next.js: 378ms, proxy.ts: 150ms, application-code: 516ms)
+ GET /learner/projects 200 in 1239ms (next.js: 165ms, proxy.ts: 60ms, application-code: 1015ms)
+ GET /learner/projects 200 in 2.8s (next.js: 462ms, proxy.ts: 916ms, application-code: 1420ms)
+ GET /learner/projects 200 in 5.1s (next.js: 1472ms, proxy.ts: 70ms, application-code: 3.5s)
+ GET /learner/projects 200 in 2.6s (next.js: 100ms, proxy.ts: 71ms, application-code: 2.4s)
+ GET /learner/projects 200 in 1258ms (next.js: 111ms, proxy.ts: 173ms, application-code: 975ms)
+ GET /learner/projects 200 in 3.0s (next.js: 1207ms, proxy.ts: 254ms, application-code: 1507ms)
+ GET /learner/projects 200 in 1657ms (next.js: 898ms, proxy.ts: 118ms, application-code: 641ms)
+ GET /learner/projects 200 in 2.1s (next.js: 36ms, proxy.ts: 49ms, application-code: 1981ms)
+ GET /learner/quizzes 200 in 447ms (next.js: 66ms, proxy.ts: 43ms, application-code: 337ms)
+ GET /learner/quizzes 200 in 1093ms (next.js: 244ms, proxy.ts: 31ms, application-code: 817ms)
+ GET /learner/quizzes 200 in 726ms (next.js: 80ms, proxy.ts: 27ms, application-code: 618ms)
+ GET /learner/quizzes 200 in 1803ms (next.js: 975ms, proxy.ts: 63ms, application-code: 764ms)
+ GET /learner/projects 200 in 1869ms (next.js: 1313ms, proxy.ts: 64ms, application-code: 493ms)
+ GET /learner/quizzes 200 in 2.0s (next.js: 17ms, proxy.ts: 47ms, application-code: 1955ms)
+ GET /learner/quizzes 200 in 650ms (next.js: 461ms, proxy.ts: 24ms, application-code: 164ms)
+ GET /learner/quizzes 200 in 2.1s (next.js: 1146ms, proxy.ts: 40ms, application-code: 931ms)
+ GET /learner/quizzes 200 in 934ms (next.js: 462ms, proxy.ts: 28ms, application-code: 443ms)
+ GET /learner/quizzes 200 in 419ms (next.js: 254ms, proxy.ts: 30ms, application-code: 135ms)
+ GET /learner/quizzes 200 in 7.0s (next.js: 263ms, proxy.ts: 583ms, application-code: 6.1s)
+ GET /learner/projects 200 in 6.5s (next.js: 288ms, proxy.ts: 5.0s, application-code: 1145ms)
+ GET /learner/quizzes 200 in 2.1s (next.js: 1235ms, proxy.ts: 36ms, application-code: 878ms)
+ GET /learner/quizzes 200 in 2.2s (next.js: 994ms, proxy.ts: 65ms, application-code: 1160ms)
+ GET /learner/projects 200 in 2.7s (next.js: 708ms, proxy.ts: 220ms, application-code: 1818ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] Uncaught ReferenceError: useReducedMotion is not defined
+    at QuizzesPage (src\app\learner\quizzes\page.tsx:104:24)
+  102 | export default function QuizzesPage() {
+  103 |   const { accessToken, refreshToken } = useAuth();
+> 104 |   const reduceMotion = useReducedMotion();
+      |                        ^
+  105 |
+  106 |   const [items, setItems] = useState<QuizListItem[]>([]);
+  107 |   const [loading, setLoading] = useState(true);
+ GET /learner/quizzes 200 in 8.0s (next.js: 6.0s, proxy.ts: 314ms, application-code: 1696ms)
+ GET /learner/projects 200 in 2.1s (next.js: 131ms, proxy.ts: 141ms, application-code: 1878ms)
+[browser] Uncaught ReferenceError: useReducedMotion is not defined
+    at QuizzesPage (src\app\learner\quizzes\page.tsx:104:24)
+  102 | export default function QuizzesPage() {
+  103 |   const { accessToken, refreshToken } = useAuth();
+> 104 |   const reduceMotion = useReducedMotion();
+      |                        ^
+  105 |
+  106 |   const [items, setItems] = useState<QuizListItem[]>([]);
+  107 |   const [loading, setLoading] = useState(true);
+ GET /learner/projects 200 in 154ms (next.js: 13ms, proxy.ts: 25ms, application-code: 116ms)
+ GET /learner/projects 200 in 1527ms (next.js: 38ms, proxy.ts: 37ms, application-code: 1452ms)
+ GET /learner/support 200 in 382ms (next.js: 118ms, proxy.ts: 66ms, application-code: 198ms)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /learner/quizzes 200 in 15.8s (next.js: 13.3s, proxy.ts: 113ms, application-code: 2.4s)
+ GET /learner/support 200 in 725ms (next.js: 184ms, proxy.ts: 106ms, application-code: 436ms)
+ GET /learner/support 200 in 3.5s (next.js: 164ms, proxy.ts: 361ms, application-code: 2.9s)
+ GET /learner/support 200 in 518ms (next.js: 282ms, proxy.ts: 32ms, application-code: 205ms)
+ GET /learner/quizzes 200 in 508ms (next.js: 399ms, proxy.ts: 30ms, application-code: 79ms)
+ GET /learner/support 200 in 583ms (next.js: 364ms, proxy.ts: 24ms, application-code: 195ms)
+ GET /learner/quizzes 200 in 586ms (next.js: 459ms, proxy.ts: 24ms, application-code: 102ms)
+ GET /learner/quizzes 200 in 894ms (next.js: 19ms, proxy.ts: 28ms, application-code: 847ms)
+ GET /learner/support 200 in 1185ms (next.js: 45ms, proxy.ts: 83ms, application-code: 1057ms)
+ GET /learner/support 200 in 153ms (next.js: 15ms, proxy.ts: 21ms, application-code: 117ms)
+ GET /learner/quizzes 200 in 153ms (next.js: 13ms, proxy.ts: 28ms, application-code: 112ms)
+ GET /learner/projects 200 in 320ms (next.js: 87ms, proxy.ts: 32ms, application-code: 202ms)
+ GET /learner 200 in 313ms (next.js: 57ms, proxy.ts: 22ms, application-code: 234ms)
+ GET /learner 200 in 805ms (next.js: 244ms, proxy.ts: 129ms, application-code: 432ms)
+ GET /learner 200 in 330ms (next.js: 7ms, proxy.ts: 10ms, application-code: 313ms)
+ GET /learner 200 in 49ms (next.js: 7ms, proxy.ts: 9ms, application-code: 32ms)
+ GET /learner 200 in 183ms (next.js: 19ms, proxy.ts: 21ms, application-code: 143ms)
+ GET /learner 200 in 313ms (next.js: 14ms, proxy.ts: 20ms, application-code: 279ms)
+ GET /learner 200 in 240ms (next.js: 24ms, proxy.ts: 31ms, application-code: 185ms)
+○ Compiling /learner/courses/[courseId] ...
+ GET /learner/courses/test-course-id 200 in 26.4s (next.js: 25.0s, proxy.ts: 30ms, application-code: 1301ms)
+ GET /learner/courses/test-course-id 200 in 1038ms (next.js: 384ms, proxy.ts: 275ms, application-code: 379ms)
+ GET /learner 200 in 8.2s (next.js: 303ms, proxy.ts: 293ms, application-code: 7.6s)
+⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
+▲ Next.js 16.3.8 (webpack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.123:3000
+- Environments: .env.local
+✓ Ready in 3.9s
+⚠ Warning: Next.js ignored package-lock.json in C:\Users\HP 1030 G3 because it is outside the current Git repository (C:\Users\HP 1030 G3\Downloads\hammet-b2c).
+ To use this directory, set `outputFileTracingRoot` in your Next.js config.
+
+✓ Running next.config.ts took 212ms
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead.
+
+  To migrate automatically, run:
+  npx @next/codemod@canary middleware-to-proxy .
+
+  Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+○ Compiling /learner/courses/[courseId] ...
+(node:18900) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/HP%201030%20G3/Downloads/hammet-b2c/tailwind.config.ts?id=1793793758473 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\HP 1030 G3\Downloads\hammet-b2c\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ GET /learner 200 in 46s (next.js: 39.4s, proxy.ts: 790ms, application-code: 5.5s)
+ GET /learner/courses/test-course-id 200 in 49s (next.js: 47s, proxy.ts: 792ms, application-code: 780ms)
+ GET /learner/courses/test-course-id 200 in 403ms (next.js: 72ms, proxy.ts: 51ms, application-code: 280ms)
+ GET /learner/courses/test-course-id 200 in 891ms (next.js: 161ms, proxy.ts: 38ms, application-code: 692ms)
+ GET /learner/courses/test-course-id 200 in 2.2s (next.js: 427ms, proxy.ts: 649ms, application-code: 1086ms)
+ GET /learner 200 in 543ms (next.js: 25ms, proxy.ts: 28ms, application-code: 490ms)
+○ Compiling /learner/support ...
+ GET /learner/support 200 in 20.8s (next.js: 17.0s, proxy.ts: 76ms, application-code: 3.7s)
+⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+○ Compiling /learner/quizzes ...
+ GET /learner/quizzes 200 in 111s (next.js: 98s, proxy.ts: 95ms, application-code: 13.4s)
+ GET /learner 200 in 103s (next.js: 88s, proxy.ts: 1221ms, application-code: 13.4s)
+○ Compiling /learner/projects ...
+⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /learner/projects 200 in 22.3s (next.js: 18.3s, proxy.ts: 280ms, application-code: 3.7s)
+ GET /learner/courses/test-course-id 200 in 2.0s (next.js: 629ms, proxy.ts: 63ms, application-code: 1319ms)
