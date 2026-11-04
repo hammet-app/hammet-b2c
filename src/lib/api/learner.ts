@@ -157,6 +157,23 @@ export const learnerApi = {
     return toLearnerQuiz(response);
   },
   /**
+   * Fetches the published exam for a course.
+   * GET /api/v1/learner/courses/{course_id}/exam
+   */
+  getCourseExam: async (
+    courseId: string,
+    token: string,
+    onRefresh: () => Promise<string | null>,
+  ): Promise<LearnerQuiz> => {
+    const response = await apiClient.get<LearnerQuizResponseDto>(
+      `/learner/courses/${encodeURIComponent(courseId)}/exam`,
+      token,
+      { onRefresh, skipSessionExpired: true },
+    );
+
+    return toLearnerQuiz(response);
+  },
+  /**
    * Starts a quiz attempt session for the authenticated learner.
    * POST /api/v1/learner/quizzes/{quiz_id}/attempts
    */

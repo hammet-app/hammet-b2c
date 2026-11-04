@@ -82,6 +82,7 @@ export type PublishedCourseDto = {
 // ============================================================
 
 // GET /api/v1/learner/modules/{module_id}/quiz
+// GET /api/v1/learner/courses/{course_id}/exam
 
 export type QuizOptionResponseDto = {
   id: string;

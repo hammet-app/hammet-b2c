@@ -25,19 +25,26 @@ import {
   Moon,
   Crown,
   GraduationCap,
+  type LucideIcon,
   LifeBuoy,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils/utils";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useTheme } from "@/lib/use-theme";
+import { useFeatureFlag } from "@/lib/features/use-feature-flag";
 //import { useCart } from "@/lib/store/use-cart";
 import { useLearnerStore } from "@/lib/store/use-learner-store";
 import { CartDropdown } from "./cart-dropdown";
 import { ProfileDropdown } from "./profile-dropdown";
 import { LearnerAmbientBackground } from "@/components/ui/learner-ambient-background";
 
-const navigation = [
+const navigation: {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  featureFlag?: string;
+}[] = [
   {
     label: "Home",
     href: "/learner",
@@ -54,15 +61,21 @@ const navigation = [
     icon: ClipboardCheck,
   },
   {
+    label: "Exams",
+    href: "/learner/exams",
+    icon: GraduationCap,
+    featureFlag: "exam",
+  },
+  {
     label: "Schools",
     href: "/learner/ai-schools",
     icon: GraduationCap,
   },
-  {
-    label: "Projects",
-    href: "/learner/projects",
-    icon: FolderKanban,
-  },
+  //{
+  //  label: "Projects",
+  //  href: "/learner/projects",
+  //  icon: FolderKanban,
+  //},
   {
     label: "Support",
     href: "/learner/support",
@@ -139,6 +152,10 @@ export function LearnerShell({ children }: LearnerShellProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { theme, toggle } = useTheme();
+  const examsEnabled = useFeatureFlag("exam");
+  const visibleNavigation = navigation.filter(
+    (item) => item.featureFlag !== "exam" || examsEnabled,
+  );
 
   //const cartItems = useCart((state) => state.items);
   const syncAccountState = useLearnerStore((state) => state.syncAccountState);
@@ -322,7 +339,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
               />
             </motion.div>
 
-            {navigation.map((item) => {
+            {visibleNavigation.map((item) => {
               const Icon = item.icon;
               const active =
                 item.href === "/learner"
@@ -514,7 +531,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
               </div>
 
               <nav className="space-y-1 px-4">
-                {navigation.map((item) => {
+                {visibleNavigation.map((item) => {
                   const Icon = item.icon;
                   const active =
                     item.href === "/learner"
@@ -774,7 +791,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
         className="fixed inset-x-0 bottom-0 z-40 border-t border-black/[0.06] bg-white/95 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#120E1D]/95 lg:hidden shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.35)]"
       >
         <div className="relative mx-auto flex w-full max-w-md items-center justify-around px-2 py-0.5">
-          {navigation.map((item) => {
+          {visibleNavigation.map((item) => {
             const Icon = item.icon;
             const active =
               item.href === "/learner"

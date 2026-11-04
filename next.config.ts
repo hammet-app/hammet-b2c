@@ -4,7 +4,7 @@ const isDev = process.env.NODE_ENV == "development"
 
 const connectSrc = [
   "'self'",
-  ...(isDev ? ["http://localhost:8000", "https://dev-api.hammetedu.com"] : []),
+  ...(isDev ? ["http://localhost:8000", "https://dev-api.hammetedu.com", "https://cdn.growthbook.io"] : []),
   "https://dev-api.hammetedu.com",
   "https://staging-api.hammetedu.com",
   "https://api.hammetedu.com",

@@ -816,74 +816,76 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
             </section>
           </section>
 
-          <aside className="order-1 lg:order-2">
-            <div className="rounded-3xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02] lg:sticky lg:top-24">
-              <div className="mb-6">
-                {canAccessCourse ? (
-                  <>
-                    <div className="mb-1 flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400">
-                      <CheckCircle2 className="h-5 w-5" />
-                      <span>
-                        {isEnrolled
-                          ? "Enrolled in Course"
-                          : "Course Access Granted"}
+          {!isEnrolled && (
+            <aside className="order-1 lg:order-2">
+              <div className="rounded-3xl border border-black/[0.06] bg-white p-6 shadow-sm dark:border-white/[0.06] dark:bg-white/[0.02] lg:sticky lg:top-24">
+                <div className="mb-6">
+                  {canAccessCourse ? (
+                    <>
+                      <div className="mb-1 flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 className="h-5 w-5" />
+                        <span>
+                          {isEnrolled
+                            ? "Enrolled in Course"
+                            : "Course Access Granted"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Your course access is active. Start or resume an available
+                        module.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-cyan-400">
+                        Course Access
                       </span>
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Your course access is active. Start or resume an available
-                      module.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-cyan-400">
-                      Course Access
-                    </span>
-                    <div className="mt-2 flex items-baseline gap-2">
-                      <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
-                        {course.price === 0
-                          ? "Free"
-                          : `₦${course.price.toLocaleString()}`}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                      Get access to the modules included in this course.
-                    </p>
-                  </>
-                )}
-              </div>
-
-              <Button
-                onClick={handleStartCourse}
-                size="lg"
-                className="w-full rounded-xl bg-purple-600 font-bold text-white shadow-md shadow-purple-600/20 hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400"
-              >
-                <Play className="mr-2 h-4 w-4" />
-                <span>
-                  {canAccessCourse ? "Start / Resume Course" : "Unlock Course"}
-                </span>
-              </Button>
-
-              <div className="mt-6 space-y-2.5 border-t border-slate-100 pt-5 text-xs text-slate-600 dark:border-white/5 dark:text-slate-300">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
-                  <span>{modules.length} course modules</span>
+                      <div className="mt-2 flex items-baseline gap-2">
+                        <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
+                          {course.price === 0
+                            ? "Free"
+                            : `₦${course.price.toLocaleString()}`}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        Get access to the modules included in this course.
+                      </p>
+                    </>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
-                  <span>{completedCount} modules completed</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+
+                <Button
+                  onClick={handleStartCourse}
+                  size="lg"
+                  className="w-full rounded-xl bg-purple-600 font-bold text-white shadow-md shadow-purple-600/20 hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400"
+                >
+                  <Play className="mr-2 h-4 w-4" />
                   <span>
-                    {course.hasFinished
-                      ? "Course completed"
-                      : "Progress saved by the backend"}
+                    {canAccessCourse ? "Start / Resume Course" : "Unlock Course"}
                   </span>
+                </Button>
+
+                <div className="mt-6 space-y-2.5 border-t border-slate-100 pt-5 text-xs text-slate-600 dark:border-white/5 dark:text-slate-300">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                    <span>{modules.length} course modules</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                    <span>{completedCount} modules completed</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                    <span>
+                      {course.hasFinished
+                        ? "Course completed"
+                        : "Progress saved by the backend"}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </aside>
+            </aside>
+          )}
         </div>
       </div>
 
