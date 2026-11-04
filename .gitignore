@@ -60,3 +60,6 @@ SKILL-VERIFICATION.md
 test-results/
 verified-*.png
 
+
+# generated Serwist service worker
+/public/sw.js

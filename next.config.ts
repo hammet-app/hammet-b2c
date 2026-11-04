@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import withSerwistInit from "@serwist/next";
 
 const isDev = process.env.NODE_ENV == "development"
 
@@ -56,6 +57,13 @@ const securityHeaders = [
   },
 ];
 
+const withSerwist = withSerwistInit({
+  swSrc: "src/app/sw.ts",
+  swDest: "public/sw.js",
+  disable: isDev,
+  register: false,
+  globPublicPatterns: ["manifest.json", "icons/**/*"],
+});
 const nextConfig: NextConfig = {
   devIndicators: false,
   poweredByHeader: false,
@@ -77,4 +85,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSerwist(nextConfig);
