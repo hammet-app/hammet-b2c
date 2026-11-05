@@ -93,7 +93,7 @@ export function AuthShell({ children, wide, mode }: AuthShellProps) {
       </div>
 
       {/* ── BORDERLINE CORNER WELCOME ILLUSTRATION ── */}
-      {mode && <AuthCornerIllustration mode={mode} />}
+      {/*mode && <AuthCornerIllustration mode={mode} />*/}
     </main>
   );
 }

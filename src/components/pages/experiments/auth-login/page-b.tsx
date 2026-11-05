@@ -233,7 +233,7 @@ export default function LoginPage() {
             Hammet: your AI academy.
           </h1>
           <p className="mt-1 text-sm font-medium text-slate-500 sm:text-[15px] dark:text-slate-400">
-            Sign in with your work email
+            Sign in with your email
           </p>
         </div>
 
@@ -257,9 +257,6 @@ export default function LoginPage() {
               disabled={isLoading}
               required
             />
-            <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
-              Use an organization email to easily collaborate with teammates
-            </p>
           </div>
 
           <div>
