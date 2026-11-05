@@ -12,6 +12,7 @@ const connectSrc = [
   "https://accounts.google.com",
   "https://*.googleusercontent.com https://*.supabase.co",
   "https://*.supabase.co",
+  "https://cdn.growthbook.io",
 ].join(" ")
 
 const securityHeaders = [
