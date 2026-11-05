@@ -7,7 +7,8 @@ export function fromRegisterB2CRequest(model: RegisterB2CRequest): RegisterB2CRe
     full_name: model.fullName,
     email: model.email,
     username: model.username,
-    password: model.password
+    password: model.password,
+    over_13_confirmed: model.over13Confirmed,
   }
 }
 

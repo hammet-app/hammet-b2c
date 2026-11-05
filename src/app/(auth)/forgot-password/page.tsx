@@ -8,9 +8,11 @@ import { motion, AnimatePresence } from "motion/react";
 import { AuthShell, AuthAlert } from "@/components/ui/auth-shell";
 import { AuthInput } from "@/components/ui/auth-input";
 import { Button } from "@/components/ui/button";
-import { apiClient, ApiError } from "@/lib/api/api-client";
+import { apiClient } from "@/lib/api/api-client";
+import { useAnalytics } from "@/hooks/use-analytics";
 
 export default function ForgotPasswordPage() {
+  const { trackEvent } = useAnalytics();
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState<{ email?: string; form?: string }>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -43,10 +45,11 @@ export default function ForgotPasswordPage() {
 
     setIsLoading(true);
     setErrors({});
+    void trackEvent("password_reset_requested", { element: "forgot_password_form" });
 
     try {
-      await apiClient.post("/auth/forgot-password", { email });
-    } catch (err) {
+      await apiClient.post("/auth/reset/email", { email: email.trim() });
+    } catch {
       // Follow OWASP security practice (prevent email enumeration attacks):
       // Always display confirmation state so external attackers cannot probe valid emails
     } finally {
@@ -59,11 +62,14 @@ export default function ForgotPasswordPage() {
   const handleResend = async () => {
     if (countdown > 0 || isLoading) return;
     setIsLoading(true);
+    void trackEvent("password_reset_email_resend_started", {
+      element: "forgot_password_confirmation",
+    });
     try {
-      await apiClient.post("/auth/forgot-password", { email });
+      await apiClient.post("/auth/reset/email", { email: email.trim() });
       setCountdown(60);
     } catch {
-      // simulated resend
+      // Keep the same confirmation and cooldown when resend fails.
       setCountdown(60);
     } finally {
       setIsLoading(false);

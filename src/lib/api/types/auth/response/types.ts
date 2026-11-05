@@ -54,13 +54,6 @@ export type ClaimAccountResponse = {
 };
 
 
-// POST /auth/resend/student
-export type ResendVerificationRequest = {
-  id: string;
-  role: UserRole
-  reset: boolean
-};
-
 export type ResendVerificationResponse = {
   password: string
 };
