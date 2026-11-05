@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Pencil,
+  RotateCw,
   Search,
   ShieldCheck,
   UserMinus,
@@ -19,6 +20,7 @@ import {
   deactivateHammetAdmin,
   editHammetAdmin,
   getHammetAdmins,
+  resendCode
 } from "@/lib/api/hammet";
 import type {
   EditHammetAdminRequest,
@@ -77,7 +79,9 @@ export default function HammetAdminsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [deactivatingId, setDeactivatingId] = useState<string | null>(null);
+  const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
 
   // Wait for the user to stop typing before searching.
   useEffect(() => {
@@ -124,10 +128,30 @@ export default function HammetAdminsPage() {
     };
   }, [accessToken, refreshToken, canManage, page, search, scopeFilter, reloadKey]);
 
+  async function handleRegenerateCode(admin: HammetAdmin) {
+    if (!accessToken) return;
+    setRegeneratingId(admin.id);
+    setActionError("");
+    setActionMessage("");
+    try {
+      await resendCode(
+        { id: admin.id, role: "hammet_admin", reset: false },
+        accessToken,
+        refreshToken ?? (async () => null),
+      );
+      setActionMessage(`A new verification link was sent to ${admin.email}.`);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Unable to regenerate the verification code.");
+    } finally {
+      setRegeneratingId(null);
+    }
+  }
+
   async function handleDeactivate(admin: HammetAdmin) {
     if (!accessToken) return;
     setDeactivatingId(admin.id);
     setActionError("");
+    setActionMessage("");
     try {
       const deactivated = await deactivateHammetAdmin(
         admin.id,
@@ -241,6 +265,12 @@ export default function HammetAdminsPage() {
           </Alert>
         )}
 
+        {actionMessage && (
+          <Alert title="Verification link sent" variant="success">
+            {actionMessage}
+          </Alert>
+        )}
+
         {actionError && (
           <Alert title="Error updating administrator" variant="error">
             {actionError}
@@ -270,8 +300,10 @@ export default function HammetAdminsPage() {
               const isSelf = admin.id === user?.id;
               const isActive = admin.status.toLowerCase() === "active";
               // Non-platform admins can only manage admins in their own scope.
-              const canAct =
-                !isSelf && isActive && (isPlatformAdmin || admin.scope === user?.scope);
+              const canManageScope = isPlatformAdmin || admin.scope === user?.scope;
+              const canAct = !isSelf && isActive && canManageScope;
+              const canRegenerate =
+                !isSelf && admin.status.toLowerCase() === "pending" && canManageScope;
               const access = admin.access ?? [];
 
               return (
@@ -340,8 +372,23 @@ export default function HammetAdminsPage() {
                       </div>
                     </div>
 
-                    {canAct && editingId !== admin.id && confirmingId !== admin.id && (
-                      <div className="flex shrink-0 gap-2">
+                    {(canAct || canRegenerate) && editingId !== admin.id && confirmingId !== admin.id && (
+                      <div className="flex shrink-0 flex-wrap gap-2">
+                        {canRegenerate && (
+                          <button
+                            type="button"
+                            onClick={() => void handleRegenerateCode(admin)}
+                            disabled={regeneratingId === admin.id}
+                            aria-label={`Regenerate verification code for ${admin.fullName}`}
+                            title="Send a new verification link"
+                            className="flex items-center gap-1.5 rounded-xl border border-cyan-200 px-3.5 py-2 text-xs font-semibold text-cyan-700 transition hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-cyan-400/20 dark:text-cyan-300 dark:hover:bg-cyan-400/10"
+                          >
+                            <RotateCw className={`h-3.5 w-3.5 ${regeneratingId === admin.id ? "animate-spin" : ""}`} />
+                            {regeneratingId === admin.id ? "Sending..." : "Regenerate code"}
+                          </button>
+                        )}
+                        {canAct && (
+                        <>
                         <button
                           type="button"
                           onClick={() => {
@@ -366,6 +413,8 @@ export default function HammetAdminsPage() {
                           <UserMinus className="h-3.5 w-3.5" />
                           Deactivate
                         </button>
+                        </>
+                        )}
                       </div>
                     )}
                   </div>

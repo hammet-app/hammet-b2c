@@ -5,6 +5,17 @@ export type AnalyticsEventName =
   | "signup_completed"
   | "login_started"
   | "login_completed"
+  | "login_failed"
+  | "auth_page_viewed"
+  | "password_reset_requested"
+  | "password_reset_email_resend_started"
+  | "password_reset_completed"
+  | "password_reset_failed"
+  | "verification_email_resent"
+  | "verification_email_resend_failed"
+  | "email_verification_completed"
+  | "email_verification_failed"
+  | "signup_failed"
   // Onboarding
   | "onboarding_started"
   | "onboarding_step_completed"
@@ -36,7 +47,7 @@ export type AnalyticsEventPayloadDto = {
   page: string;
   element?: string | null;
   variant?: string | null;
-  properties?: Record<string, any> | null;
+  properties?: Record<string, unknown> | null;
   device_type?: string | null;
   referrer?: string | null;
 };

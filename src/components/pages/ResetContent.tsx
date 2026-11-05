@@ -8,6 +8,7 @@ import { ResetPasswordRequest } from "@/lib/api/types";
 import { AuthInput } from "@/components/ui/auth-input";
 import { apiClient, ApiError } from "@/lib/api/api-client";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAnalytics } from "@/hooks/use-analytics";
 import LoadingState from "@/components/pages/VerifyEmailContent";
 import { validatePassword as checkPassword } from "@/utils/password";
 import { AuthShell, AuthHeading, AuthAlert } from "@/components/ui/auth-shell";
@@ -33,6 +34,7 @@ const submitBtnClass = cn(
 const submitBtnStyle = { background: "linear-gradient(135deg,#5B21B6,#3B0764)" };
 
 export default function ResetPassword() {
+  const { trackEvent } = useAnalytics();
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -160,11 +162,14 @@ export default function ResetPassword() {
         { token: token ?? otp, password } satisfies ResetPasswordRequest
       );
       if (response) {
+        void trackEvent("password_reset_completed", { element: "reset_password_form" });
         router.push("/login");
       } else {
+        void trackEvent("password_reset_failed", { element: "reset_password_form" });
         setErrors({ form: "Something went wrong, please try again" });
       }
     } catch (err) {
+      void trackEvent("password_reset_failed", { element: "reset_password_form" });
       if (err instanceof ApiError) {
         if (err.status === 422) {
           setErrors({ form: `Please check your details and try again. ${err.message}` });

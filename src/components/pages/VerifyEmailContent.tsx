@@ -11,6 +11,7 @@ import { apiClient, ApiError } from "@/lib/api/api-client";
 import { Button } from "@/components/ui/button";
 import { LoginResponseDto, toLoginResponse } from "@/lib/api/types";
 import { useAuth } from "@/lib/auth/auth-context";
+import { useAnalytics } from "@/hooks/use-analytics";
 
 type VerificationState =
   | "verifying"
@@ -20,6 +21,7 @@ type VerificationState =
 export default function VerifyEmailContent() {
   const router = useRouter();
   const { setSession, redirectAfterAuth } = useAuth();
+  const { trackEvent } = useAnalytics();
   const searchParams = useSearchParams();
 
   const token = searchParams.get("token");
@@ -29,7 +31,13 @@ export default function VerifyEmailContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      void trackEvent("email_verification_failed", {
+        element: "email_verification",
+        properties: { reason: "missing_token" },
+      });
+      return;
+    }
 
     const verify = async () => {
       try {
@@ -49,9 +57,11 @@ export default function VerifyEmailContent() {
 
         const data = toLoginResponse(response);
 
+        void trackEvent("email_verification_completed", { element: "email_verification" });
         setSession(data.user, data.accessToken);
         redirectAfterAuth(data.user);
       } catch (err) {
+        void trackEvent("email_verification_failed", { element: "email_verification" });
         if (err instanceof ApiError) {
           if (err.status === 401 || err.status === 404) {
             setError(
@@ -77,7 +87,7 @@ export default function VerifyEmailContent() {
     };
 
     void verify();
-  }, [token, setSession, redirectAfterAuth]);
+  }, [token, setSession, redirectAfterAuth, trackEvent]);
 
   if (!token) {
     return (
