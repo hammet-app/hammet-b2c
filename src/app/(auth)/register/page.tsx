@@ -30,6 +30,7 @@ type RegisterErrors = {
   password?: string;
   confirmPassword?: string;
   terms?: string;
+  ageConfirmation?: string;
   form?: string;
 };
 
@@ -80,6 +81,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [confirmedOver13, setConfirmedOver13] = useState(false);
 
   const [errors, setErrors] = useState<RegisterErrors>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -90,6 +92,11 @@ export default function RegisterPage() {
 
   const handleGoogleCredentialResponse = useCallback(
     async (googleResponse: { credential: string }) => {
+      if (!confirmedOver13) {
+        setErrors({ ageConfirmation: "Please confirm that you are over 13 years old." });
+        return;
+      }
+
       setErrors({});
       setIsLoading(true);
       void trackEvent("signup_started", { element: "google_sign_up" });
@@ -100,6 +107,7 @@ export default function RegisterPage() {
           {
             credential: googleResponse.credential,
             device_id: crypto.randomUUID(),
+            over_13_confirmed: true,
           }
         );
 
@@ -123,7 +131,7 @@ export default function RegisterPage() {
         setIsLoading(false);
       }
     },
-    [setSession, redirectAfterAuth, trackEvent]
+    [setSession, redirectAfterAuth, trackEvent, confirmedOver13]
   );
   
   useEffect(() => {
@@ -231,6 +239,10 @@ export default function RegisterPage() {
       nextErrors.terms = "Please accept the Terms of Service.";
     }
 
+    if (!confirmedOver13) {
+      nextErrors.ageConfirmation = "Please confirm that you are over 13 years old.";
+    }
+
     setErrors(nextErrors);
 
     return Object.keys(nextErrors).length === 0;
@@ -273,6 +285,7 @@ export default function RegisterPage() {
           email,
           password,
           username,
+          over_13_confirmed: confirmedOver13,
         } satisfies RegisterB2CRequestDto
       );
 
@@ -673,6 +686,40 @@ export default function RegisterPage() {
             {errors.terms && (
               <div className="mt-1">
                 <FieldError message={errors.terms} />
+              </div>
+            )}
+          </div>
+
+          <div className="pt-0.5">
+            <label className="flex cursor-pointer items-start gap-2.5">
+              <input
+                type="checkbox"
+                checked={confirmedOver13}
+                onChange={(event) => setConfirmedOver13(event.target.checked)}
+                required
+                aria-invalid={Boolean(errors.ageConfirmation)}
+                aria-describedby={errors.ageConfirmation ? "age-confirmation-error" : undefined}
+                disabled={isLoading}
+                className="peer sr-only"
+              />
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all peer-focus-visible:ring-2 peer-focus-visible:ring-purple-500 peer-focus-visible:ring-offset-2 dark:peer-focus-visible:ring-cyan-400 dark:peer-focus-visible:ring-offset-[#0B0813]",
+                  confirmedOver13
+                    ? "border-purple-600 bg-purple-600 text-white dark:border-cyan-400 dark:bg-cyan-400 dark:text-black"
+                    : "border-slate-300 bg-white dark:border-white/20 dark:bg-white/[0.04]"
+                )}
+              >
+                {confirmedOver13 && <Check size={11} strokeWidth={3} />}
+              </span>
+              <span className="text-[11px] leading-4 text-slate-500 dark:text-slate-400">
+                I confirm that I am over 13 years old.
+              </span>
+            </label>
+            {errors.ageConfirmation && (
+              <div id="age-confirmation-error" className="mt-1">
+                <FieldError message={errors.ageConfirmation} />
               </div>
             )}
           </div>

@@ -5,6 +5,7 @@ export type RegisterB2CRequest = {
   username: string;
   email: string;
   password: string;
+  over13Confirmed: boolean;
 }
 
 // POST /auth/login
