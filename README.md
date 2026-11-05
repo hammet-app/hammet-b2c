@@ -37,13 +37,6 @@ Frontend: app.hammetedu.com
 Scope: b2c
 ```
 
-### B2B
-
-```text
-Frontend: schools.hammetedu.com
-Scope: b2b
-```
-
 Both products use the shared API:
 
 ```text
@@ -189,7 +182,7 @@ Staging:
 Production:
 
 ```text
-api.hammetedu.com
+<production-api-url>
 ```
 
 The backend is responsible for:
