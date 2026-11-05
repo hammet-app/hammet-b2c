@@ -372,9 +372,7 @@ export default function HammetAdminsPage() {
                       </div>
                     </div>
 
-                    {(canAct || canRegenerate) &&
-                      editingId !== admin.id &&
-                      confirmingId !== admin.id && (
+                    {(canAct || canRegenerate) && editingId !== admin.id && confirmingId !== admin.id && (
                       <div className="flex shrink-0 flex-wrap gap-2">
                         {canRegenerate && (
                           <button
@@ -390,34 +388,32 @@ export default function HammetAdminsPage() {
                           </button>
                         )}
                         {canAct && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingId(admin.id);
-                                setConfirmingId(null);
-                                setActionError("");
-                                setActionMessage("");
-                              }}
-                              className="flex items-center gap-1.5 rounded-xl border border-black/[0.08] px-3.5 py-2 text-xs font-semibold transition hover:bg-slate-50 dark:border-white/[0.08] dark:hover:bg-white/[0.04]"
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                              Edit access
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setConfirmingId(admin.id);
-                                setEditingId(null);
-                                setActionError("");
-                                setActionMessage("");
-                              }}
-                              className="flex items-center gap-1.5 rounded-xl border border-rose-200 px-3.5 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 dark:border-rose-400/20 dark:text-rose-300 dark:hover:bg-rose-400/10"
-                            >
-                              <UserMinus className="h-3.5 w-3.5" />
-                              Deactivate
-                            </button>
-                          </>
+                        <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingId(admin.id);
+                            setConfirmingId(null);
+                            setActionError("");
+                          }}
+                          className="flex items-center gap-1.5 rounded-xl border border-black/[0.08] px-3.5 py-2 text-xs font-semibold transition hover:bg-slate-50 dark:border-white/[0.08] dark:hover:bg-white/[0.04]"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          Edit access
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setConfirmingId(admin.id);
+                            setEditingId(null);
+                            setActionError("");
+                          }}
+                          className="flex items-center gap-1.5 rounded-xl border border-rose-200 px-3.5 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 dark:border-rose-400/20 dark:text-rose-300 dark:hover:bg-rose-400/10"
+                        >
+                          <UserMinus className="h-3.5 w-3.5" />
+                          Deactivate
+                        </button>
+                        </>
                         )}
                       </div>
                     )}

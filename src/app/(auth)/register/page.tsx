@@ -21,6 +21,7 @@ import {
 } from "@/lib/api/api-client";
 import { LoginResponseDto, RegisterB2CRequestDto, toLoginResponse } from "@/lib/api/types";
 import { useAuth } from "@/lib/auth/auth-context";
+import { useAnalytics } from "@/hooks/use-analytics";
 
 type RegisterErrors = {
   fullName?: string;
@@ -72,6 +73,7 @@ function computePasswordStrength(pw: string) {
 
 export default function RegisterPage() {
   const { setSession, redirectAfterAuth } = useAuth();
+  const { trackEvent } = useAnalytics();
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -90,6 +92,7 @@ export default function RegisterPage() {
     async (googleResponse: { credential: string }) => {
       setErrors({});
       setIsLoading(true);
+      void trackEvent("signup_started", { element: "google_sign_up" });
 
       try {
         const response = await apiClient.post<LoginResponseDto>(
@@ -102,9 +105,11 @@ export default function RegisterPage() {
 
         const data = toLoginResponse(response);
 
+        void trackEvent("signup_completed", { element: "google_sign_up" });
         setSession(data.user, data.accessToken);
         redirectAfterAuth(data.user);
       } catch (err) {
+        void trackEvent("signup_failed", { element: "google_sign_up" });
         if (err instanceof ApiError) {
           setErrors({ form: err.message });
         } else if (err instanceof Error) {
@@ -118,7 +123,7 @@ export default function RegisterPage() {
         setIsLoading(false);
       }
     },
-    [setSession, redirectAfterAuth]
+    [setSession, redirectAfterAuth, trackEvent]
   );
   
   useEffect(() => {
@@ -238,11 +243,13 @@ export default function RegisterPage() {
     setResendMessage(null);
 
     try {
-      await apiClient.post("/auth/resend-verification", {
-        email: registeredEmail,
-      });
+      await apiClient.post(
+        `/auth/resend?email=${encodeURIComponent(registeredEmail.trim())}`,
+      );
+      void trackEvent("verification_email_resent", { element: "register_confirmation" });
       setResendMessage("Verification email resent successfully.");
     } catch {
+      void trackEvent("verification_email_resend_failed", { element: "register_confirmation" });
       setResendMessage("Failed to resend email. Please try again.");
     } finally {
       setIsResending(false);
@@ -256,6 +263,7 @@ export default function RegisterPage() {
 
     setIsLoading(true);
     setErrors({});
+    void trackEvent("signup_started", { element: "registration_form" });
 
     try {
       const response = await apiClient.post<string>(
@@ -270,8 +278,10 @@ export default function RegisterPage() {
 
       if (typeof response === "string") {
         setRegisteredEmail(response);
+        void trackEvent("signup_completed", { element: "registration_form" });
       }
     } catch (err) {
+      void trackEvent("signup_failed", { element: "registration_form" });
       if (err instanceof ApiError) {
         if (err.status === 401 || err.status === 403) {
           setErrors({ form: err.message });
