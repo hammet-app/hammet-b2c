@@ -14,10 +14,12 @@ import { apiClient, ApiError } from "@/lib/api/api-client";
 import { useAuth } from "@/lib/auth/auth-context";
 import { getDeviceId } from "@/lib/auth/device-id";
 import { LoginResponseDto, toLoginResponse } from "@/lib/api/types";
+import { useAnalytics } from "@/hooks/use-analytics";
 
 
 export default function LoginPage() {
   const { setSession, redirectAfterAuth } = useAuth();
+  const { trackEvent } = useAnalytics();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -35,6 +37,7 @@ export default function LoginPage() {
     async (googleResponse: { credential: string }) => {
       setErrors({});
       setIsLoading(true);
+      void trackEvent("login_started", { element: "google_sign_in", variant: "B" });
 
       try {
         const response = await apiClient.post<LoginResponseDto>(
@@ -46,9 +49,11 @@ export default function LoginPage() {
         );
 
         const data = toLoginResponse(response);
+        void trackEvent("login_completed", { element: "google_sign_in", variant: "B" });
         setSession(data.user, data.accessToken);
         redirectAfterAuth(data.user);
       } catch (err) {
+        void trackEvent("login_failed", { element: "google_sign_in", variant: "B" });
         if (err instanceof ApiError) {
           setErrors({
             form: err.message,
@@ -66,7 +71,7 @@ export default function LoginPage() {
         setIsLoading(false);
       }
     },
-    [setSession, redirectAfterAuth]
+    [setSession, redirectAfterAuth, trackEvent]
   );
 
   useEffect(() => {
@@ -165,6 +170,7 @@ export default function LoginPage() {
 
     setIsLoading(true);
     setErrors({});
+    void trackEvent("login_started", { element: "login_form", variant: "B" });
 
     try {
       const response = await apiClient.post<LoginResponseDto>(
@@ -177,9 +183,11 @@ export default function LoginPage() {
       );
 
       const data = toLoginResponse(response);
+      void trackEvent("login_completed", { element: "login_form", variant: "B" });
       setSession(data.user, data.accessToken);
       redirectAfterAuth(data.user);
     } catch (err) {
+      void trackEvent("login_failed", { element: "login_form", variant: "B" });
       if (err instanceof ApiError) {
         setErrors({
           form: err.message,

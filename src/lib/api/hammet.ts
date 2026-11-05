@@ -57,6 +57,7 @@ import {
   fromCreateCouponRequest,
   fromEditCouponRequest,
   toCoupon,
+  ResendVerificationRequest,
 } from "@/lib/api/types";
 
 // ------------------------------------------------------------
@@ -117,6 +118,19 @@ export async function editHammetAdmin(
   );
 
   return toHammetAdmin(response);
+}
+
+export async function resendCode(
+  body:ResendVerificationRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>
+) {
+  return apiClient.post(
+    "/auth/resend/student",
+    body,
+    token,
+    { onRefresh }
+  );
 }
 
 // Deactivates the admin; the record stays and its status changes.
