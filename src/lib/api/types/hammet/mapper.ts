@@ -1,20 +1,18 @@
-import { 
-    AdminDetails,
-    DeactivateSchoolResponse,
-    Dispute,
-    DisputeReviewPayload,
-    Disputes,
+import {
     RegisterHammetAdminRequest,
+    HammetAdmin,
+    HammetAdminsResponse,
+    EditHammetAdminRequest,
 } from "@/lib/api/types/hammet/types";
-import { 
-    AdminDetailsDto,
-    DeactivateSchoolResponseDto,
-    DisputeDto,
-    DisputeReviewPayloadDto,
-    DisputesDto,
+import {
     RegisterHammetAdminRequestDto,
+    HammetAdminDto,
+    HammetAdminsResponseDto,
+    EditHammetAdminRequestDto,
 } from "@/lib/api/types/hammet/types-dto";
 import { toPagination } from "../support";
+import type { Coupon, CouponsResponse, CreateCouponRequest, EditCouponRequest } from "@/lib/api/types/hammet/types";
+import type { CouponDto, CouponsResponseDto, CreateCouponRequestDto, EditCouponRequestDto } from "@/lib/api/types/hammet/types-dto";
 
 /**
  * Naming convention:
@@ -38,53 +36,69 @@ export function fromRegisterHammetAdminRequest(model: RegisterHammetAdminRequest
     }
 }
 
-function toAdminDetails(dto: AdminDetailsDto): AdminDetails {
+export function toHammetAdmin(dto: HammetAdminDto): HammetAdmin {
     return {
         id: dto.id,
         fullName: dto.full_name,
         email: dto.email,
         role: dto.role,
+        scope: dto.scope,
+        access: dto.access,
         status: dto.status,
-        lastLogin: dto.last_login
+        createdAt: dto.created_at,
     }
 }
 
-export function toDeactivateSchoolResponse(dto: DeactivateSchoolResponseDto): DeactivateSchoolResponse {
+export function toHammetAdminsResponse(dto: HammetAdminsResponseDto): HammetAdminsResponse {
     return {
-        schoolId: dto.school_id,
-        tier: dto.tier,
-        message: dto.message
+        admins: dto.admins.map(toHammetAdmin),
+        pagination: toPagination(dto.pagination),
     }
 }
 
-
-export function fromDisputeReviewPayload(model: DisputeReviewPayload): DisputeReviewPayloadDto {
-    return {
-        id: model.id,
-        review_note: model.reviewNote
-    }
+// The backend rejects unknown fields, so only the fields that are set are sent.
+export function fromEditHammetAdminRequest(model: EditHammetAdminRequest): EditHammetAdminRequestDto {
+    const dto: EditHammetAdminRequestDto = {}
+    if (model.scope !== undefined) dto.scope = model.scope
+    if (model.access !== undefined) dto.access = model.access
+    return dto
 }
 
-export function toDispute(dto: DisputeDto): Dispute {
+export function toCoupon(dto: CouponDto): Coupon {
     return {
-        id: dto.id,
-        studentId: dto.student_id,
-        moduleTitle: dto.module_title,
-        originalResponse: dto.original_response,
-        aiStatus: dto.ai_status,
-        aiScore: dto.ai_score,
-        studentReview: dto.student_review,
-        studentDisputeNote: dto.student_dispute_note,
-        disputedAt: dto.disputed_at,
-        reviewedBy: dto.reviewed_by,
-        reviewed: dto.reviewed,
-        reviewNote: dto.review_note
-    }
+        id: dto.id, code: dto.code, description: dto.description,
+        discountType: dto.discount_type, discountValue: Number(dto.discount_value),
+        currency: dto.currency,
+        maxDiscountAmount: dto.max_discount_amount === null ? null : Number(dto.max_discount_amount),
+        minPurchaseAmount: dto.min_purchase_amount === null ? null : Number(dto.min_purchase_amount),
+        startsAt: dto.starts_at, expiresAt: dto.expires_at,
+        usageLimit: dto.usage_limit, usageLimitPerUser: dto.usage_limit_per_user,
+        usedCount: dto.used_count, appliesToAllProducts: dto.applies_to_all_products,
+        status: dto.status,
+        products: dto.products?.map((product) => ({
+            couponId: product.coupon_id, productType: product.product_type, productId: product.product_id,
+        })) ?? null,
+    };
 }
 
-export function toDisputes(dto: DisputesDto): Disputes {
+export function toCouponsResponse(dto: CouponsResponseDto): CouponsResponse {
+    return { coupons: dto.coupons.map(toCoupon), pagination: toPagination(dto.pagination) };
+}
+
+export function fromCreateCouponRequest(model: CreateCouponRequest): CreateCouponRequestDto {
     return {
-        disputes: dto.disputes.map(toDispute),
-        pagination: toPagination(dto.pagination)
-    }
+        code: model.code, description: model.description,
+        discount_type: model.discountType, discount_value: model.discountValue,
+        currency: model.currency, max_discount_amount: model.maxDiscountAmount,
+        min_purchase_amount: model.minPurchaseAmount, starts_at: model.startsAt,
+        expires_at: model.expiresAt, usage_limit: model.usageLimit,
+        usage_limit_per_user: model.usageLimitPerUser,
+        applies_to_all_products: true, products: null,
+    };
+}
+
+export function fromEditCouponRequest(model: EditCouponRequest): EditCouponRequestDto {
+    const dto: EditCouponRequestDto = { activate: model.activate };
+    if (model.expiresAt !== undefined) dto.expires_at = model.expiresAt;
+    return dto;
 }

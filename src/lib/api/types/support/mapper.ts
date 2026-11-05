@@ -1,34 +1,69 @@
-import { CallbackForm, Pagination } from "@/lib/api/types/support/types";
-import { CallbackFormDto, PaginationDto } from "@/lib/api/types/support/types-dto";
+import {
+  CallbackFormDto,
+  CreateSupportTicketDto,
+  SupportTicketResponseDto,
+  PaginationDto,
+} from "./types-dto";
+import {
+  CallbackForm,
+  CreateSupportTicket,
+  SupportTicketResponse,
+  Pagination,
+} from "./types";
 
+export function toSupportTicketResponse(
+  dto: SupportTicketResponseDto
+): SupportTicketResponse {
+  return {
+    id: dto.id,
+    subject: dto.subject,
+    message: dto.message,
+    category: dto.category,
+    priority: dto.priority,
+    status: dto.status,
+    createdAt: dto.created_at,
+    updatedAt: dto.updated_at,
+  };
+}
 
-/**
- * Naming convention:
- *
- * fromXxx(...)
- * Converts frontend/domain models into backend DTOs
- * (camelCase -> snake_case, app shape -> API shape)
- *
- * toXxx(...)
- * Converts backend DTOs into frontend/domain models
- * (snake_case -> camelCase, API shape -> app shape)
- */
-export function fromCallbackForm(model: CallbackForm): CallbackFormDto {
-    return {
-        school_name: model.schoolName,
-        full_name: model.fullName,
-        email: model.email,
-        role: model.role,
-        phone: model.phone,
-        city: model.city
-    }
+export function fromCreateSupportTicket(
+  domain: CreateSupportTicket
+): CreateSupportTicketDto {
+  return {
+    subject: domain.subject.trim(),
+    message: domain.message.trim(),
+    category: domain.category,
+    priority: domain.priority || "medium",
+  };
+}
+
+export function fromCallbackForm(domain: CallbackForm): CallbackFormDto {
+  return {
+    school_name: domain.schoolName,
+    full_name: domain.fullName,
+    email: domain.email,
+    role: domain.role,
+    phone: domain.phone,
+    city: domain.city,
+  };
+}
+
+export function toCallbackForm(dto: CallbackFormDto): CallbackForm {
+  return {
+    schoolName: dto.school_name,
+    fullName: dto.full_name,
+    email: dto.email,
+    role: dto.role,
+    phone: dto.phone,
+    city: dto.city,
+  };
 }
 
 export function toPagination(model: PaginationDto): Pagination {
-    return {
-        page: model.page,
-        pageSize: model.page_size,
-        total: model.total,
-        totalPages: model.total_pages
-    }
+  return {
+    page: model.page,
+    pageSize: model.page_size,
+    total: model.total,
+    totalPages: model.total_pages,
+  };
 }

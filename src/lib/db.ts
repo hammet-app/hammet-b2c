@@ -3,247 +3,62 @@
 // This is where all student work lives on the device.
 // Everything here is available offline, 100% of the time.
 
-import Dexie, { type Table } from 'dexie'
-import { apiClient } from '@/lib/api/api-client'
-import { AuthUser } from '@/lib/utils/roles'
-import { 
-  type CurriculumContentJson,
-  type ModuleState,
-  type ModuleSummary, 
-  type AiFormState,
-  type AiFormStateDto,
-  type CreateSubmissionResponsesDto,
-  type CreateSubmissionResponses,
-  fromAiFormState,
-  toCreateSubmissionResponses,
-  ModuleStateResponse,
-  QuestionAnswer,
-  fromQuestionAnswer,
-  QuestionAnswerDto,
-} from '@/lib/api/types'
+import Dexie, { type Table } from "dexie";
+import { AuthUser } from "@/lib/utils/roles";
+import { apiClient } from "./api/api-client";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface CachedSession {
-  id: 'current'                // singleton row
-  user: AuthUser
-  accessToken: string
-  cachedAt: string
+  id: "current"; // singleton row
+  user: AuthUser;
+  accessToken: string;
+  cachedAt: string;
 }
 
-export interface LocalSubmission {
-  id: string | null
-  localId: string           // client-generated UUID — used for server dedup
-  studentId: string
-  moduleId: string
-  activityText?: string
-  reflectionText?: string
+export type CartItemType = "ai_school" | "course" | "profile";
+export type CartSyncStatus = "synced" | "pending" | "failed";
 
-  questionAnswers?: QuestionAnswer[],
-  aiForm: AiFormState |null;
-  submittedAt: string       // ISO timestamp
-  syncStatus: 'pending' | 'synced' | 'failed' | 'draft'
-  syncAttempts: number
-  submissionType: 'submit' | 'resubmit'
+export interface DexieCartItem {
+  type: CartItemType;
+  title: string;
+  price: number;
+  productId: string;
 }
 
-type LocalSubmissionDto = {
-  local_id: string
-  student_id: string
-  module_id: string
-  activity_text: string | null
-  reflection_text: string
-  question_answers?: QuestionAnswerDto[]
-  ai_form: AiFormStateDto | null,
-  submitted_at: string
+export interface DexieCartMeta {
+  id: "cart-meta";
+  paidItems: string[];
+  couponCode: string | null;
+  discountPercentage: number;
+  updatedAt: string;
 }
-
-export interface LocalPortfolioEntry {
-  localId: string
-  studentId: string
-  moduleId: string
-  moduleTitle: string
-  reflectionText?: string
-  skillsEarned: string[]
-  createdAt: string
-  synced: boolean
-}
-
-/**
- * Cached after getModules() — powers the lessons list page offline.
- * Mirrors ModuleSummary + submission_status for lock/pill display.
- */
-export interface CachedModuleSummary {
-  id: string
-  term: number
-  weekNumber: number
-  level: string
-  title: string
-  published: boolean
-  cachedAt: string
-}
-
-/**
- * Cached after getModule() — powers the lesson detail page offline.
- * Mirrors CurriculumModule
-
- */
-export interface CachedModule {
-  id: string
-  term: number
-  weekNumber: number
-  level: string
-  title: string
-  description?: string
-  outcome: string
-  contentJson: CurriculumContentJson
-  updatedAt: string
-  published: boolean
-  createdAt: string
-  cachedAt: string
-}
-
-export interface CachedModuleStates {
-  studentId: string;
-  currentTerm: number;
-  states: Record<string, ModuleState>;
-}
-
-export interface PendingProgress {
-  moduleId: string        // primary key
-  studentId: string
-  sectionId: string       // last section_id the student reached
-  updatedAt: string       // ISO timestamp — for debugging, not logic
-}
-
-export interface LocalFileQueue {
-  id: string              // client UUID — used as dexieId in TaskFileEntry
-  studentId: string
-  moduleId: string
-  blockId: string         // which task block this file belongs to
-  path: string            // Supabase Storage path: uploads/{studentId}/{timestamp}_filename
-  blob: Blob | null             // compressed blob ready for upload or null for delete operation
-  fileName: string        // original file name for display
-  mimeType: string
-  operation: 'upload' | 'delete'
-  uploadStatus: 'pending' | 'uploading' | 'done' | 'failed'
-  uploadAttempts: number
-  createdAt: string
-}
-
-export interface LocalLinks {
-  id: string
-  studentId: string;
-  moduleId: string;
-  blockId: string;
-  url: string[]
-}
-
-type SyncRegistration = ServiceWorkerRegistration & {
-  sync: {
-    register(tag: string): Promise<void>;
-  };
-};
 
 // ── Database ─────────────────────────────────────────────────────────────────
 
 class HammetDB extends Dexie {
-  submissions!:      Table<LocalSubmission>
-  portfolioEntries!: Table<LocalPortfolioEntry>
-  modules!:          Table<CachedModule>
-  moduleSummaries!:  Table<CachedModuleSummary>
-  fileQueue!:        Table<LocalFileQueue>
-  session!:          Table<CachedSession>
-  pendingProgress!:  Table<PendingProgress>
-  taskLinks!:        Table<LocalLinks>
-  modulesState!:     Table<CachedModuleStates>
+  session!: Table<CachedSession>;
+  cart!: Table<DexieCartItem>;
+  cartMeta!: Table<DexieCartMeta>;
 
   constructor() {
-    super('hammet-db')
+    super("hammet-db");
 
+    // Version 1: Original session cache
     this.version(1).stores({
-      submissions:      'localId, studentId, moduleId, syncStatus',
-      portfolioEntries: 'localId, studentId, moduleId',
-      modules:          'id, term, level, [term+level]',
-    })
+      session: "id",
+    });
 
-    // version 2: adds fileQueue table + activityText/file_urls on submissions
-    // Dexie migrations are additive — existing tables and rows are untouched
+    // Version 2: Local-first Cart with indexed properties and cart metadata
     this.version(2).stores({
-      submissions:      'localId, studentId, moduleId, syncStatus',
-      portfolioEntries: 'localId, studentId, moduleId',
-      modules:          'id, term, level, [term+level]',
-      fileQueue:        'id, studentId, moduleId, blockId, uploadStatus',
-    })
-
-    // version 3: singleton session cache for offline auth
-    this.version(3).stores({
-      submissions:      'localId, studentId, moduleId, syncStatus',
-      portfolioEntries: 'localId, studentId, moduleId',
-      modules:          'id, term, level, [term+level]',
-      fileQueue:        'id, studentId, moduleId, blockId, uploadStatus',
-      session:          'id',                 
-    })
-
-    // version 4: separate summary cache with submission_status for list page
-    this.version(4).stores({
-      submissions:      'localId, studentId, moduleId, syncStatus',
-      portfolioEntries: 'localId, studentId, moduleId',
-      modules:          'id, term, level, [term+level]',
-      moduleSummaries:  'id, term, level, [term+level]',  // ← new
-      fileQueue:        'id, studentId, moduleId, blockId, uploadStatus',
-      session:          'id',
-    })
-
-    this.version(5).stores({
-      submissions:      'localId, studentId, moduleId, syncStatus, [studentId+moduleId]',
-      portfolioEntries: 'localId, studentId, moduleId',
-      modules:          'id, term, level, [term+level]',
-      moduleSummaries:  'id, term, level, [term+level]',
-      fileQueue:        'id, studentId, moduleId, blockId, uploadStatus',
-      session:          'id',
-      pendingProgress:  'studentId',   // ← one row per student, upserted on every page turn
-    })
-
-    // version 6: adds operation index to fileQueue
-    // Existing upload rows get operation = undefined which is fine —
-    // all helpers filter explicitly so undefined rows are ignored by delete helpers
-    this.version(6).stores({
-      submissions:      'localId, studentId, moduleId, syncStatus, [studentId+moduleId]',
-      portfolioEntries: 'localId, studentId, moduleId',
-      modules:          'id, term, level, [term+level]',
-      moduleSummaries:  'id, term, level, [term+level]',
-      fileQueue:        'id, studentId, moduleId, blockId, uploadStatus, operation',
-      session:          'id',
-      pendingProgress:  'studentId',   // ← one row per student, upserted on every page turn
-    })
-
-    this.version(7).stores({
-      submissions:      'localId, studentId, moduleId, syncStatus, [studentId+moduleId]',
-      portfolioEntries: 'localId, studentId, moduleId',
-      modules:          'id, term, level, [term+level]',
-      moduleSummaries:  'id, term, level, [term+level]',
-      fileQueue:        'id, studentId, moduleId, blockId, uploadStatus, operation',
-      session:          'id',
-      pendingProgress:  'studentId',
-      taskLinks:        'id, studentId, moduleId, blockId, [studentId+moduleId], [studentId+moduleId+blockId]'
-    })
-
-    this.version(8).stores({
-      submissions:      'localId, studentId, moduleId, syncStatus, [studentId+moduleId]',
-      portfolioEntries: 'localId, studentId, moduleId',
-      modules:          'id, term, level, [term+level]',
-      moduleSummaries:  'id, term, level, [term+level]',
-      fileQueue:        'id, studentId, moduleId, blockId, uploadStatus, operation',
-      session:          'id',
-      pendingProgress:  'studentId',
-      taskLinks:        'id, studentId, moduleId, blockId, [studentId+moduleId], [studentId+moduleId+blockId]',
-      modulesState:     'studentId'
-    })
+      session: "id",
+      cart: "id, type, schoolId, syncStatus, createdAt, updatedAt",
+      cartMeta: "id",
+    });
   }
 }
 
-export const db = new HammetDB()
+export const db = new HammetDB();
 
 // ── Session cache helpers ─────────────────────────────────────────────────────
 
@@ -252,14 +67,17 @@ export const db = new HammetDB()
  * Call this after every successful refresh or login so the student
  * can be recognised offline without a network round-trip.
  */
-export async function persistSession(user: AuthUser, accessToken: string): Promise<void> {
+export async function persistSession(
+  user: AuthUser,
+  accessToken: string,
+): Promise<void> {
   try {
     await db.session.put({
-      id: 'current',
+      id: "current",
       user,
       accessToken,
       cachedAt: new Date().toISOString(),
-    })
+    });
   } catch {
     // best-effort — never throw
   }
@@ -271,9 +89,9 @@ export async function persistSession(user: AuthUser, accessToken: string): Promi
  */
 export async function getPersistedSession(): Promise<CachedSession | null> {
   try {
-    return (await db.session.get('current')) ?? null
+    return (await db.session.get("current")) ?? null;
   } catch {
-    return null
+    return null;
   }
 }
 
@@ -282,614 +100,253 @@ export async function getPersistedSession(): Promise<CachedSession | null> {
  */
 export async function clearPersistedSession(): Promise<void> {
   try {
-    await db.session.delete('current')
+    await db.session.delete("current");
   } catch {
     // best-effort
   }
 }
 
-// ── Submission helpers ────────────────────────────────────────────────────────
-// submitLesson
-//
-// accessToken is passed in by the caller (lesson-detail-page) which already
-// holds it from useAuth. Never call useAuth here — this is not a component.
-// ─────────────────────────────────────────────────────────────────────────────
- 
-export async function submitLesson({
-  id,
-  studentId,
-  moduleId,
-  activityText,
-  reflectionText,
-  aiForm,
-  questionAnswers,
-  syncStatus,
-  submissionType,
-  accessToken,
-}: {
-  id:             string | null
-  studentId:      string
-  moduleId:       string
-  activityText?:  string
-  reflectionText?: string
-  aiForm: AiFormState | null
-  questionAnswers? : QuestionAnswer[],
-  syncStatus: 'pending' | 'synced' | 'failed' | 'draft'
-  submissionType: 'submit'  | 'resubmit'
-  // Optional — if provided and online, we attempt immediate sync.
-  // Not provided for auto-saves (we don't want to sync on every keystroke).
-  accessToken?:   string
-}): Promise<{ success: boolean; synced: boolean }> {
-  const existing = await getDraftForModule(studentId, moduleId)
-  const localId     = existing?.localId ?? crypto.randomUUID()
+// ── Cart Dexie helpers ────────────────────────────────────────────────────────
 
-  const submittedAt = new Date().toISOString()
- 
-  // Always write to Dexie first.
-  // saveSubmissionLocally deletes any existing row for this moduleId before
-  // inserting — so there is always exactly one pending row per module.
-  await saveSubmissionLocally({
-    id,
-    localId,
-    studentId,
-    moduleId,
-    activityText,
-    reflectionText,
-    questionAnswers,
-    aiForm,
-    submittedAt,
-    syncStatus,
-    submissionType
-  })
- 
-  // Only attempt immediate sync on final submit (accessToken provided) + online
-  if (accessToken && navigator.onLine) {
-    try {
-      await syncPendingSubmissions(
-        studentId,
-        accessToken
-      )
-      return { success: true, synced: true }
-    } catch {
-      // Sync failed — row stays pending in Dexie, SW will retry
-    }
-  }
- 
-  // Register SW background sync so the queue flushes automatically on reconnect.
-  // Falls back silently if the browser doesn't support Background Sync API.
-  if ('serviceWorker' in navigator) {
-    try {
-      const reg = await navigator.serviceWorker.ready
-      if ('sync' in reg) {
-        await (reg as SyncRegistration).sync.register('submissions-queue')
-      }
-    } catch {
-      // Background sync not supported or SW not active — Dexie row will be
-      // picked up by the useOnlineStatus hook instead
-    }
-  }
- 
-  return { success: true, synced: false }
-}
+const DEFAULT_CART_META: DexieCartMeta = {
+  id: "cart-meta",
+  paidItems: [],
+  couponCode: null,
+  discountPercentage: 0,
+  updatedAt: new Date().toISOString(),
+};
 
 /**
- * Upsert a submission draft for a module.
- * There is exactly ONE row per (studentId, moduleId) at any time.
- * If a row already exists for this module, it is replaced entirely —
- * this prevents duplicate pending rows accumulating across auto-saves.
+ * Fetch all cart items from Dexie, ordered chronologically.
  */
-export async function saveSubmissionLocally(
-  submission: Omit<LocalSubmission, 'syncAttempts'>
-): Promise<void> {
-  // Delete any existing rows for this module before inserting the new one.
-  // This is the dedup guarantee — one pending row per module, always.
-  await db.submissions
-    .where('[studentId+moduleId]')
-    .equals([submission.studentId, submission.moduleId])
-    .delete()
- 
-  await db.submissions.put({
-    ...submission,
-    syncAttempts: 0,
-  })
-}
- 
-/**
- * Get the current draft/pending submission for a module, if any.
- * Use this on lesson load to restore progress when offline.
- */
-export async function getDraftForModule(
-  studentId: string,
-  moduleId: string
-): Promise<LocalSubmission | undefined> {
-  return db.submissions
-    .where('[studentId+moduleId]')
-    .equals([studentId, moduleId])
-    .and((s) => s.syncStatus === 'draft' || s.syncStatus === 'pending')
-    .first()
-}
- 
-/**
- * Get only the latest pending submission per module.
- * Since saveSubmissionLocally now guarantees one row per module,
- * this is just getPendingSubmissions — but kept explicit for clarity.
- */
-export async function getDedupedPendingSubmissions(): Promise<LocalSubmission[]> {
-  const all = await db.submissions.where('syncStatus').equals('pending').toArray()
-  const byModule = new Map<string, LocalSubmission>()
-  for (const s of all) {
-    const key = `${s.studentId}:${s.moduleId}`
-    const existing = byModule.get(key)
-    if (!existing || s.submittedAt > existing.submittedAt) {
-      byModule.set(key, s)
-    }
-  }
-  return Array.from(byModule.values())
-}
-
-/**
- * Checks if there is an pending submission
- */
-export async function hasPendingSubmission(
-  studentId: string,
-  moduleId: string
-): Promise<boolean> {
+export async function getCartItemsFromDB(): Promise<DexieCartItem[]> {
   try {
-    const result = await db.submissions
-      .where('[studentId+moduleId]').equals([studentId,moduleId])
-      .and((s) => s.syncStatus === 'pending')
-      .first()
-    return !!result
-  } catch {
-    return false
+    return await db.cart.orderBy("createdAt").toArray();
+  } catch (err) {
+    console.warn("[Dexie] Failed to fetch cart items from IndexedDB:", err);
+    return [];
   }
-}
-
-export async function getPendingSubmissions(studentId: string): Promise<LocalSubmission[]> {
-  return db.submissions
-  .where('syncStatus').equals('pending')
-  .and((s) => s.studentId === studentId)
-  .toArray()
-}
-
-export async function markSubmissionSynced(localId: string): Promise<void> {
-  const submission = await db.submissions.get(localId)
-  await db.submissions.update(localId, { syncStatus: 'synced' })
-  if (submission?.moduleId) {
-    await clearPendingProgress(submission.studentId)
-  }
-}
-
-export async function markSubmissionFailed(localId: string): Promise<void> {
-  await db.submissions.where('localId').equals(localId).modify((s) => {
-    s.syncStatus = 'failed'
-    s.syncAttempts += 1
-  })
 }
 
 /**
- * Remove all synced submissions to keep the DB lean.
- * Call after a successful sync cycle — not before, in case the tab closes mid-sync.
+ * Fetch a single cart item by ID.
  */
-export async function clearSyncedSubmissions(): Promise<void> {
-  await db.submissions.where('syncStatus').equals('synced').delete()
-}
-
-// ── Task Links helpers ────────────────────────────────────────────────────────
-export async function storeLinks(entry: LocalLinks) {
-  const existing = await db.taskLinks
-    .where("[studentId+moduleId]")
-    .equals([entry.studentId, entry.moduleId])
-    .filter(l => l.blockId === entry.blockId)
-    .first();
-
-  if (existing) {
-    await db.taskLinks.put({
-      ...existing,
-      url: [...new Set([...existing.url, ...entry.url])],
-    });
-  } else {
-    await db.taskLinks.add(entry);
+export async function getCartItemFromDB(
+  id: string,
+): Promise<DexieCartItem | undefined> {
+  try {
+    return await db.cart.get(id);
+  } catch (err) {
+    console.warn(`[Dexie] Failed to get cart item ${id}:`, err);
+    return undefined;
   }
 }
 
-export async function removeLink(
-  studentId: string,
-  moduleId: string,
-  blockId: string,
-  url: string
-) {
-  const existing = await db.taskLinks
-    .where("[studentId+moduleId+blockId]")
-    .equals([studentId, moduleId, blockId])
-    .first();
-
-  if (!existing) return;
-
-  const remaining = existing.url.filter(u => u !== url);
-
-  if (remaining.length === 0) {
-    await db.taskLinks.delete(existing.id);
-  } else {
-    await db.taskLinks.put({
-      ...existing,
-      url: remaining,
-    });
-  }
-}
-
-export async function getLinks(
-  studentId: string,
-  moduleId: string
-): Promise<LocalLinks[]> {
-  return db.taskLinks
-    .where("[studentId+moduleId]")
-    .equals([studentId, moduleId])
-    .toArray();
-}
-
-export async function getLinksForBlock(
-  studentId: string,
-  moduleId: string,
-  blockId: string
-): Promise<LocalLinks | undefined> {
-  return db.taskLinks
-    .where("[studentId+moduleId]")
-    .equals([studentId, moduleId])
-    .filter(l => l.blockId === blockId)
-    .first();
-}
-
-export async function clearLinksForModule(
-  studentId: string, moduleId: string
-) {
-  db.taskLinks
-    .where("[studentId+moduleId]")
-    .equals([studentId, moduleId])
-    .delete()
-}
-
-// ── File queue helpers ────────────────────────────────────────────────────────
-
-export async function enqueueFile(
-  entry: Omit<LocalFileQueue, 'uploadStatus' | 'uploadAttempts' | 'createdAt' | 'operation'>
-): Promise<string> {
-  const record: LocalFileQueue = {
-    ...entry,
-    operation: 'upload',
-    uploadStatus: 'pending',
-    uploadAttempts: 0,
-    createdAt: new Date().toISOString(),
-  }
-  await db.fileQueue.put(record)
-  return record.id
-}
-
-export async function getFilesForPendingSubmissions(studentId: string, moduleId: string): Promise<LocalFileQueue[]> {
-  return db.fileQueue
-    .where('uploadStatus').equals('done')
-    .filter((f) => f.moduleId === moduleId && f.studentId === studentId)
-    .toArray()
-}
- 
-export async function getPendingFiles(): Promise<LocalFileQueue[]> {
-  return db.fileQueue
-    .where('uploadStatus').equals('pending')
-    .filter((f) => f.operation === 'upload')
-    .toArray()
-}
- 
-export async function getFilesForModule(moduleId: string): Promise<LocalFileQueue[]> {
-  return db.fileQueue
-    .where('moduleId').equals(moduleId)
-    .filter((f) => f.operation === 'upload')
-    .toArray()
-}
-
-export async function markFileUploading(id: string): Promise<void> {
-  await db.fileQueue.update(id, { uploadStatus: 'uploading' })
-}
-
-export async function markFileUploaded(id: string): Promise<void> {
-  await db.fileQueue.update(id, { uploadStatus: 'done' })
-}
-
-export async function markFileFailed(id: string): Promise<void> {
-  await db.fileQueue.where('id').equals(id).modify((f) => {
-    f.uploadStatus = 'failed'
-    f.uploadAttempts += 1
-  })
-}
-
-/** Remove a single queued file entry — call when student removes a file before submitting. */
-export async function dequeueFile(id: string): Promise<void> {
-  await db.fileQueue.delete(id)
+export interface PutCartItemInput {
+  id: string;
+  type: CartItemType;
+  title: string;
+  price: number;
+  quantity?: number;
+  productId: string;
+  syncStatus?: CartSyncStatus;
 }
 
 /**
- * Remove all successfully uploaded file queue entries for a module.
- * Call after the submission for that module is confirmed by the server.
- */
-export async function clearUploadedFilesForModule(moduleId: string): Promise<void> {
-  await db.fileQueue
-    .where('moduleId').equals(moduleId)
-    .filter((f) => f.operation === 'upload' && f.uploadStatus === 'done')
-    .delete()
-}
- 
-// ── File queue helpers — deletes ──────────────────────────────────────────────
- 
-/**
- * Queue a Supabase Storage path for deletion.
- * blob is null — we only need the path to call the backend delete endpoint.
- * Used when a student removes an already-uploaded file while offline.
- */
-export async function enqueueFileDeletion(
-  studentId: string,
-  moduleId: string,
-  blockId: string,
-  path: string,
-): Promise<string> {
-  const record: LocalFileQueue = {
-    id:            crypto.randomUUID(),
-    studentId,
-    moduleId,
-    blockId,
-    path,
-    blob:          null,
-    fileName:      '',
-    mimeType:      '',
-    operation:     'delete',
-    uploadStatus:  'pending',
-    uploadAttempts: 0,
-    createdAt:     new Date().toISOString(),
+ * Insert or update a cart item in Dexie.
+ * If the item already exists, updates its quantity and timestamp.
+ *
+export async function putCartItemToDB(
+  input: PutCartItemInput,
+): Promise<DexieCartItem> {
+  const now = new Date().toISOString();
+  try {
+    const existing = await db.cart.get(input.id);
+    const item: DexieCartItem = {
+      id: input.id,
+      type: input.type,
+      title: input.title,
+      price: input.price,
+      quantity: Math.max(1, input.quantity ?? existing?.quantity ?? 1),
+      productId: input.productId ?? existing?.productId,
+      syncStatus: input.syncStatus ?? "pending",
+      createdAt: existing?.createdAt ?? now,
+      updatedAt: now,
+    };
+    await db.cart.put(item);
+    return item;
+  } catch (err) {
+    console.warn(`[Dexie] Failed to put cart item ${input.id}:`, err);
+    return {
+      id: input.id,
+      type: input.type,
+      title: input.title,
+      price: input.price,
+      quantity: Math.max(1, input.quantity ?? 1),
+      productId: input.productId,
+      syncStatus: "failed",
+      createdAt: now,
+      updatedAt: now,
+    };
   }
-  await db.fileQueue.put(record)
-  return record.id
-}
- 
-export async function getPendingDeletions(): Promise<LocalFileQueue[]> {
-  return db.fileQueue
-    .where('uploadStatus').equals('pending')
-    .filter((f) => f.operation === 'delete')
-    .toArray()
-}
- 
-export async function markDeletionDone(id: string): Promise<void> {
-  await db.fileQueue.delete(id)
-}
- 
-export async function markDeletionFailed(id: string): Promise<void> {
-  await db.fileQueue.where('id').equals(id).modify((f) => {
-    f.uploadStatus = 'failed'
-    f.uploadAttempts += 1
-  })
-}
-
-// ── Module cache helpers ──────────────────────────────────────────────────────
+}/
 
 /**
- * Call inside studentApi.getModules() after every successful fetch.
- * Stores the lightweight list including submission_status for offline display.
- */
-export async function cacheModuleSummaries(
-  summaries: ModuleSummary[]
+ * Update quantity of a cart item in Dexie.
+ * If quantity <= 0, the item is removed.
+ *
+export async function updateCartItemQuantityInDB(
+  id: string,
+  quantity: number,
 ): Promise<void> {
   try {
-    await db.moduleSummaries.bulkPut(
-      summaries.map((s) => ({ ...s, cachedAt: new Date().toISOString() }))
-    )
-  } catch {
-    // best-effort
-  }
-}
+    if (quantity <= 0) {
+      await removeCartItemFromDB(id);
+      return;
+    }
+    const existing = await db.cart.get(id);
+    if (!existing) return;
 
-/**
- * Cached after getModules() — powers the lessons list page offline.
- * Mirrors ModuleSummary.
- */
-
-export async function getCachedModuleSummaries(
-  term: number,
-  level: string
-): Promise<CachedModuleSummary[]> {
-  try {
-    return await db.moduleSummaries
-      .where('[term+level]')
-      .equals([term, level])
-      .toArray()
-  } catch {
-    return []
-  }
-}
-
-// ── Full module cache (lesson detail) ────────────────────────────────────────
-
-/**
- * Call inside studentApi.getModules() after every successful fetch.
- * Stores the lightweight module list for offline display.
- */
-export async function cacheModule(incoming: Omit<CachedModule, 'cachedAt'>): Promise<void> {
-  try {
-    const existing = await db.modules.get(incoming.id)
-    await db.modules.put({
-      ...incoming,
-      // Preserve where the student left off — never overwrite with 0 from a fresh fetch
-      cachedAt: new Date().toISOString(),
-    })
-  } catch {
-    // best-effort
-  }
-}
-
-export async function getCachedModule(
-  moduleId: string
-): Promise<CachedModule | undefined> {
-  return db.modules.get(moduleId)
-}
-
-export async function cacheModuleState(studentId: string, state: ModuleStateResponse) {
-  await db.modulesState.put({
-    studentId,
-    currentTerm: state.currentTerm,
-    states: state.states,
-  })
-}
-
-export async function getCachedModuleState(
-  studentId: string
-): Promise<CachedModuleStates | undefined> {
-  const cachedState = await db.modulesState.get(studentId)
-  if (cachedState){
-    return cachedState
-  }
-  return cachedState
-}
-
-export async function clearModuleState() {
-  try {
-    await db.modulesState.clear();
-  } catch {
-    // best-effort
-  }
-} 
-
-
-// ── Pending progress helpers ──────────────────────────────────────────────────
-
-/**
- * Upsert progress for a module. Called on every page navigation.
- * Replaces any existing row for the same moduleId.
- */
-export async function savePendingProgress(
-  studentId: string,
-  moduleId: string,
-  sectionId: string
-): Promise<void> {
-  try {
-    await db.pendingProgress.put({
-      studentId,
-      moduleId,
-      sectionId,
+    await db.cart.update(id, {
+      quantity,
+      syncStatus: "pending",
       updatedAt: new Date().toISOString(),
-    })
-  } catch {
-    // best-effort
+    });
+  } catch (err) {
+    console.warn(`[Dexie] Failed to update quantity for ${id}:`, err);
   }
 }
 
-
 /**
- * Read all progress rows that need syncing.
+ * Remove an item from the cart table.
  */
-export async function getPendingProgress(studentId: string): Promise<PendingProgress[]> {
+export async function removeCartItemFromDB(id: string): Promise<void> {
   try {
-    return await db.pendingProgress
-    .where('studentId').equals(studentId)
-    .toArray()
-  } catch {
-    return []
+    await db.cart.delete(id);
+  } catch (err) {
+    console.warn(`[Dexie] Failed to remove item ${id}:`, err);
   }
 }
 
 /**
- * Remove progress for a module — call after a successful PATCH
- * or when a submission for the module is confirmed synced.
+ * Clear all items from the cart table.
  */
-export async function clearPendingProgress(studentId: string): Promise<void> {
+export async function clearCartInDB(): Promise<void> {
   try {
-    await db.pendingProgress.delete(studentId)
-  } catch {
-    // best-effort
+    await db.cart.clear();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("cart-updated"));
+    }
+  } catch (err) {
+    console.warn("[Dexie] Failed to clear cart:", err);
   }
 }
 
 /**
- * Mapper for converting LocalSubmission to LocalSubmissionDto
- * to be used for syncing submissions to backend
+ * Retrieve cart metadata (paid items, active coupon, discount).
  */
-function fromLocalSubmission(model: LocalSubmission): LocalSubmissionDto {
-  return {
-    local_id: model.localId,
-    student_id: model.studentId,
-    module_id: model.moduleId,
-    activity_text: model.activityText ?? null,
-    reflection_text: model.reflectionText!,
-    question_answers: model.questionAnswers ? model.questionAnswers.map(fromQuestionAnswer) : undefined,
-    ai_form: model.aiForm
-                ? fromAiFormState(model.aiForm)
-                : null,
-    submitted_at: model.submittedAt
+export async function getCartMetaFromDB(): Promise<DexieCartMeta> {
+  try {
+    const meta = await db.cartMeta.get("cart-meta");
+    return (
+      meta ?? { ...DEFAULT_CART_META, updatedAt: new Date().toISOString() }
+    );
+  } catch (err) {
+    console.warn("[Dexie] Failed to get cart metadata:", err);
+    return { ...DEFAULT_CART_META, updatedAt: new Date().toISOString() };
   }
 }
 
-
-// ── Sync function ─────────────────────────────────────────────────────────────
-// Call this:
-// 1. When the app comes back online (useOnlineStatus hook)
-// 2. On app startup
-// 3. After every successful page load
-
-export async function syncPendingSubmissions(
-  studentId: string,
-  accessToken: string,
-): Promise<CreateSubmissionResponses | undefined> {
-  const pending = (
-    await getPendingSubmissions(studentId)
-  ).filter(s => s.syncStatus === "pending" && s.submissionType === "submit")
-  if (pending.length === 0) return
-
-  
-  const payload = pending.map(fromLocalSubmission)
-
-  const responseDto = await apiClient.post<CreateSubmissionResponsesDto>("/submissions/sync", {"submissions": payload}, accessToken)
-  const response = toCreateSubmissionResponses(responseDto)
-
-  for (const r of response.submissions) {
-    if (r.status === "approved") {
-      await markSubmissionSynced(r.localId)
-    } else {
-      await markSubmissionFailed(r.localId)
-    }
+/**
+ * Save or update cart metadata in Dexie.
+ */
+export async function saveCartMetaToDB(
+  updates: Partial<Omit<DexieCartMeta, "id">>,
+): Promise<DexieCartMeta> {
+  try {
+    const current = await getCartMetaFromDB();
+    const updated: DexieCartMeta = {
+      ...current,
+      ...updates,
+      id: "cart-meta",
+      updatedAt: new Date().toISOString(),
+    };
+    await db.cartMeta.put(updated);
+    return updated;
+  } catch (err) {
+    console.warn("[Dexie] Failed to save cart metadata:", err);
+    return {
+      ...DEFAULT_CART_META,
+      ...updates,
+      id: "cart-meta",
+      updatedAt: new Date().toISOString(),
+    };
   }
-
-  await clearPendingProgress(studentId)
-  await clearSyncedSubmissions()
 }
 
-// ── Sync function ─────────────────────────────────────────────────────────────
-// Call this:
-// 1. When the app comes back online (useOnlineStatus hook)
-// 2. On app startup
-// 3. After every successful page load
+/**
+ * Mark specified items as paid in Dexie:
+ * - Appends item IDs to cartMeta.paidItems
+ * - Deletes the items from the cart table
+ */
+export async function markItemsPaidInDB(itemIds: string[]): Promise<void> {
+  try {
+    await db.transaction("rw", db.cart, db.cartMeta, async () => {
+      const currentMeta =
+        (await db.cartMeta.get("cart-meta")) ?? DEFAULT_CART_META;
+      const combined = Array.from(
+        new Set([...currentMeta.paidItems, ...itemIds]),
+      );
 
-export async function syncPendingRevisions(
-  studentId: string,
-  accessToken: string,
-): Promise<CreateSubmissionResponses|undefined> {
-  const pending = (
-    await getPendingSubmissions(studentId)
-  ).filter(s => s.syncStatus === "pending" && s.submissionType === 'resubmit')
-  if (pending.length === 0) return
+      await db.cartMeta.put({
+        ...currentMeta,
+        paidItems: combined,
+        updatedAt: new Date().toISOString(),
+      });
 
-  pending.map(async (s) => {
-    if (!s.id) {
-      await markSubmissionFailed(s.localId)
-      return
-    }
-  })
-  const payload = pending.map(fromLocalSubmission)
+      // Remove paid items from active cart
+      for (const id of itemIds) {
+        await db.cart.delete(id);
+      }
+    });
+  } catch (err) {
+    console.warn("[Dexie] Failed to mark items as paid in DB:", err);
+  }
+}
 
-  const responseDto = await apiClient.patch<CreateSubmissionResponsesDto>("/submissions/resync", {"submissions": payload}, accessToken)
-  const response = toCreateSubmissionResponses(responseDto)
-
-  for (const r of response.submissions) {
-    if (r.status === "approved") {
-      await markSubmissionSynced(r.localId)
-    } else {
-      await markSubmissionFailed(r.localId)
+/**
+ * Fetch all items that have not been successfully synced with the backend.
+ *
+export async function getUnsyncedCartItemsFromDB(): Promise<DexieCartItem[]> {
+  try {
+    return await db.cart
+      .where("syncStatus")
+      .anyOf(["pending", "failed"])
+      .toArray();
+  } catch {
+    // Fallback in case of index issues
+    try {
+      const all = await db.cart.toArray();
+      return all.filter((i) => i.syncStatus !== "synced");
+    } catch {
+      return [];
     }
   }
-  await clearSyncedSubmissions()
-  await clearPendingProgress(studentId)
-}
+}*/
+
+/**
+ * Update the synchronization status of a cart item in Dexie.
+ *
+export async function updateCartItemSyncStatusInDB(
+  id: string,
+  syncStatus: CartSyncStatus,
+): Promise<void> {
+  try {
+    await db.cart.update(id, {
+      syncStatus,
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.warn(`[Dexie] Failed to update syncStatus for ${id}:`, err);
+  }
+}*/

@@ -1,7 +1,6 @@
 // GET /hammet/schools
 
 import { UserAccess, UserRole, UserScope } from "@/lib/utils/roles";
-import { UserStatus } from "../admin";
 import { PaginationDto } from "../support";
 
 export type RegisterHammetAdminRequestDto = {
@@ -12,47 +11,76 @@ export type RegisterHammetAdminRequestDto = {
   access: UserAccess[] | null;
 }
 
-export type AdminDetailsDto = {
+// GET /hammet/admins
+export type HammetAdminDto = {
   id: string;
   full_name: string;
   email: string;
-  role: UserRole[];
-  status: UserStatus;
-  last_login: string | null;
+  role: UserRole;
+  scope: UserScope;
+  access: UserAccess[] | null;
+  status: string;
+  created_at: string;
 }
 
-// POST /hammet/schools/[schoolId]/deactivate
-// Sets tier to "suspended" — hammet_admin only
-// No request body needed
-export type DeactivateSchoolResponseDto = {
-  school_id: string;
-  tier: "suspended";
-  message: string;
+export type HammetAdminsResponseDto = {
+  admins: HammetAdminDto[];
+  pagination: PaginationDto;
+}
+
+// PATCH /hammet/admins/{admin_id}
+export type EditHammetAdminRequestDto = {
+  scope?: UserScope | null;
+  access?: UserAccess[] | null;
+}
+
+export type CouponProductDto = {
+  coupon_id: string;
+  product_type: string;
+  product_id: string;
 };
 
-
-export type DisputeReviewPayloadDto = {
+export type CouponDto = {
   id: string;
-  review_note: string
-}
+  code: string;
+  description: string | null;
+  discount_type: "FIXED" | "PERCENTAGE";
+  discount_value: string | number;
+  currency: string | null;
+  max_discount_amount: string | number | null;
+  min_purchase_amount: string | number | null;
+  starts_at: string | null;
+  expires_at: string | null;
+  usage_limit: number | null;
+  usage_limit_per_user: number;
+  used_count: number;
+  applies_to_all_products: boolean;
+  status: string;
+  products: CouponProductDto[] | null;
+};
 
-export type  DisputeDto = {
-  id: string;
-  student_id: string;
-  module_title: string;
-  original_response: string;
-  ai_status: string;
-  ai_score: number;
-  student_review: string;
-  student_dispute_note: string;
-  disputed_at: string;
-  reviewed_by: string | null;
-  reviewed: boolean;
-  review_note: string | null
-}
+export type CouponsResponseDto = {
+  coupons: CouponDto[];
+  pagination: PaginationDto;
+};
 
-export type DisputesDto = {
-  disputes: DisputeDto[]
-  pagination: PaginationDto
-}
+export type CreateCouponRequestDto = {
+  code: string;
+  description: string | null;
+  discount_type: "FIXED" | "PERCENTAGE";
+  discount_value: string;
+  currency: string | null;
+  max_discount_amount: string | null;
+  min_purchase_amount: string | null;
+  starts_at: string | null;
+  expires_at: string | null;
+  usage_limit: number | null;
+  usage_limit_per_user: number;
+  applies_to_all_products: boolean;
+  products: null;
+};
 
+export type EditCouponRequestDto = {
+  activate: boolean;
+  expires_at?: string | null;
+};

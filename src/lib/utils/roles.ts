@@ -1,3 +1,5 @@
+import { SchoolDetails, ProfileDetails, SessionDetails } from "../api/types";
+
 export type UserRole =
   | "learner"
   | "facilitator"
@@ -9,6 +11,8 @@ export type UserAccess =
   | "admins"
   | "disputes"
   | "schools"
+  | "coupons"
+  | "beta_access"
 
 export type UserScope = 
   | "b2b"
@@ -23,13 +27,31 @@ export interface AuthUser {
   role: UserRole;
   scope: UserScope;
   access: UserAccess[];
-  schoolId: string;
-  cookieConsent: boolean;
-  cookiePolicyVersion: string;
-  classLevel: string | null;
-  classArm: string | null;
-  term: number | null;
-  learningMode?: "focus" | "guided";
+  schoolDetails: SchoolDetails | null;
+  profileDetails: ProfileDetails | null;
+  sessionDetails: SessionDetails | null;
+  profilePicture?: string | null;
+}
+
+/** Hammet admins with platform scope, or b2c scope plus course access, manage AI schools and their content. */
+export function canManageAiCatalog(user: AuthUser | null | undefined): boolean {
+  if (user?.role !== "hammet_admin") return false;
+  if (user.scope === "platform") return true;
+  return user.scope === "b2c" && (user.access ?? []).includes("courses");
+}
+
+/** Hammet admins with platform scope, or b2c scope plus admins access, register and manage other admins. */
+export function canManageAdmins(user: AuthUser | null | undefined): boolean {
+  if (user?.role !== "hammet_admin") return false;
+  if (user.scope === "platform") return true;
+  return user.scope === "b2c" && (user.access ?? []).includes("admins");
+}
+
+/** Hammet admins with platform scope, or B2C scope plus coupon access, manage coupons. */
+export function canManageCoupons(user: AuthUser | null | undefined): boolean {
+  if (user?.role !== "hammet_admin") return false;
+  if (user.scope === "platform") return true;
+  return user.scope === "b2c" && (user.access ?? []).includes("coupons");
 }
 
 /** Returns the user's display label for a given role. */

@@ -1,6 +1,4 @@
-import { CurriculumModuleBlock } from "@/lib/api/types/module";
 import { UserAccess, UserRole, UserScope } from "@/lib/utils/roles";
-import { UserStatus } from "../admin";
 import { Pagination, PaginationDto } from "../support";
 
 export type RegisterHammetAdminRequest = {
@@ -11,65 +9,83 @@ export type RegisterHammetAdminRequest = {
   access: UserAccess[] | null;
 }
 
-export type AdminDetails = {
+// GET /hammet/admins
+export type HammetAdmin = {
   id: string;
   fullName: string;
   email: string;
-  role: UserRole[];
-  status: UserStatus
-  lastLogin: string | null;
+  role: UserRole;
+  scope: UserScope;
+  access: UserAccess[] | null;
+  status: string;
+  createdAt: string;
 }
 
+export type HammetAdminsResponse = {
+  admins: HammetAdmin[];
+  pagination: Pagination;
+}
 
-// POST /hammet/schools/[schoolId]/deactivate
-// Sets tier to "suspended" — hammet_admin only
-// No request body needed
-export type DeactivateSchoolResponse = {
-  schoolId: string;
-  tier: "suspended";
-  message: string;
+export type GetHammetAdminsParams = {
+  page?: number;
+  pageSize?: number;
+  scope?: UserScope | null;
+  access?: UserAccess | null;
+  search?: string | null;
+}
+
+// PATCH /hammet/admins/{admin_id}
+// Leave a field out to keep its current value.
+export type EditHammetAdminRequest = {
+  scope?: UserScope | null;
+  access?: UserAccess[] | null;
+}
+
+export type CouponProduct = {
+  couponId: string;
+  productType: string;
+  productId: string;
 };
 
-// PUT /admin/modules/[moduleId] — full replace, no partial update
-// reuses CreateModuleRequest as request body
-export type UpdateModuleResponse = {
-  success: boolean;
-};
-
-// POST /admin/modules
-export type CreateModuleRequest = {
-  title: string;
-  term: number;
-  week_number: number;
-  level: string;
-  published: boolean;           // false = draft, not visible to students yet
-  content_json: {
-    blocks: CurriculumModuleBlock[];
-  };
-};
-
-export type DisputeReviewPayload = {
+export type Coupon = {
   id: string;
-  reviewNote: string
-}
+  code: string;
+  description: string | null;
+  discountType: "FIXED" | "PERCENTAGE";
+  discountValue: number;
+  currency: string | null;
+  maxDiscountAmount: number | null;
+  minPurchaseAmount: number | null;
+  startsAt: string | null;
+  expiresAt: string | null;
+  usageLimit: number | null;
+  usageLimitPerUser: number;
+  usedCount: number;
+  appliesToAllProducts: boolean;
+  status: string;
+  products: CouponProduct[] | null;
+};
 
-export type  Dispute = {
-  id: string;
-  studentId: string;
-  moduleTitle: string;
-  originalResponse: string;
-  aiStatus: string;
-  aiScore: number;
-  studentReview: string;
-  studentDisputeNote: string;
-  disputedAt: string;
-  reviewedBy: string | null;
-  reviewed: boolean;
-  reviewNote: string | null
-}
+export type CouponsResponse = {
+  coupons: Coupon[];
+  pagination: Pagination;
+};
 
-export type Disputes = {
-  disputes: Dispute[];
-  pagination: Pagination
-}
+export type CreateCouponRequest = {
+  code: string;
+  description: string | null;
+  discountType: "FIXED" | "PERCENTAGE";
+  discountValue: string;
+  currency: string | null;
+  maxDiscountAmount: string | null;
+  minPurchaseAmount: string | null;
+  startsAt: string | null;
+  expiresAt: string | null;
+  usageLimit: number | null;
+  usageLimitPerUser: number;
+};
 
+export type EditCouponRequest = {
+  activate: boolean;
+  expiresAt?: string | null;
+};

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
 import {
   BookOpen,
+  TicketPercent,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -14,14 +15,18 @@ import {
   LogOut,
   Menu,
   Settings,
+  ShieldCheck,
   Users,
   X,
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-context";
+import { getHammetAiSchools } from "@/lib/api/hammet";
+import type { AiSchool } from "@/lib/api/types";
 import { useTheme } from "@/lib/use-theme";
+import { canManageAdmins, canManageCoupons } from "@/lib/utils/roles";
 
-const navigation = [
+const baseNavigation = [
   {
     label: "Dashboard",
     href: "/hammet",
@@ -44,6 +49,18 @@ const navigation = [
   },
 ];
 
+const adminsNavigation = {
+  label: "Administrators",
+  href: "/hammet/admins",
+  icon: ShieldCheck,
+};
+
+const couponsNavigation = {
+  label: "Coupons",
+  href: "/hammet/coupons",
+  icon: TicketPercent,
+};
+
 const STORAGE_KEY = "hammet-admin-sidebar-collapsed";
 
 interface HammetShellProps {
@@ -52,9 +69,17 @@ interface HammetShellProps {
 
 export function HammetShell({ children }: HammetShellProps) {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, accessToken, refreshToken, logout } = useAuth();
   const { theme, toggle } = useTheme();
 
+  // Only admins who can manage other admins see the Administrators link.
+  const navigation = [
+    ...baseNavigation,
+    ...(canManageCoupons(user) ? [couponsNavigation] : []),
+    ...(canManageAdmins(user) ? [adminsNavigation] : []),
+  ];
+
+  const [schools, setSchools] = useState<AiSchool[]>([]);
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === "undefined") {
       return false;
@@ -63,6 +88,26 @@ export function HammetShell({ children }: HammetShellProps) {
     return localStorage.getItem(STORAGE_KEY) === "true";
   });
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    if (!accessToken) return;
+
+    const token = accessToken;
+    let active = true;
+    async function loadSchools() {
+      try {
+        const schoolsResponse = await getHammetAiSchools(token, refreshToken ?? (async () => null));
+        if (active) setSchools(schoolsResponse);
+      } catch {
+        if (active) setSchools([]);
+      }
+    }
+
+    void loadSchools();
+    return () => {
+      active = false;
+    };
+  }, [accessToken, refreshToken]);
 
   function toggleSidebar() {
     setCollapsed((current) => {
@@ -208,6 +253,21 @@ export function HammetShell({ children }: HammetShellProps) {
               );
             })}
           </nav>
+
+          {/* Schools */}
+          {!collapsed && schools.length > 0 && (
+            <div className="mt-6 w-full px-3">
+              <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">Schools</p>
+              <div className="space-y-1">
+                {schools.map((school) => (
+                  <Link key={school.id} href={`/hammet/courses/new?schoolId=${encodeURIComponent(school.id)}`} className="flex h-9 items-center gap-2 rounded-lg px-2 text-xs text-slate-500 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-white">
+                    <span className="h-1.5 w-1.5 rounded-full bg-purple-500 dark:bg-cyan-400" />
+                    <span className="truncate">{school.name}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Spacer */}
           <div className="flex-1" />

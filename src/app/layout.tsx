@@ -1,11 +1,16 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { SerwistProvider } from "@serwist/next/react";
+import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider } from "@/lib/auth/auth-context";
-import { Geist, Geist_Mono } from "next/font/google";
+import { SmoothScrollProvider } from "@/components/providers/smooth-scroll-provider";
+import { Poppins, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const poppins = Poppins({
+  variable: "--font-poppins",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 const geistMono = Geist_Mono({
@@ -14,41 +19,60 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hammet App",
+  title: "Hammet",
+  applicationName: "Hammet",
+  description: "Learn, build, and create with Hammet.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Hammet",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#6D28D9",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className={`${poppins.variable} ${geistMono.variable} font-poppins h-full antialiased`}
     >
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function () {
-                const stored = localStorage.getItem("hammet-theme");
+        <Script id="theme-script" strategy="beforeInteractive">
+          {`
+            (function () {
+              const stored = localStorage.getItem("hammet-theme");
 
-                const theme =
-                  stored === "light" || stored === "dark"
-                    ? stored
-                    : window.matchMedia("(prefers-color-scheme: dark)").matches
-                      ? "dark"
-                      : "light";
+              const theme =
+                stored === "light" || stored === "dark"
+                  ? stored
+                  : window.matchMedia("(prefers-color-scheme: dark)").matches
+                    ? "dark"
+                    : "light";
 
-                document.documentElement.classList.toggle(
-                  "dark",
-                  theme === "dark"
-                );
-              })();
-            `,
-          }}
-        />
+              document.documentElement.classList.toggle(
+                "dark",
+                theme === "dark"
+              );
+            })();
+          `}
+        </Script>
       </head>
 
-      <body className="min-h-full flex flex-col">
-        <AuthProvider>{children}</AuthProvider>
+      <body className="min-h-full flex flex-col font-poppins">
+        <SerwistProvider
+          swUrl="/sw.js"
+          cacheOnNavigation={false}
+          disable={process.env.NODE_ENV !== "production"}
+        >
+          <AuthProvider>
+            <SmoothScrollProvider>{children}</SmoothScrollProvider>
+          </AuthProvider>
+        </SerwistProvider>
       </body>
     </html>
   );

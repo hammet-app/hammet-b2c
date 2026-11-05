@@ -94,15 +94,16 @@ export const AuthInput = forwardRef<
       transition={{ duration: 0.35 }}
       className="flex flex-col gap-1"
     >
-      <label htmlFor={id} className="text-[12.5px] font-medium text-text-secondary">
-        {label}
-
-        {required && (
-          <span className="text-danger">
-            *
-          </span>
-        )}
-      </label>
+      {label && (
+        <label htmlFor={id} className="text-[12.5px] font-medium text-text-secondary">
+          {label}
+          {required && (
+            <span className="text-danger ml-0.5">
+              *
+            </span>
+          )}
+        </label>
+      )}
 
       {description && (
         <p className="text-[11.5px] text-text-muted -mt-0.5">{description}</p>

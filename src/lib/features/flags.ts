@@ -1,52 +1,47 @@
-export type FeatureFlag =
-  | "lesson_coach"
-  | "lesson_questions";
+import { OpenFeature, InMemoryProvider } from "@openfeature/web-sdk";
+import { GrowthbookClientProvider } from "@openfeature/growthbook-client-provider";
 
-type FeatureConfig = {
-  enabled: boolean;
-  schoolIds?: string[];
+const clientKey = process.env.NEXT_PUBLIC_FEATURE_CLIENT_KEY;
+
+const gbContext = {
+  apiHost:
+    process.env.NEXT_PUBLIC_GROWTHBOOK_API_HOST || "https://cdn.growthbook.io",
+  clientKey: clientKey,
 };
 
-const FEATURES: Record<FeatureFlag, FeatureConfig> = {
-  lesson_coach: {
-    enabled: true,
-    schoolIds: (
-      process.env.NEXT_PUBLIC_LESSON_COACH_SCHOOL_IDS ?? ""
-    )
-      .split(",")
-      .map((id) => id.trim())
-      .filter(Boolean),
-  },
+let initPromise: Promise<void> | null = null;
 
-  lesson_questions: {
-    enabled: true,
-    schoolIds: (
-      process.env.NEXT_PUBLIC_LESSON_QUESTIONS_SCHOOL_IDS ?? ""
-    )
-      .split(",")
-      .map((id) => id.trim())
-      .filter(Boolean),
-  },
-};
+function ensureInitialized() {
+  if (!initPromise) {
+    initPromise = OpenFeature.setProviderAndWait(
+      new GrowthbookClientProvider(gbContext, { timeout: 2000 }),
+    ).catch((error) => {
+      console.warn("Failed to initialize feature flags provider:", error);
+    });
+  }
+  return initPromise;
+}
 
-export function isFeatureEnabled(
-  feature: FeatureFlag,
-  schoolId?: string | null
-): boolean {
-  const config = FEATURES[feature];
+const client = OpenFeature.getClient("hammet-api");
 
-  if (!config.enabled) {
-    return false;
+export async function is_enabled(
+  key: string,
+  layout?: boolean,
+  defaultVariant: string = "B",
+  defaultValue: boolean = false,
+) {
+  try {
+    await ensureInitialized();
+  } catch {
+    // fallback gracefully
   }
 
-  // Empty school list means the feature is available to everyone.
-  if (!config.schoolIds?.length) {
-    return true;
+  if (layout) {
+    const details = client.getStringDetails(key, defaultVariant);
+    return details.variant || details.value || defaultVariant;
   }
 
-  if (!schoolId) {
-    return false;
-  }
+  const details = client.getBooleanDetails(key, defaultValue);
 
-  return config.schoolIds.includes(schoolId);
+  return details.value;
 }

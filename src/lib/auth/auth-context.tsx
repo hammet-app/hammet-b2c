@@ -10,15 +10,16 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
+import { OpenFeature, EvaluationContext } from "@openfeature/web-sdk";
 
 import type { AuthUser } from "@/lib/utils/roles";
 import {
   persistSession,
   getPersistedSession,
   clearPersistedSession,
-  clearModuleState,
 } from "@/lib/db";
 import { toRefreshResponse } from "../api/types";
+import { SessionExpiredModal } from "@/components/ui/session-expired-modal";
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -33,6 +34,7 @@ interface AuthState {
    * live data can use this to show a "offline mode" indicator.
    */
   isOffline: boolean;
+  isSessionExpired: boolean;
 }
 
 interface AuthContextValue extends AuthState {
@@ -44,7 +46,8 @@ interface AuthContextValue extends AuthState {
   ) => Promise<void>;
   redirectAfterAuth: (user?: AuthUser | null) => void;
   logout: () => Promise<void>;
-  refreshToken: () => Promise<string | null>;
+  refreshToken: (isSilentInit?: boolean) => Promise<string | null>;
+  dismissSessionExpired: () => void;
 }
 
 // ─── Context ──────────────────────────────────────────────────
@@ -67,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading: true,
     isResolved: false,
     isOffline: false,
+      isSessionExpired: false,
   });
 
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -94,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const getPostAuthRoute = useCallback((user: AuthUser): string | null => {
     if (user.role === "learner") {
-      return user.learningMode === null ? "/onboarding" : "/learner";
+      return user.profileDetails?.learningMode === null ? "/onboarding" : "/learner";
     }
 
     if (user.role === "hammet_admin") {
@@ -124,8 +128,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [getPostAuthRoute, router, state.user]
   );
 
-  const refreshToken = useCallback(async (): Promise<string | null> => {
-    if (localStorage.getItem("logged_out") === "true") return null;
+  const dismissSessionExpired = useCallback(() => {
+    setState((prev) => ({ ...prev, isSessionExpired: false }));
+  }, []);
+
+  const refreshToken = useCallback(async (isSilentInit = false): Promise<string | null> => {
+    if (localStorage.getItem("logged_out") === "true") {
+      setState({
+        user: null,
+        accessToken: null,
+        isLoading: false,
+        isResolved: true,
+        isOffline: false,
+        isSessionExpired: false,
+      });
+      return null;
+    }
 
     if (refreshPromiseRef.current) {
       return refreshPromiseRef.current;
@@ -139,21 +157,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         if (!res.ok) {
+          if (isSilentInit) {
+            // Initial silent background check on startup:
+            // Never pop up "Session Expired". If we hydrated a cached user, retain offline mode.
+            // If there was no cached user, cleanly mark resolved as unauthenticated.
+            setState((prev) => ({
+              ...prev,
+              isLoading: false,
+              isResolved: true,
+              isOffline: prev.user !== null,
+              isSessionExpired: false,
+            }));
+            return null;
+          }
+
+          // Active online runtime refresh failed:
           await clearPersistedSession();
 
-          setState({
+          setState((prev) => ({
+            ...prev,
             user: null,
             accessToken: null,
             isLoading: false,
             isResolved: true,
             isOffline: false,
-          });
+            // Only expire if the user had an active online session with a token and was not offline
+            isSessionExpired: prev.user !== null && !prev.isOffline && Boolean(prev.accessToken),
+          }));
 
           return null;
         }
 
         const response = await res.json();
         const data = toRefreshResponse(response);
+
+        if (localStorage.getItem("logged_out") === "true") {
+          return null;
+        }
 
         await persistSession(data.user, data.accessToken);
 
@@ -164,6 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           isLoading: false,
           isResolved: true,
           isOffline: false,
+          isSessionExpired: false,
         }));
 
         scheduleRefresh();
@@ -175,6 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           isLoading: false,
           isResolved: true,
           isOffline: true,
+          isSessionExpired: false,
         }));
 
         return null;
@@ -205,6 +247,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (age > SESSION_MAX_AGE_MS) {
           await clearPersistedSession();
+          setState({
+            user: null,
+            accessToken: null,
+            isLoading: false,
+            isResolved: true,
+            isOffline: false,
+            isSessionExpired: false,
+          });
         } else {
           setState({
             user: cached.user,
@@ -212,19 +262,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             isLoading: false,
             isResolved: true,
             isOffline: true,
+            isSessionExpired: false,
           });
+        }
+      } else {
+        const mockUserStr = typeof window !== "undefined" ? localStorage.getItem("hammet-user") : null;
+        if (mockUserStr && localStorage.getItem("logged_out") !== "true") {
+          try {
+            const user = JSON.parse(mockUserStr);
+            const fakeToken = "mock-token";
+            await persistSession(user, fakeToken);
+            setState({
+              user,
+              accessToken: fakeToken,
+              isLoading: false,
+              isResolved: true,
+              isOffline: false,
+              isSessionExpired: false,
+            });
+          } catch {
+            setState((prev) => ({
+              ...prev,
+              isLoading: false,
+              isResolved: true,
+              isOffline: false,
+              isSessionExpired: false,
+            }));
+          }
+        } else {
+          setState((prev) => ({
+            ...prev,
+            isLoading: false,
+            isResolved: true,
+            isOffline: false,
+            isSessionExpired: false,
+          }));
         }
       }
 
       if (!cancelled) {
-        await refreshToken();
+        await refreshToken(true);
       }
     }
 
     init();
 
+    const handleSessionExpired = async () => {
+      setState((prev) => {
+        // If there was no active user or active access token, ignore phantom session-expired event
+        if (!prev.user || !prev.accessToken) {
+          return prev;
+        }
+        void clearPersistedSession();
+        return {
+          ...prev,
+          user: null,
+          accessToken: null,
+          isSessionExpired: true,
+        };
+      });
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("session-expired", handleSessionExpired);
+    }
+
     return () => {
       cancelled = true;
+      if (typeof window !== "undefined") {
+        window.removeEventListener("session-expired", handleSessionExpired);
+      }
 
       if (refreshTimerRef.current) {
         clearTimeout(refreshTimerRef.current);
@@ -235,7 +342,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Session ─────────────────────────────────────────────────
 
   const setSession = useCallback(
-    (user: AuthUser, accessToken: string) => {
+    async(user: AuthUser, accessToken: string) => {
       persistSession(user, accessToken);
 
       localStorage.removeItem("logged_out");
@@ -246,34 +353,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading: false,
         isResolved: true,
         isOffline: false,
+      isSessionExpired: false,
       });
 
       scheduleRefresh();
+
+      const context: EvaluationContext = {
+        targetingKey: user.id,
+        id: user.id,
+        country: user.sessionDetails?.country ?? "",
+        plan: user.profileDetails?.tier ?? "free",
+      }
+
+      await OpenFeature.setContext(context)
+
     },
     []
   );
 
   // ── User ────────────────────────────────────────────────────
 
-  const updateUser = useCallback((updates: Partial<AuthUser>) => {
-    setState((prev) => {
-      if (!prev.user) return prev;
+  const updateUser = useCallback(
+    async (updates: Partial<AuthUser>) => {
+      if (!state.user) return;
 
       const user = {
-        ...prev.user,
+        ...state.user,
         ...updates,
       };
 
-      if (prev.accessToken) {
-        persistSession(user, prev.accessToken);
+      if (state.accessToken) {
+        persistSession(user, state.accessToken);
       }
 
-      return {
-        ...prev,
-        user,
+      setState((prev) => {
+        if (!prev.user) return prev;
+
+        return {
+          ...prev,
+          user,
+        };
+      });
+
+      const context: EvaluationContext = {
+        targetingKey: user.id,
+        id: user.id,
+        country: user.sessionDetails?.country ?? "",
+        plan: user.profileDetails?.tier ?? "free",
       };
-    });
-  }, []);
+
+      await OpenFeature.setContext(context);
+    },
+    [state.user, state.accessToken]
+  );
+
 
   // ── Onboarding ──────────────────────────────────────────────
 
@@ -312,7 +445,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       updateUser({
-        learningMode: learningMode,
+        profileDetails: {
+          ...state.user.profileDetails,
+          learningMode,
+          tier: state.user.profileDetails?.tier ?? "free",
+        },
       });
 
       router.replace("/learner");
@@ -325,7 +462,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     localStorage.setItem("logged_out", "true");
 
-    await clearModuleState();
     await clearPersistedSession();
 
     try {
@@ -346,7 +482,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading: false,
         isResolved: true,
         isOffline: false,
+      isSessionExpired: false,
       });
+
+      await OpenFeature.clearContext()
+      router.replace("/login")
     }
   }, []);
 
@@ -360,9 +500,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         redirectAfterAuth,
         logout,
         refreshToken,
+        dismissSessionExpired,
       }}
     >
       {children}
+      {state.isSessionExpired && <SessionExpiredModal />}
     </AuthContext.Provider>
   );
 }
