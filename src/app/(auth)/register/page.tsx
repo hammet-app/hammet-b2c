@@ -386,7 +386,7 @@ export default function RegisterPage() {
             Hammet: your AI academy.
           </h1>
           <p className="mt-1 text-sm font-medium text-slate-500 sm:text-[15px] dark:text-slate-400">
-            Sign up with your work email
+            Sign up with your email
           </p>
         </div>
 
@@ -434,9 +434,6 @@ export default function RegisterPage() {
               disabled={isLoading}
               required
             />
-            <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
-              Use an organization email to easily collaborate with teammates
-            </p>
           </div>
 
           <AuthInput
