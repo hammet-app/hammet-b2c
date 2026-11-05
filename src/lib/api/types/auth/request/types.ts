@@ -1,3 +1,4 @@
+import { UserRole } from "@/lib/utils/roles";
 
 export type RegisterB2CRequest = {
   fullName: string;
@@ -27,4 +28,12 @@ export type UpdatePassword = {
 // POST /auth/profile-picture/upload-url
 export type ProfilePictureUploadRequest = {
   contentType: "image/jpeg" | "image/png" | "image/webp";
+};
+
+
+// POST /auth/resend
+export type ResendVerificationRequest = {
+  id: string;
+  role: UserRole
+  reset: boolean
 };

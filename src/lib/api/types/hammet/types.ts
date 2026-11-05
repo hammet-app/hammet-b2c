@@ -9,6 +9,13 @@ export type RegisterHammetAdminRequest = {
   access: UserAccess[] | null;
 }
 
+// POST /auth/resend
+export type ResendVerificationRequest = {
+  id: string;
+  role: UserRole
+  reset: boolean
+};
+
 // GET /hammet/admins
 export type HammetAdmin = {
   id: string;
