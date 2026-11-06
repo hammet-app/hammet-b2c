@@ -2,6 +2,8 @@
 
 import { UserAccess, UserRole, UserScope } from "@/lib/utils/roles";
 import { PaginationDto } from "../support";
+import type { TicketCategory, TicketPriority } from "../support";
+import type { SupportTicketStatus } from "./types";
 
 export type RegisterHammetAdminRequestDto = {
   full_name: string;
@@ -83,4 +85,31 @@ export type CreateCouponRequestDto = {
 export type EditCouponRequestDto = {
   activate: boolean;
   expires_at?: string | null;
+};
+
+// ------------------------------------------------------------
+// Support tickets
+// GET /api/v1/hammet/support/tickets
+// ------------------------------------------------------------
+
+export type SupportTicketLearnerDto = {
+  id: string;
+  full_name: string;
+  email: string;
+};
+
+export type SupportTicketListItemDto = {
+  id: string;
+  learner: SupportTicketLearnerDto;
+  subject: string;
+  category: TicketCategory;
+  priority: TicketPriority;
+  status: SupportTicketStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SupportTicketsResponseDto = {
+  tickets: SupportTicketListItemDto[];
+  pagination: PaginationDto;
 };
