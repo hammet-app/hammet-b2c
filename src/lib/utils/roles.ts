@@ -54,6 +54,11 @@ export function canManageCoupons(user: AuthUser | null | undefined): boolean {
   return user.scope === "b2c" && (user.access ?? []).includes("coupons");
 }
 
+/** Hammet admins with platform scope view application logs. */
+export function canViewLogs(user: AuthUser | null | undefined): boolean {
+  return user?.role === "hammet_admin" && user.scope === "platform";
+}
+
 /** Returns the user's display label for a given role. */
 export function getRoleLabel(role: UserRole): string {
   const map: Record<UserRole, string> = {

@@ -2,6 +2,7 @@
 
 import { UserAccess, UserRole, UserScope } from "@/lib/utils/roles";
 import { PaginationDto } from "../support";
+import type { LogLevel } from "./types";
 
 export type RegisterHammetAdminRequestDto = {
   full_name: string;
@@ -83,4 +84,42 @@ export type CreateCouponRequestDto = {
 export type EditCouponRequestDto = {
   activate: boolean;
   expires_at?: string | null;
+};
+
+// GET /hammet/logs
+export type LogSummaryDto = {
+  id: string;
+  timestamp: string;
+  level: LogLevel;
+  event: string;
+  message: string;
+  domain: string | null;
+  user_id: string | null;
+  request_id: string | null;
+  method: string | null;
+  path: string | null;
+  status_code: number | null;
+};
+
+// GET /hammet/logs/{log_id}
+export type LogDetailDto = LogSummaryDto & {
+  error_type: string | null;
+  error_message: string | null;
+  stack_trace: string | null;
+  duration_ms: number | null;
+  user_agent: string | null;
+  metadata: Record<string, unknown> | null;
+};
+
+export type LogsResponseDto = {
+  logs: LogSummaryDto[];
+  pagination: PaginationDto;
+};
+
+// GET /hammet/logs/stats
+export type LogStatsDto = {
+  total: number;
+  by_level: Record<LogLevel, number>;
+  start_date: string | null;
+  end_date: string | null;
 };
