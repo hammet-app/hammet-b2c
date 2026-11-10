@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { UpdateAiSchoolRequest } from "@/lib/api/types";
 import { getHammetAiSchoolCourses, updateAiSchool } from "@/lib/api/hammet";
 import { ApiError } from "@/lib/api/api-client";
-import { is_enabled } from "@/lib/features/flags";
+import { isEnabled } from "@/lib/features/flags";
 import { canManageAiCatalog } from "@/lib/utils/roles";
 import { Alert } from "@/components/ui";
 import { Notice, PublishSelect, SessionExpiredNotice, inputClassName } from "@/components/hammet/admin-form";
@@ -24,7 +24,7 @@ export default function EditAiSchoolPage() {
   const [featureEnabled, setFeatureEnabled] = useState<boolean | null>(null);
 
   useEffect(() => {
-    is_enabled("gloria_school_creation").then((value) => setFeatureEnabled(Boolean(value)));
+    isEnabled("gloria_school_creation").then((value) => setFeatureEnabled(Boolean(value)));
   }, []);
 
   const [name, setName] = useState("");

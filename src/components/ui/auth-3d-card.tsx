@@ -219,10 +219,10 @@ export function Auth3DCard() {
           >
             <div className="p-4 flex flex-col justify-between h-full">
               <div className="flex items-center justify-between text-cyan-200">
-                <span className="text-[10px] font-mono font-bold">140 tok/s</span>
+                <span className="text-[10px] font-mono font-bold">AI UGC</span>
                 <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_10px_#22d3ee]" />
               </div>
-              <div className="text-xs font-bold text-white">Active Neural Graph</div>
+              <div className="text-xs font-bold text-white">Google Flow</div>
             </div>
           </motion.div>
 
