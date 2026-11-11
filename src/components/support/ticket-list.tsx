@@ -14,6 +14,7 @@ import {
   AlertCircle,
   Plus,
   Info,
+  RotateCw,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -31,6 +32,9 @@ export function TicketList() {
     searchQuery,
     setSearchQuery,
     setIsCreateModalOpen,
+    isLoadingTickets,
+    ticketsError,
+    reloadTickets,
   } = useTicketStore();
 
   const statusTabs = [
@@ -49,7 +53,7 @@ export function TicketList() {
       const q = searchQuery.toLowerCase();
       const matchId = ticket.id.toLowerCase().includes(q);
       const matchSubject = ticket.subject.toLowerCase().includes(q);
-      const matchMessage = ticket.message.toLowerCase().includes(q);
+      const matchMessage = (ticket.message ?? "").toLowerCase().includes(q);
       if (!matchId && !matchSubject && !matchMessage) return false;
     }
 
@@ -205,19 +209,45 @@ export function TicketList() {
         </div>
       </div>
 
-      {/* ── Local reference notice ─────────────────────────────── */}
-      <div className="flex items-start gap-2 border-b border-black/[0.05] bg-amber-50/60 px-3 py-2 text-[10.5px] leading-relaxed text-amber-800 dark:border-white/[0.06] dark:bg-amber-500/10 dark:text-amber-200">
-        <Info className="mt-0.5 h-3 w-3 shrink-0" />
-        <span>
-          This list only contains tickets created from this browser. The support
-          API does not provide history sync or status updates.
-        </span>
-      </div>
+      {/* ── Sync notice ────────────────────────────────────────── */}
+      {ticketsError ? (
+        <div className="flex items-start justify-between gap-2 border-b border-rose-200/60 bg-rose-50/70 px-3 py-2 text-[10.5px] leading-relaxed text-rose-800 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200">
+          <span className="flex items-start gap-2">
+            <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />
+            <span>{ticketsError}</span>
+          </span>
+          <button
+            type="button"
+            onClick={reloadTickets}
+            disabled={isLoadingTickets}
+            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-rose-300/60 px-2 py-0.5 font-semibold transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-400/30 dark:hover:bg-rose-500/20"
+          >
+            <RotateCw
+              className={`h-2.5 w-2.5 ${isLoadingTickets ? "animate-spin" : ""}`}
+            />
+            Retry
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-start gap-2 border-b border-black/[0.05] bg-purple-50/50 px-3 py-2 text-[10.5px] leading-relaxed text-purple-800 dark:border-white/[0.06] dark:bg-purple-500/10 dark:text-purple-200">
+          <Info className="mt-0.5 h-3 w-3 shrink-0" />
+          <span>Ticket history is loaded from the support desk.</span>
+        </div>
+      )}
 
       {/* ── Ticket List Scrollable Container ───────────────────── */}
       <div className="overflow-y-auto divide-y divide-slate-100 dark:divide-white/5 max-h-[580px]">
         <AnimatePresence mode="popLayout">
-          {filteredTickets.length === 0 ? (
+          {isLoadingTickets && tickets.length === 0 ? (
+            <div className="space-y-3 p-3">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-[104px] animate-pulse rounded-2xl bg-purple-50 dark:bg-white/5"
+                />
+              ))}
+            </div>
+          ) : filteredTickets.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -304,9 +334,11 @@ export function TicketList() {
                   </h4>
 
                   {/* Excerpt */}
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                    {ticket.message}
-                  </p>
+                  {ticket.message ? (
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                      {ticket.message}
+                    </p>
+                  ) : null}
 
                   {/* Bottom Row: Category and date */}
                   <div className="mt-1 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 pt-1 border-t border-black/[0.03] dark:border-white/[0.04]">

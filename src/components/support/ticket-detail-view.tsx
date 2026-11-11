@@ -71,7 +71,7 @@ export function TicketDetailView() {
   });
 
   const displaySubject = ticket.subject;
-  const displayMessage = ticket.message;
+  const displayMessage = ticket.message?.trim() ?? "";
 
   return (
     <div className="flex flex-col bg-white dark:bg-slate-900/60 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-sm overflow-hidden font-poppins">
@@ -164,10 +164,9 @@ export function TicketDetailView() {
               </div>
 
               <p className="mt-1 text-slate-600 dark:text-slate-300 leading-relaxed">
-                This card is a local reference copy of the ticket returned by the
-                backend. The support API currently supports ticket creation only,
-                so replies and later status changes are not fetched here. Use the
-                reference above when contacting the team.
+                Tickets and their current status are synced from the support
+                desk. Replies are handled by email, so use the reference above
+                when contacting the team.
               </p>
 
               <div className="mt-2.5 flex flex-wrap items-center gap-4 text-[11px] font-medium text-slate-500 dark:text-slate-400 border-t border-purple-500/15 pt-2">
@@ -196,9 +195,20 @@ export function TicketDetailView() {
             <span className="text-[11px] text-slate-400 font-mono">{formattedDate}</span>
           </div>
 
-          <div className="mt-4 whitespace-pre-wrap text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-            {displayMessage}
-          </div>
+          {displayMessage ? (
+            <div className="mt-4 whitespace-pre-wrap text-xs sm:text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+              {displayMessage}
+            </div>
+          ) : (
+            <p className="mt-4 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              The ticket list response does not include the message body. Reply
+              by email and quote{" "}
+              <span className="font-mono font-semibold text-purple-700 dark:text-purple-300">
+                {ticket.id}
+              </span>{" "}
+              so the team can locate your request.
+            </p>
+          )}
         </div>
       </div>
     </div>
