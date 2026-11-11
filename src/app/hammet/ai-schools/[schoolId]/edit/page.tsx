@@ -13,7 +13,7 @@ import { ApiError } from "@/lib/api/api-client";
 import { is_enabled } from "@/lib/features/flags";
 import { canManageAiCatalog } from "@/lib/utils/roles";
 import { Alert } from "@/components/ui";
-import { Notice, PublishSelect, SessionExpiredNotice, inputClassName } from "@/components/hammet/admin-form";
+import { Notice, PublishSelect, SessionExpiredNotice, inputClassName } from "@/components/layout/hammet/admin-form";
 
 export default function EditAiSchoolPage() {
   const { schoolId } = useParams<{ schoolId: string }>();

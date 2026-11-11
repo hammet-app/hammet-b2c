@@ -38,7 +38,7 @@ import {
   inputClassName,
   parseWholeNumber,
   primaryButtonClassName,
-} from "@/components/hammet/admin-form";
+} from "@/components/layout/hammet/admin-form";
 
 type ModuleRow = {
   key: number;

@@ -1,7 +1,7 @@
 import { FilterX, Search } from "lucide-react";
 
 import type { LogLevel, LogSortOrder } from "@/lib/api/types";
-import { inputClassName } from "@/components/hammet/admin-form";
+import { inputClassName } from "@/components/layout/hammet/admin-form";
 import { logLevelLabels, logLevels } from "@/components/hammet/logs/log-level-badge";
 
 export type LogFilterValues = {
