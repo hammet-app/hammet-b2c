@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import {
   ChevronLeft,
@@ -30,6 +30,7 @@ import {
   PriorityBadge,
   StatusBadge,
 } from "@/components/support/ticket-badges";
+import { AdminTicketDetailModal } from "@/components/support/admin-ticket-detail-modal";
 
 const PAGE_SIZE = 20;
 
@@ -68,6 +69,11 @@ export default function HammetSupportPage() {
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeTicket, setActiveTicket] = useState<SupportTicketListItem | null>(
+    null,
+  );
+
+  const closeTicketDetails = useCallback(() => setActiveTicket(null), []);
 
   useEffect(() => {
     if (!accessToken || !canManage) return;
@@ -273,7 +279,16 @@ export default function HammetSupportPage() {
                     className="absolute inset-y-0 left-0 w-[3px] bg-gradient-to-b from-purple-500 to-cyan-400 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                   />
 
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  {/* Full-card hit target: content below stays click-through so
+                      the learner email link keeps working. */}
+                  <button
+                    type="button"
+                    onClick={() => setActiveTicket(ticket)}
+                    aria-label={`View ticket ${ticket.id}: ${ticket.subject}`}
+                    className="absolute inset-0 z-0 cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50 focus-visible:ring-offset-2 dark:focus-visible:ring-cyan-400/40 dark:focus-visible:ring-offset-[#0f0b1e]"
+                  />
+
+                  <div className="pointer-events-none relative z-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-md bg-[#EDE9FE] px-2 py-0.5 font-mono text-[11px] font-semibold tracking-wide text-purple-700 dark:bg-[#21183A] dark:text-purple-300">
@@ -299,7 +314,7 @@ export default function HammetSupportPage() {
 
                         <a
                           href={`mailto:${ticket.learner.email}`}
-                          className="flex min-w-0 items-center gap-1.5 break-all transition-colors hover:text-purple-700 dark:hover:text-cyan-400"
+                          className="pointer-events-auto flex min-w-0 items-center gap-1.5 break-all transition-colors hover:text-purple-700 dark:hover:text-cyan-400"
                         >
                           <Mail className="h-3.5 w-3.5 shrink-0" />
                           {ticket.learner.email}
@@ -328,6 +343,11 @@ export default function HammetSupportPage() {
                           </time>
                         </p>
                       )}
+
+                      <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-purple-700 transition-transform duration-200 group-hover:translate-x-0.5 dark:text-cyan-400">
+                        View details
+                        <ChevronRight className="h-3 w-3" />
+                      </span>
                     </div>
                   </div>
                 </article>
@@ -368,6 +388,11 @@ export default function HammetSupportPage() {
           </div>
         )}
       </div>
+
+      <AdminTicketDetailModal
+        ticket={activeTicket}
+        onClose={closeTicketDetails}
+      />
     </div>
   );
 }

@@ -112,6 +112,11 @@ export type SupportTicketListItem = {
   id: string;
   learner: SupportTicketLearner;
   subject: string;
+  /**
+   * The list endpoint may omit the ticket body. When it is returned, the
+   * admin detail modal shows it; otherwise the UI falls back to email contact.
+   */
+  message?: string;
   category: TicketCategory;
   priority: TicketPriority;
   status: SupportTicketStatus;

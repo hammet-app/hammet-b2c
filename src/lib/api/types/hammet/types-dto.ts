@@ -102,6 +102,7 @@ export type SupportTicketListItemDto = {
   id: string;
   learner: SupportTicketLearnerDto;
   subject: string;
+  message?: string | null;
   category: TicketCategory;
   priority: TicketPriority;
   status: SupportTicketStatus;

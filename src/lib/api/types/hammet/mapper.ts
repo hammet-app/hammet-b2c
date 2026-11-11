@@ -122,6 +122,7 @@ export function toSupportTicketListItem(
             email: dto.learner.email,
         },
         subject: dto.subject,
+        message: dto.message?.trim() || undefined,
         category: dto.category,
         priority: dto.priority,
         status: dto.status,
