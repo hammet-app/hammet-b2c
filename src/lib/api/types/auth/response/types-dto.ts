@@ -18,8 +18,6 @@ export type SessionDetailsDto = {
 
 export type SchoolDetailsDto = {
   school_id: string;
-  cookie_consent: boolean;
-  cookie_policy_version: string;
   class_level: string | null; // null for non-students
   class_arm: string | null;
   term: number | null;

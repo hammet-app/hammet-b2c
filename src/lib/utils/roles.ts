@@ -13,6 +13,7 @@ export type UserAccess =
   | "schools"
   | "coupons"
   | "support"
+  | "legal"
   | "beta_access"
 
 export type UserScope = 
@@ -60,6 +61,13 @@ export function canManageSupport(user: AuthUser | null | undefined): boolean {
   if (user?.role !== "hammet_admin") return false;
   if (user.scope === "platform") return true;
   return user.scope === "b2c" && (user.access ?? []).includes("support");
+}
+
+/** Hammet admins with platform scope, or B2C scope plus legal access, manage legal documents. */
+export function canManageLegal(user: AuthUser | null | undefined): boolean {
+  if (user?.role !== "hammet_admin") return false;
+  if (user.scope === "platform") return true;
+  return user.scope === "b2c" && (user.access ?? []).includes("legal");
 }
 
 /** Returns the user's display label for a given role. */

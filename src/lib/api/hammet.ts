@@ -62,6 +62,12 @@ import {
   type SupportTicketsResponseDto,
   type GetSupportTicketsParams,
   toSupportTicketsResponse,
+  type LegalDocument,
+  type LegalDocumentsResponse,
+  type LegalDocumentsResponseDto,
+  type LegalDocumentDto,
+  type CreateLegalDocumentRequest,
+  type PatchLegalDocumentRequest,
 } from "@/lib/api/types";
 
 // ------------------------------------------------------------
@@ -395,4 +401,93 @@ export async function getHammetSupportTickets(
   );
 
   return toSupportTicketsResponse(response);
+}
+
+// ------------------------------------------------------------
+// LEGAL DOCUMENTS
+// ------------------------------------------------------------
+
+function toLegalDocument(dto: LegalDocumentDto): LegalDocument {
+  return {
+    id: dto.id,
+    seriesId: dto.series_id,
+    documentType: dto.document_type,
+    domain: dto.domain,
+    variation: dto.variation,
+    version: dto.version,
+    content: dto.content,
+    status: dto.status,
+    createdBy: dto.created_by,
+    updatedBy: dto.updated_by,
+    reviewedBy: dto.reviewed_by,
+    createdAt: dto.created_at,
+    updatedAt: dto.updated_at,
+  };
+}
+
+export async function getHammetLegalDocuments(
+  params: { domain: "b2b" | "b2c"; status?: "draft" | "review" | "published" },
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<LegalDocumentsResponse> {
+  const query = new URLSearchParams({ domain: params.domain, page: "1", page_size: "100" });
+  if (params.status) query.set("document_status", params.status);
+  const response = await apiClient.get<LegalDocumentsResponseDto>(
+    `/hammet/legal/admin?${query.toString()}`,
+    token,
+    { onRefresh },
+  );
+  return {
+    documents: response.documents.map(toLegalDocument),
+    total: response.total,
+    page: response.page,
+    pageSize: response.page_size,
+  };
+}
+
+export async function getHammetLegalDocument(
+  documentId: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<LegalDocument> {
+  const response = await apiClient.get<LegalDocumentDto>(
+    `/hammet/legal/admin/${encodeURIComponent(documentId)}`,
+    token,
+    { onRefresh },
+  );
+  return toLegalDocument(response);
+}
+
+export async function createHammetLegalDocument(
+  body: CreateLegalDocumentRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<LegalDocument> {
+  const response = await apiClient.post<LegalDocumentDto>(
+    "/hammet/legal",
+    {
+      document_type: body.documentType,
+      domain: body.domain,
+      variation: body.variation,
+      content: body.content,
+    },
+    token,
+    { onRefresh },
+  );
+  return toLegalDocument(response);
+}
+
+export async function patchHammetLegalDocument(
+  documentId: string,
+  body: PatchLegalDocumentRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<LegalDocument> {
+  const response = await apiClient.patch<LegalDocumentDto>(
+    `/hammet/legal/admin/${encodeURIComponent(documentId)}`,
+    body,
+    token,
+    { onRefresh },
+  );
+  return toLegalDocument(response);
 }

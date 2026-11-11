@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { SerwistProvider } from "@serwist/next/react";
-import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import { SmoothScrollProvider } from "@/components/providers/smooth-scroll-provider";
+import { CookieConsentProvider, CookieConsentSync } from "@/components/legal/CookieConsentProvider";
 import { Poppins, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
@@ -70,7 +70,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           disable={process.env.NODE_ENV !== "production"}
         >
           <AuthProvider>
-            <SmoothScrollProvider>{children}</SmoothScrollProvider>
+            <CookieConsentProvider>
+              <SmoothScrollProvider>{children}</SmoothScrollProvider>
+              <CookieConsentSync />
+            </CookieConsentProvider>
           </AuthProvider>
         </SerwistProvider>
       </body>

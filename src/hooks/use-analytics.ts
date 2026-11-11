@@ -5,39 +5,12 @@ import { usePathname } from "next/navigation";
 import { analyticsApi } from "@/lib/api/analytics";
 import { useAuth } from "@/lib/auth/auth-context";
 import { AnalyticsEventName } from "@/lib/api/types/analytics";
-
-const ANONYMOUS_ID_STORAGE_KEY = "hammet-analytics-anonymous-id";
-
-function createAnonymousId() {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (character) => {
-    const random = Math.floor(Math.random() * 16);
-    const value = character === "x" ? random : (random & 0x3) | 0x8;
-    return value.toString(16);
-  });
-}
-
-function getOrCreateAnonymousId(): string | undefined {
-  if (typeof window === "undefined") return undefined;
-
-  try {
-    const storedId = window.localStorage.getItem(ANONYMOUS_ID_STORAGE_KEY);
-    if (storedId) return storedId;
-
-    const anonymousId = createAnonymousId();
-    window.localStorage.setItem(ANONYMOUS_ID_STORAGE_KEY, anonymousId);
-    return anonymousId;
-  } catch {
-    // Keep anonymous analytics working for this page session if storage is unavailable.
-    return createAnonymousId();
-  }
-}
+import { useCookieConsent } from "@/components/legal/CookieConsentProvider";
+import { getOrCreateAnonymousId } from "@/lib/legal/cookie-consent";
 
 export function useAnalytics() {
   const { user, accessToken, refreshToken } = useAuth();
+  const { analyticsAllowed } = useCookieConsent();
   const pathname = usePathname();
   const [anonymousId, setAnonymousId] = useState<string | undefined>();
 
@@ -50,6 +23,7 @@ export function useAnalytics() {
           properties?: Record<string, unknown>;
       }
     ) => {
+      if (!analyticsAllowed) return;
       try {
         let eventAnonymousId = anonymousId;
         if (!user?.id && !eventAnonymousId) {
@@ -78,7 +52,7 @@ export function useAnalytics() {
         console.warn("[Analytics] Failed to track event:", eventName, error);
       }
     },
-    [user, accessToken, refreshToken, pathname, anonymousId]
+    [user, accessToken, refreshToken, pathname, anonymousId, analyticsAllowed]
   );
 
   return { trackEvent };

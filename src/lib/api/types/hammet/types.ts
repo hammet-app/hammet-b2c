@@ -9,6 +9,45 @@ export type RegisterHammetAdminRequest = {
   access: UserAccess[] | null;
 }
 
+export type LegalDocumentType = "cookie_policy" | "privacy_policy" | "terms_and_conditions";
+export type LegalDocumentStatus = "draft" | "review" | "published";
+export type LegalDomain = "b2b" | "b2c";
+
+export type LegalDocument = {
+  id: string;
+  seriesId: string;
+  documentType: LegalDocumentType;
+  domain: LegalDomain;
+  variation: string | null;
+  version: number;
+  content: string;
+  status: LegalDocumentStatus;
+  createdBy: string | null;
+  updatedBy: string | null;
+  reviewedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type LegalDocumentsResponse = {
+  documents: LegalDocument[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+export type CreateLegalDocumentRequest = {
+  documentType: LegalDocumentType;
+  domain: LegalDomain;
+  variation: string | null;
+  content: string;
+};
+
+export type PatchLegalDocumentRequest = {
+  content?: string;
+  status?: LegalDocumentStatus;
+};
+
 // GET /hammet/admins
 export type HammetAdmin = {
   id: string;

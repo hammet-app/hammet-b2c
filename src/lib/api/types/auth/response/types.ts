@@ -13,8 +13,6 @@ export type SessionDetails = {
 
 export type SchoolDetails = {
   schoolId: string;
-  cookieConsent: boolean;
-  cookiePolicyVersion: string;
   classLevel: string | null; // null for non-students
   classArm: string | null;
   term: number | null;

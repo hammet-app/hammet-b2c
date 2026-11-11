@@ -5,3 +5,4 @@ export * from "@/lib/api/types/support";
 export * from "@/lib/api/types/ai-schools";
 export * from "@/lib/api/types/analytics";
 export * from "@/lib/api/types/learner";
+export * from "@/lib/api/types/legal";

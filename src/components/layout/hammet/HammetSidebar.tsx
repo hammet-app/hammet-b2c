@@ -8,6 +8,7 @@ import { motion } from "motion/react";
 import {
   BookOpen,
   LifeBuoy,
+  Scale,
   TicketPercent,
   ChevronLeft,
   ChevronRight,
@@ -25,7 +26,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { getHammetAiSchools } from "@/lib/api/hammet";
 import type { AiSchool } from "@/lib/api/types";
 import { useTheme } from "@/lib/use-theme";
-import { canManageAdmins, canManageCoupons, canManageSupport } from "@/lib/utils/roles";
+import { canManageAdmins, canManageCoupons, canManageLegal, canManageSupport } from "@/lib/utils/roles";
 
 const baseNavigation = [
   {
@@ -68,6 +69,12 @@ const supportNavigation = {
   icon: LifeBuoy,
 };
 
+const legalNavigation = {
+  label: "Legal documents",
+  href: "/hammet/legal",
+  icon: Scale,
+};
+
 const STORAGE_KEY = "hammet-admin-sidebar-collapsed";
 
 interface HammetShellProps {
@@ -84,6 +91,7 @@ export function HammetShell({ children }: HammetShellProps) {
     ...baseNavigation,
     ...(canManageCoupons(user) ? [couponsNavigation] : []),
     ...(canManageSupport(user) ? [supportNavigation] : []),
+    ...(canManageLegal(user) ? [legalNavigation] : []),
     ...(canManageAdmins(user) ? [adminsNavigation] : []),
   ];
 

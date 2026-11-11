@@ -47,8 +47,6 @@ function toSessionDetails(dto: SessionDetailsDto): SessionDetails {
 function toSchoolDetails(dto: SchoolDetailsDto): SchoolDetails {
     return {
         schoolId: dto.school_id,
-        cookieConsent: dto.cookie_consent,
-        cookiePolicyVersion: dto.cookie_policy_version,
         classArm: dto.class_arm,
         classLevel: dto.class_level,
         term: dto.term

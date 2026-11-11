@@ -1,4 +1,5 @@
 import { track } from "@vercel/analytics";
+import { isAnalyticsConsentGranted } from "@/lib/legal/cookie-consent";
 
 export type GloriaAnalyticsEvent =
   | "gloria_school_created"
@@ -16,6 +17,9 @@ export function trackGloriaEvent(
   event: GloriaAnalyticsEvent,
   properties: Record<string, string | number | boolean | null> = {}
 ): void {
+  if (!isAnalyticsConsentGranted()) {
+    return;
+  }
   if (process.env.NEXT_PUBLIC_GLORIA_PAYMENT_ANALYTICS !== "true") {
     return;
   }

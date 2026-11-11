@@ -13,6 +13,41 @@ export type RegisterHammetAdminRequestDto = {
   access: UserAccess[] | null;
 }
 
+export type LegalDocumentDto = {
+  id: string;
+  series_id: string;
+  document_type: "cookie_policy" | "privacy_policy" | "terms_and_conditions";
+  domain: "b2b" | "b2c";
+  variation: string | null;
+  version: number;
+  content: string;
+  status: "draft" | "review" | "published";
+  created_by: string | null;
+  updated_by: string | null;
+  reviewed_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type LegalDocumentsResponseDto = {
+  documents: LegalDocumentDto[];
+  total: number;
+  page: number;
+  page_size: number;
+};
+
+export type CreateLegalDocumentRequestDto = {
+  document_type: LegalDocumentDto["document_type"];
+  domain: LegalDocumentDto["domain"];
+  variation: string | null;
+  content: string;
+};
+
+export type PatchLegalDocumentRequestDto = {
+  content?: string;
+  status?: LegalDocumentDto["status"];
+};
+
 // GET /hammet/admins
 export type HammetAdminDto = {
   id: string;

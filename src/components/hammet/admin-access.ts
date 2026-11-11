@@ -47,6 +47,11 @@ export const b2cAccess: AccessOption[] = [
     label: "Support",
     description: "View learner support tickets.",
   },
+  {
+    id: "legal",
+    label: "Legal documents",
+    description: "Create, edit, and review B2C legal documents.",
+  },
 ];
 
 export function accessOptionsFor(scope: UserScope): AccessOption[] {
