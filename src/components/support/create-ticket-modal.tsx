@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useLenis } from "lenis/react";
 import { useTicketStore } from "@/lib/store/use-ticket-store";
 import { TicketForm } from "./ticket-form";
 import { X, Mail } from "lucide-react";
@@ -10,6 +11,7 @@ import { motion, AnimatePresence } from "motion/react";
 
 export function CreateTicketModal() {
   const { isCreateModalOpen, setIsCreateModalOpen } = useTicketStore();
+  const lenis = useLenis();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -25,6 +27,10 @@ export function CreateTicketModal() {
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
+    // Lenis owns scroll on the root element, so `overflow: hidden` alone does
+    // not stop the page behind the dialog from scrolling.
+    lenis?.stop();
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setIsCreateModalOpen(false);
@@ -35,16 +41,20 @@ export function CreateTicketModal() {
 
     return () => {
       document.body.style.overflow = originalOverflow;
+      lenis?.start();
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isCreateModalOpen, setIsCreateModalOpen]);
+  }, [isCreateModalOpen, setIsCreateModalOpen, lenis]);
 
   if (!mounted) return null;
 
   return createPortal(
     <AnimatePresence>
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 md:p-6 overflow-hidden font-poppins">
+        <div
+          data-lenis-prevent
+          className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 md:p-6 overflow-hidden font-poppins"
+        >
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -64,6 +74,7 @@ export function CreateTicketModal() {
             className="relative z-[101] w-full max-w-2xl max-h-[92vh] flex flex-col rounded-3xl border border-slate-200/80 bg-white shadow-2xl dark:border-white/10 dark:bg-slate-900 overflow-hidden"
             role="dialog"
             aria-modal="true"
+            aria-labelledby="create-ticket-title"
           >
             {/* Pinned Header */}
             <div className="shrink-0 flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-white/[0.08] bg-slate-50/70 dark:bg-slate-900/90 z-10">
@@ -72,7 +83,10 @@ export function CreateTicketModal() {
                   <Mail className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <h2
+                    id="create-ticket-title"
+                    className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5"
+                  >
                     <span>New Support Ticket</span>
                     <GlowingMagicSparkle className="h-3.5 w-3.5 text-purple-600" />
                   </h2>
@@ -92,7 +106,10 @@ export function CreateTicketModal() {
             </div>
 
             {/* Scrollable Form Body */}
-            <div className="flex-1 overflow-y-auto px-6 py-5">
+            <div
+              data-lenis-prevent
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 py-5"
+            >
               <TicketForm
                 onCancel={() => setIsCreateModalOpen(false)}
                 onSuccess={() => {

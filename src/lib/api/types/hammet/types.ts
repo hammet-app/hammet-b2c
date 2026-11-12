@@ -1,5 +1,5 @@
 import { UserAccess, UserRole, UserScope } from "@/lib/utils/roles";
-import { Pagination, PaginationDto } from "../support";
+import { Pagination, TicketCategory, TicketPriority } from "../support";
 
 export type RegisterHammetAdminRequest = {
   fullName: string;
@@ -88,4 +88,49 @@ export type CreateCouponRequest = {
 export type EditCouponRequest = {
   activate: boolean;
   expiresAt?: string | null;
+};
+
+// ------------------------------------------------------------
+// Support tickets
+// GET /api/v1/hammet/support/tickets
+// ------------------------------------------------------------
+
+export type SupportTicketStatus =
+  | "open"
+  | "in-progress"
+  | "pending"
+  | "resolved"
+  | "closed";
+
+export type SupportTicketLearner = {
+  id: string;
+  fullName: string;
+  email: string;
+};
+
+export type SupportTicketListItem = {
+  id: string;
+  learner: SupportTicketLearner;
+  subject: string;
+  /**
+   * The list endpoint may omit the ticket body. When it is returned, the
+   * admin detail modal shows it; otherwise the UI falls back to email contact.
+   */
+  message?: string;
+  category: TicketCategory;
+  priority: TicketPriority;
+  status: SupportTicketStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SupportTicketsResponse = {
+  tickets: SupportTicketListItem[];
+  pagination: Pagination;
+};
+
+export type GetSupportTicketsParams = {
+  page?: number;
+  pageSize?: number;
+  status?: SupportTicketStatus | null;
 };

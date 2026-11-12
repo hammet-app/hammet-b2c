@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import {
   ArrowRight,
@@ -27,11 +28,73 @@ import {
 import { LearningSnapshot } from "@/components/learner/learning-snapshot";
 
 import { useAuth } from "@/lib/auth/auth-context";
+import { learnerApi } from "@/lib/api/learner";
+import type { AiSchool, AiSchoolCourse } from "@/lib/api/types";
 
 export default function LearnerHomePage() {
-  const { user } = useAuth();
+  const { user, accessToken, refreshToken } = useAuth();
   const firstName = user?.fullName?.split(" ")[0] ?? "there";
   const shouldReduceMotion = useReducedMotion();
+  const [school, setSchool] = useState<AiSchool | null>(null);
+  const [schoolCourses, setSchoolCourses] = useState<AiSchoolCourse[]>([]);
+  const [schoolLoading, setSchoolLoading] = useState(true);
+  const [schoolError, setSchoolError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!accessToken) return;
+
+    let cancelled = false;
+
+    async function fetchFeaturedSchool() {
+      setSchoolLoading(true);
+      setSchoolError(null);
+
+      try {
+        if (!accessToken) return;
+        const schoolsResponse = await learnerApi.getAiSchools(
+          accessToken,
+          refreshToken,
+          1,
+          1,
+        );
+        const featuredSchool = schoolsResponse.aiSchools[0] ?? null;
+
+        if (!featuredSchool) {
+          if (!cancelled) {
+            setSchool(null);
+            setSchoolCourses([]);
+          }
+          return;
+        }
+
+        if (!cancelled) setSchool(featuredSchool);
+
+        const coursesResponse = await learnerApi.getAiSchoolCourses(
+          featuredSchool.id,
+          accessToken,
+          refreshToken,
+        );
+
+        if (!cancelled) {
+          setSchoolCourses(coursesResponse.courses);
+        }
+      } catch (error: unknown) {
+        if (!cancelled) {
+          setSchoolError(
+            error instanceof Error ? error.message : "Unable to load the featured school.",
+          );
+        }
+      } finally {
+        if (!cancelled) setSchoolLoading(false);
+      }
+    }
+
+    void fetchFeaturedSchool();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, refreshToken]);
 
   return (
     <div className="relative min-h-screen px-5 pb-28 pt-8 sm:px-7 sm:pt-10 lg:px-10 lg:pb-16 lg:pt-10">
@@ -109,7 +172,7 @@ export default function LearnerHomePage() {
                 transition={{ delay: 0.45 }}
                 className="mb-5 hidden rounded-2xl rounded-br-sm border border-purple-200/50 bg-white/95 px-3.5 py-1.5 text-[11px] font-semibold text-slate-800 shadow-[0_4px_16px_rgba(0,0,0,0.12)] backdrop-blur sm:block dark:border-cyan-500/30 dark:bg-slate-900/95 dark:text-cyan-300"
               >
-                Welcome! Let&apos;s build AI 🤖
+                Welcome! Let&apos;s learn AI 🤖
               </motion.div>
               <img
                 src="/ai-bot-welcome.png"
@@ -163,23 +226,27 @@ export default function LearnerHomePage() {
                 </div>
 
                 <h2 className="max-w-xl text-3xl font-bold tracking-[-0.045em] sm:text-4xl lg:text-5xl">
-                  School of{" "}
-                  <span className="bg-gradient-to-r from-fuchsia-300 via-violet-300 to-cyan-300 bg-clip-text font-black text-transparent">
-                    AI
-                  </span>{" "}
-                  <span className="bg-gradient-to-r from-violet-200 via-cyan-200 to-emerald-200 bg-clip-text text-transparent">
-                    Foundations
-                  </span>
+                  {school?.name ??
+                    (schoolLoading
+                      ? "Loading your featured school…"
+                      : "Explore your learning journey")}
                 </h2>
 
                 <p className="mt-4 max-w-xl text-sm leading-6 text-purple-100/80 sm:text-base">
-                  Build your foundation for understanding and working with AI,
-                  from mathematical fundamentals to practical everyday autonomous systems.
+                  {school?.description ??
+                    (schoolError ||
+                      "Discover a learning path designed to help you build practical skills.")}
                 </p>
 
                 <div className="mt-7 flex flex-wrap gap-2">
                   <span className="rounded-full border border-white/10 bg-white/[0.08] px-3 py-1.5 text-xs text-white/90 backdrop-blur-sm">
-                    4 core courses
+                    {school
+                      ? schoolError
+                        ? "Courses unavailable"
+                        : `${schoolCourses.length} ${schoolCourses.length === 1 ? "course" : "courses"}`
+                      : schoolLoading
+                        ? "Loading courses…"
+                        : "Explore available schools"}
                   </span>
                   <span className="rounded-full border border-white/10 bg-white/[0.08] px-3 py-1.5 text-xs text-white/90 backdrop-blur-sm">
                     Beginner → Intermediate
@@ -192,11 +259,11 @@ export default function LearnerHomePage() {
 
               <div className="flex lg:justify-end">
                 <Link
-                  href="/learner/ai-schools"
+                  href={school ? `/learner/ai-schools/${school.id}` : "/learner/ai-schools"}
                   className="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-300/20 px-6 py-3 text-xs font-bold uppercase tracking-[0.12em] text-cyan-200 shadow-lg shadow-cyan-500/20 transition-all hover:bg-cyan-300/30 hover:scale-[1.02]"
                 >
                   <span className="h-2 w-2 rounded-full bg-cyan-300 animate-ping" />
-                  Explore School
+                  {school ? "View School" : "Explore Schools"}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -277,10 +344,16 @@ export default function LearnerHomePage() {
               <div>
                 <div className="flex flex-wrap items-center gap-2 mb-3">
                   <span className="rounded-full bg-purple-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
-                    Full Diploma Track
+                    Featured School
                   </span>
                   <span className="rounded-full bg-cyan-50 px-3 py-1 text-[11px] font-bold text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">
-                    4 Core Courses
+                    {school
+                      ? schoolError
+                        ? "Courses unavailable"
+                        : `${schoolCourses.length} ${schoolCourses.length === 1 ? "Course" : "Courses"}`
+                      : schoolLoading
+                        ? "Loading courses…"
+                        : "No courses available"}
                   </span>
                 </div>
 
@@ -289,13 +362,20 @@ export default function LearnerHomePage() {
                     <GraduationCap className="h-6 w-6" />
                   </div>
                   <h3 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
-                    School of AI Foundations
+                    {school?.name ??
+                      (schoolLoading ? "Loading featured school…" : "No featured school available")}
                   </h3>
                 </div>
 
                 <p className="text-sm leading-relaxed text-slate-600 sm:text-base dark:text-slate-300 max-w-xl">
-                  Comprehensive industry-recognized tracks designed to take you from foundational mathematics and prompt engineering to production autonomous agent architectures.
+                  {school?.description ??
+                    (schoolError || "Explore the available schools and learning paths.")}
                 </p>
+                {school && schoolError && (
+                  <p className="mt-2 text-xs text-rose-600 dark:text-rose-300">
+                    We couldn&apos;t load this school&apos;s course list.
+                  </p>
+                )}
 
                 <div className="mt-5 flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400">
                   <span className="flex items-center gap-1.5">
@@ -315,21 +395,26 @@ export default function LearnerHomePage() {
 
               <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end justify-between gap-4">
                 <div className="text-left lg:text-right">
-                  <p className="text-xs uppercase font-semibold text-slate-400">Complete Academy Tuition</p>
+                  <p className="text-xs uppercase font-semibold text-slate-400">School Price</p>
                   <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-3xl font-extrabold text-slate-950 dark:text-white">₦25,000</span>
-                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                      Save 20% Bundle
+                    <span className="text-3xl font-extrabold text-slate-950 dark:text-white">
+                      {school
+                        ? school.price === 0
+                          ? "Free"
+                          : <>{"\u20A6"}{school.price.toLocaleString()}</>
+                        : schoolLoading
+                          ? "Loading price..."
+                          : "N/A"}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-3 w-full sm:w-auto">
                   <Link
-                    href="/learner/ai-schools/ai-foundations"
+                    href={school ? `/learner/ai-schools/${school.id}` : "/learner/ai-schools"}
                     className="inline-flex flex-1 sm:flex-initial items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-purple-600/25 transition-all hover:bg-purple-700 hover:scale-[1.02]"
                   >
-                    View Curriculum
+                    {school ? "View Curriculum" : "Browse Schools"}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>

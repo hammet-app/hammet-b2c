@@ -58,6 +58,10 @@ import {
   fromEditCouponRequest,
   toCoupon,
   ResendVerificationRequest,
+  type SupportTicketsResponse,
+  type SupportTicketsResponseDto,
+  type GetSupportTicketsParams,
+  toSupportTicketsResponse,
 } from "@/lib/api/types";
 
 // ------------------------------------------------------------
@@ -365,4 +369,30 @@ export async function deleteHammetCoupon(
     token,
     { onRefresh },
   );
+}
+
+// ------------------------------------------------------------
+// SUPPORT TICKETS
+// ------------------------------------------------------------
+
+// Contract: GET /api/v1/hammet/support/tickets
+// Returns the newest tickets first. An optional status filters to one exact status.
+export async function getHammetSupportTickets(
+  params: GetSupportTicketsParams,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<SupportTicketsResponse> {
+  const query = new URLSearchParams();
+  if (params.page) query.set("page", String(params.page));
+  if (params.pageSize) query.set("page_size", String(params.pageSize));
+  if (params.status) query.set("status", params.status);
+
+  const queryString = query.toString();
+  const response = await apiClient.get<SupportTicketsResponseDto>(
+    `/hammet/support/tickets${queryString ? `?${queryString}` : ""}`,
+    token,
+    { onRefresh },
+  );
+
+  return toSupportTicketsResponse(response);
 }

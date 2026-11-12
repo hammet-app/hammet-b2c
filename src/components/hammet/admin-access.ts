@@ -42,6 +42,11 @@ export const b2cAccess: AccessOption[] = [
     label: "Coupons",
     description: "Create and manage B2C coupons.",
   },
+  {
+    id: "support",
+    label: "Support",
+    description: "View learner support tickets.",
+  },
 ];
 
 export function accessOptionsFor(scope: UserScope): AccessOption[] {
