@@ -232,6 +232,9 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-[26px] dark:text-white">
             Hammet: your AI academy.
           </h1>
+          <p className="mt-1 text-sm font-medium text-slate-500 sm:text-[15px] dark:text-slate-400">
+            Sign in with your email
+          </p>
         </div>
 
         {errors.form && (
