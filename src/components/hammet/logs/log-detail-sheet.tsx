@@ -97,7 +97,7 @@ export function LogDetailSheet({ log, open, onOpenChange }: LogDetailSheetProps)
       >
         {log && (
           <>
-            <header className="flex items-start gap-3 border-b border-black/[0.06] px-6 py-5 dark:border-white/[0.06]">
+            <header className="flex shrink-0 items-start gap-3 border-b border-black/[0.06] px-6 py-5 dark:border-white/[0.06]">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <LogLevelBadge level={log.level} />
@@ -120,7 +120,10 @@ export function LogDetailSheet({ log, open, onOpenChange }: LogDetailSheetProps)
               </SheetClose>
             </header>
 
-            <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
+            <div
+              data-lenis-prevent
+              className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain touch-pan-y px-6 py-6"
+            >
               <DetailSection title="Event">
                 <DetailRow label="Time (UTC)" value={log.timestamp} />
                 <DetailRow label="Domain" value={log.domain} />
