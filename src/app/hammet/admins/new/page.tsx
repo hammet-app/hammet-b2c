@@ -37,6 +37,16 @@ const b2bAccess = [
     label: "Disputes",
     description: "Review and manage platform disputes.",
   },
+  {
+    id: "support" as UserAccess,
+    label: "Support",
+    description: "Respond to issues users have with regards to the platform"
+  },
+  {
+    id: "legal" as UserAccess,
+    label: "Legal",
+    description: "Manage legal documents for the b2c domain"
+  },
 ];
 
 const b2cAccess = [
@@ -49,7 +59,17 @@ const b2cAccess = [
     id: "coupons" as UserAccess,
     label: "Coupons",
     description: "Create and manage B2C coupons.",
-  }
+  },
+  {
+    id: "support" as UserAccess,
+    label: "Support",
+    description: "Respond to issues users have with regards to the platform"
+  },
+  {
+    id: "legal" as UserAccess,
+    label: "Legal",
+    description: "Manage legal documents for the b2c domain"
+  },
 ];
 
 export default function RegisterAdminPage() {
