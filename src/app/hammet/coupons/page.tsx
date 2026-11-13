@@ -10,7 +10,7 @@ import { createHammetCoupon, getHammetCoupons } from "@/lib/api/hammet";
 import type { Coupon, CouponsResponse } from "@/lib/api/types";
 import { canManageCoupons } from "@/lib/utils/roles";
 import { Alert } from "@/components/ui";
-import { SessionExpiredNotice } from "@/components/hammet/admin-form";
+import { SessionExpiredNotice } from "@/components/layout/hammet/admin-form";
 
 const PAGE_SIZE = 20;
 const inputClassName =

@@ -10,7 +10,7 @@ import { getHammetLogStats, getHammetLogs } from "@/lib/api/hammet";
 import type { LogStats, LogSummary, Pagination } from "@/lib/api/types";
 import { canViewLogs } from "@/lib/utils/roles";
 import { Alert } from "@/components/ui";
-import { Notice, SessionExpiredNotice } from "@/components/hammet/admin-form";
+import { Notice, SessionExpiredNotice } from "@/components/layout/hammet/admin-form";
 import { LogDetailSheet } from "@/components/hammet/logs/log-detail-sheet";
 import {
   LogFilters,
