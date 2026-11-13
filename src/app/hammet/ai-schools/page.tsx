@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { getHammetAiSchools } from "@/lib/api/hammet";
 import type { AiSchool } from "@/lib/api/types";
 import { Alert } from "@/components/ui";
-import { SessionExpiredNotice } from "@/components/hammet/admin-form";
+import { SessionExpiredNotice } from "@/components/layout/hammet/admin-form";
 
 export default function AiSchoolsPage() {
   const { accessToken, refreshToken, isLoading: authLoading } = useAuth();

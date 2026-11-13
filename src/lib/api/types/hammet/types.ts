@@ -89,3 +89,62 @@ export type EditCouponRequest = {
   activate: boolean;
   expiresAt?: string | null;
 };
+
+export type LogLevel = "debug" | "info" | "warning" | "error" | "critical";
+
+export type LogSortOrder = "desc" | "asc";
+
+// GET /hammet/logs
+export type LogSummary = {
+  id: string;
+  timestamp: string;
+  level: LogLevel;
+  event: string;
+  message: string;
+  domain: string | null;
+  userId: string | null;
+  requestId: string | null;
+  method: string | null;
+  path: string | null;
+  statusCode: number | null;
+};
+
+// GET /hammet/logs/{log_id}
+export type LogDetail = LogSummary & {
+  errorType: string | null;
+  errorMessage: string | null;
+  stackTrace: string | null;
+  durationMs: number | null;
+  userAgent: string | null;
+  metadata: Record<string, unknown> | null;
+};
+
+export type LogsResponse = {
+  logs: LogSummary[];
+  pagination: Pagination;
+};
+
+export type GetHammetLogsParams = {
+  page?: number;
+  pageSize?: number;
+  level?: LogLevel | null;
+  event?: string | null;
+  search?: string | null;
+  userId?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  order?: LogSortOrder | null;
+};
+
+// GET /hammet/logs/stats
+export type LogStats = {
+  total: number;
+  byLevel: Record<LogLevel, number>;
+  startDate: string | null;
+  endDate: string | null;
+};
+
+export type GetHammetLogStatsParams = {
+  startDate?: string | null;
+  endDate?: string | null;
+};

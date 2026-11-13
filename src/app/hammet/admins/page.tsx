@@ -38,13 +38,13 @@ import {
   Notice,
   SessionExpiredNotice,
   inputClassName,
-} from "@/components/hammet/admin-form";
+} from "@/components/layout/hammet/admin-form";
 import {
   accessOptionsFor,
   adminScopes,
   defaultAccessFor,
   getAccessLabel,
-} from "@/components/hammet/admin-access";
+} from "@/components/layout/hammet/admin-access";
 
 const PAGE_SIZE = 20;
 
