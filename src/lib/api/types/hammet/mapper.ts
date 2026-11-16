@@ -13,6 +13,8 @@ import {
 import { toPagination } from "../support";
 import type { Coupon, CouponsResponse, CreateCouponRequest, EditCouponRequest } from "@/lib/api/types/hammet/types";
 import type { CouponDto, CouponsResponseDto, CreateCouponRequestDto, EditCouponRequestDto } from "@/lib/api/types/hammet/types-dto";
+import type { LogDetail, LogStats, LogSummary, LogsResponse } from "@/lib/api/types/hammet/types";
+import type { LogDetailDto, LogStatsDto, LogSummaryDto, LogsResponseDto } from "@/lib/api/types/hammet/types-dto";
 
 /**
  * Naming convention:
@@ -101,4 +103,48 @@ export function fromEditCouponRequest(model: EditCouponRequest): EditCouponReque
     const dto: EditCouponRequestDto = { activate: model.activate };
     if (model.expiresAt !== undefined) dto.expires_at = model.expiresAt;
     return dto;
+}
+
+export function toLogSummary(dto: LogSummaryDto): LogSummary {
+    return {
+        id: dto.id,
+        timestamp: dto.timestamp,
+        level: dto.level,
+        event: dto.event,
+        message: dto.message,
+        domain: dto.domain,
+        userId: dto.user_id,
+        requestId: dto.request_id,
+        method: dto.method,
+        path: dto.path,
+        statusCode: dto.status_code,
+    };
+}
+
+export function toLogDetail(dto: LogDetailDto): LogDetail {
+    return {
+        ...toLogSummary(dto),
+        errorType: dto.error_type,
+        errorMessage: dto.error_message,
+        stackTrace: dto.stack_trace,
+        durationMs: dto.duration_ms,
+        userAgent: dto.user_agent,
+        metadata: dto.metadata,
+    };
+}
+
+export function toLogsResponse(dto: LogsResponseDto): LogsResponse {
+    return {
+        logs: dto.logs.map(toLogSummary),
+        pagination: toPagination(dto.pagination),
+    };
+}
+
+export function toLogStats(dto: LogStatsDto): LogStats {
+    return {
+        total: dto.total,
+        byLevel: dto.by_level,
+        startDate: dto.start_date,
+        endDate: dto.end_date,
+    };
 }

@@ -58,6 +58,17 @@ import {
   fromEditCouponRequest,
   toCoupon,
   ResendVerificationRequest,
+  type GetHammetLogsParams,
+  type GetHammetLogStatsParams,
+  type LogDetail,
+  type LogDetailDto,
+  type LogStats,
+  type LogStatsDto,
+  type LogsResponse,
+  type LogsResponseDto,
+  toLogDetail,
+  toLogStats,
+  toLogsResponse,
 } from "@/lib/api/types";
 
 // ------------------------------------------------------------
@@ -365,4 +376,67 @@ export async function deleteHammetCoupon(
     token,
     { onRefresh },
   );
+}
+
+// ------------------------------------------------------------
+// LOGS
+// ------------------------------------------------------------
+
+export async function getHammetLogs(
+  params: GetHammetLogsParams,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<LogsResponse> {
+  const query = new URLSearchParams();
+  if (params.page) query.set("page", String(params.page));
+  if (params.pageSize) query.set("page_size", String(params.pageSize));
+  if (params.level) query.set("level", params.level);
+  if (params.event?.trim()) query.set("event", params.event.trim());
+  if (params.search?.trim()) query.set("search", params.search.trim());
+  if (params.userId?.trim()) query.set("user_id", params.userId.trim());
+  if (params.startDate) query.set("start_date", params.startDate);
+  if (params.endDate) query.set("end_date", params.endDate);
+  if (params.order) query.set("order", params.order);
+
+  const queryString = query.toString();
+  const response = await apiClient.get<LogsResponseDto>(
+    `/hammet/logs${queryString ? `?${queryString}` : ""}`,
+    token,
+    { onRefresh },
+  );
+
+  return toLogsResponse(response);
+}
+
+export async function getHammetLog(
+  logId: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<LogDetail> {
+  const response = await apiClient.get<LogDetailDto>(
+    `/hammet/logs/${encodeURIComponent(logId)}`,
+    token,
+    { onRefresh },
+  );
+
+  return toLogDetail(response);
+}
+
+export async function getHammetLogStats(
+  params: GetHammetLogStatsParams,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<LogStats> {
+  const query = new URLSearchParams();
+  if (params.startDate) query.set("start_date", params.startDate);
+  if (params.endDate) query.set("end_date", params.endDate);
+
+  const queryString = query.toString();
+  const response = await apiClient.get<LogStatsDto>(
+    `/hammet/logs/stats${queryString ? `?${queryString}` : ""}`,
+    token,
+    { onRefresh },
+  );
+
+  return toLogStats(response);
 }

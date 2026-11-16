@@ -27,7 +27,7 @@ import {
   inputClassName,
   parseWholeNumber,
   primaryButtonClassName,
-} from "@/components/hammet/admin-form";
+} from "@/components/layout/hammet/admin-form";
 
 const RESOURCE_TYPES: { value: AiResourceType; label: string }[] = [
   { value: "link", label: "Link" },
