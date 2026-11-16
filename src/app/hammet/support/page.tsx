@@ -24,7 +24,7 @@ import { Alert } from "@/components/ui";
 import {
   Notice,
   SessionExpiredNotice,
-} from "@/components/hammet/admin-form";
+} from "@/components/layout/hammet/admin-form";
 import {
   CategoryBadge,
   PriorityBadge,
@@ -392,6 +392,9 @@ export default function HammetSupportPage() {
       <AdminTicketDetailModal
         ticket={activeTicket}
         onClose={closeTicketDetails}
+        currentAdminId={user?.id ?? null}
+        currentAdminName={user?.fullName ?? null}
+        onRefreshTickets={() => setReloadKey((key) => key + 1)}
       />
     </div>
   );

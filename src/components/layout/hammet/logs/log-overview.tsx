@@ -1,5 +1,5 @@
 import type { LogStats } from "@/lib/api/types";
-import { LogLevelBadge, logLevels } from "@/components/hammet/logs/log-level-badge";
+import { LogLevelBadge, logLevels } from "@/components/layout/hammet/logs/log-level-badge";
 
 type LogOverviewProps = {
   stats: LogStats | null;

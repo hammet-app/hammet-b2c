@@ -46,22 +46,9 @@ export function TicketList() {
     { id: "closed", label: "Closed" },
   ];
 
-  // Filtering
+  // Status and search are applied by the backend. Category and priority are
+  // lightweight filters over the currently loaded page.
   const filteredTickets = tickets.filter((ticket) => {
-    // Search
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchId = ticket.id.toLowerCase().includes(q);
-      const matchSubject = ticket.subject.toLowerCase().includes(q);
-      const matchMessage = (ticket.message ?? "").toLowerCase().includes(q);
-      if (!matchId && !matchSubject && !matchMessage) return false;
-    }
-
-    // Status filter
-    if (filterStatus !== "all" && ticket.status !== filterStatus) {
-      return false;
-    }
-
     // Category filter
     if (filterCategory !== "all" && ticket.category !== filterCategory) {
       return false;

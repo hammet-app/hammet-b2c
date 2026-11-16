@@ -25,7 +25,7 @@ import {
   TerminalDoodleIcon,
   NeuroBotIcon,
 } from "@/components/ui/character-icons";
-import { LearningSnapshot } from "@/components/learner/learning-snapshot";
+import { LearningSnapshot } from "@/components/layout/learner/learning-snapshot";
 
 import { useAuth } from "@/lib/auth/auth-context";
 import { learnerApi } from "@/lib/api/learner";

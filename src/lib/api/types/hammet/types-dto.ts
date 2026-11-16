@@ -99,9 +99,16 @@ export type SupportTicketLearnerDto = {
   email: string;
 };
 
+export type SupportTicketAdminDto = {
+  id: string;
+  full_name: string;
+  email: string;
+};
+
 export type SupportTicketListItemDto = {
   id: string;
   learner: SupportTicketLearnerDto;
+  assigned_admin: SupportTicketAdminDto | null;
   subject: string;
   message?: string | null;
   category: TicketCategory;
@@ -109,6 +116,21 @@ export type SupportTicketListItemDto = {
   status: SupportTicketStatus;
   created_at: string;
   updated_at: string;
+};
+
+export type SupportTicketConversationMessageDto = {
+  id: string;
+  sender: { id: string; full_name: string; role: string };
+  sender_role: string;
+  content: string;
+  attachments: string[] | null;
+  created_at: string;
+};
+
+export type SupportTicketMessagesPageDto = {
+  messages: SupportTicketConversationMessageDto[];
+  has_more: boolean;
+  next_cursor: string | null;
 };
 
 export type SupportTicketsResponseDto = {

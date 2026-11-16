@@ -108,9 +108,16 @@ export type SupportTicketLearner = {
   email: string;
 };
 
+export type SupportTicketAdmin = {
+  id: string;
+  fullName: string;
+  email: string;
+};
+
 export type SupportTicketListItem = {
   id: string;
   learner: SupportTicketLearner;
+  assignedAdmin: SupportTicketAdmin | null;
   subject: string;
   /**
    * The list endpoint may omit the ticket body. When it is returned, the
@@ -122,6 +129,21 @@ export type SupportTicketListItem = {
   status: SupportTicketStatus;
   createdAt: string;
   updatedAt: string;
+};
+
+export type SupportTicketConversationMessage = {
+  id: string;
+  sender: { id: string; fullName: string; role: string };
+  senderRole: string;
+  content: string;
+  attachments: string[] | null;
+  createdAt: string;
+};
+
+export type SupportTicketMessagesPage = {
+  messages: SupportTicketConversationMessage[];
+  hasMore: boolean;
+  nextCursor: string | null;
 };
 
 export type SupportTicketsResponse = {

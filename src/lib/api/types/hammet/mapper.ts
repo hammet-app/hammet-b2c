@@ -123,6 +123,13 @@ export function toSupportTicketListItem(
             fullName: dto.learner.full_name,
             email: dto.learner.email,
         },
+        assignedAdmin: dto.assigned_admin
+            ? {
+                id: dto.assigned_admin.id,
+                fullName: dto.assigned_admin.full_name,
+                email: dto.assigned_admin.email,
+            }
+            : null,
         subject: dto.subject,
         message: dto.message?.trim() || undefined,
         category: dto.category,

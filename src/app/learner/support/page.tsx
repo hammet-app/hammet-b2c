@@ -4,12 +4,9 @@ import { useEffect } from "react";
 
 import { useAuth } from "@/lib/auth/auth-context";
 import { ApiError } from "@/lib/api/api-client";
-import { getHammetSupportTickets } from "@/lib/api/hammet";
-import type { SupportTicketListItem } from "@/lib/api/types";
 import {
   useTicketStore,
   HAMMET_SUPPORT_EMAIL,
-  type SupportTicket,
 } from "@/lib/store/use-ticket-store";
 import { TicketStats } from "@/components/support/ticket-stats";
 import { TicketList } from "@/components/support/ticket-list";
@@ -18,21 +15,9 @@ import { CreateTicketModal } from "@/components/support/create-ticket-modal";
 
 import { SectionKicker, TitleIcon } from "@/components/ui/section-title";
 import { LifeBuoy, Plus, Mail, Inbox, MessagesSquare } from "lucide-react";
+import { learnerApi } from "@/lib/api/learner";
 
 const TICKET_PAGE_SIZE = 100;
-
-function toSupportTicket(item: SupportTicketListItem): SupportTicket {
-  return {
-    id: item.id,
-    subject: item.subject,
-    message: item.message,
-    category: item.category,
-    priority: item.priority,
-    status: item.status,
-    createdAt: item.createdAt,
-    updatedAt: item.updatedAt,
-  };
-}
 
 function getTicketsErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -58,6 +43,8 @@ export default function SupportPage() {
     setIsLoadingTickets,
     setTicketsError,
     ticketsReloadKey,
+    filterStatus,
+    searchQuery,
   } = useTicketStore();
 
   useEffect(() => {
@@ -66,19 +53,27 @@ export default function SupportPage() {
     const token = accessToken;
     let active = true;
 
+    const timer = window.setTimeout(() => {
+      void loadTickets();
+    }, searchQuery.trim() ? 300 : 0);
+
     async function loadTickets() {
       setIsLoadingTickets(true);
       setTicketsError(null);
-
       try {
-        const response = await getHammetSupportTickets(
-          { page: 1, pageSize: TICKET_PAGE_SIZE },
+        const response = await learnerApi.getSupportTickets(
+          {
+            page: 1,
+            pageSize: TICKET_PAGE_SIZE,
+            status: filterStatus === "all" ? undefined : filterStatus,
+            search: searchQuery,
+          },
           token,
           refreshToken
         );
 
         if (active) {
-          setTickets(response.tickets.map(toSupportTicket));
+          setTickets(response.tickets);
         }
       } catch (error) {
         if (active) {
@@ -91,10 +86,9 @@ export default function SupportPage() {
       }
     }
 
-    void loadTickets();
-
     return () => {
       active = false;
+      window.clearTimeout(timer);
     };
   }, [
     accessToken,
@@ -104,6 +98,8 @@ export default function SupportPage() {
     setIsLoadingTickets,
     setTicketsError,
     ticketsReloadKey,
+    filterStatus,
+    searchQuery,
   ]);
 
   return (
@@ -169,9 +165,6 @@ export default function SupportPage() {
               <TitleIcon icon={Inbox} tone="indigo" size="sm" />
               Your submitted tickets
             </h2>
-            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-              Synced from the support desk
-            </span>
           </div>
 
           <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">

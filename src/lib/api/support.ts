@@ -2,7 +2,9 @@ import { apiClient, ApiError } from "@/lib/api/api-client";
 import {
   CreateSupportTicket,
   SupportTicketResponse,
+  SupportTicketUpload,
   SupportTicketResponseDto,
+  SupportTicketUploadResponseDto,
   fromCreateSupportTicket,
   toSupportTicketResponse,
   CallbackForm,
@@ -14,6 +16,7 @@ export type {
   TicketPriority,
   CreateSupportTicket,
   SupportTicketResponse,
+  SupportTicketUpload,
 } from "@/lib/api/types/support";
 
 // Backward compatibility alias for DTO
@@ -35,7 +38,8 @@ export const supportApi = {
    */
   createTicket: async (
     payload: CreateSupportTicket,
-    token?: string | null
+    token?: string | null,
+    onRefresh?: () => Promise<string | null>,
   ): Promise<SupportApiResponse<SupportTicketResponse>> => {
     try {
       const dtoPayload = fromCreateSupportTicket(payload);
@@ -43,7 +47,7 @@ export const supportApi = {
         "/learner/tickets",
         dtoPayload,
         token,
-        { skipSessionExpired: true }
+        { onRefresh, skipSessionExpired: true }
       );
 
       return {
@@ -72,6 +76,37 @@ export const supportApi = {
         error: msg,
       };
     }
+  },
+
+  uploadScreenshot: async (
+    file: File,
+    token: string,
+    onRefresh: () => Promise<string | null>,
+  ): Promise<SupportTicketUpload> => {
+    const contentType = file.type as "image/jpeg" | "image/png" | "image/webp";
+    const upload = await apiClient.post<SupportTicketUploadResponseDto>(
+      "/learner/tickets/attachments/upload-url",
+      { content_type: contentType },
+      token,
+      { onRefresh, skipSessionExpired: true },
+    );
+
+    const response = await fetch(upload.signed_url || upload.signedUrl, {
+      method: "PUT",
+      body: file,
+      headers: { "Content-Type": contentType },
+    });
+    if (!response.ok) {
+      throw new Error(`Screenshot upload failed (${response.status}).`);
+    }
+
+    return {
+      signedUrl: upload.signed_url || upload.signedUrl,
+      token: upload.token,
+      path: upload.path,
+      publicUrl: upload.public_url,
+      contentType: upload.content_type,
+    };
   },
 };
 

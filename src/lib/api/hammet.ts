@@ -61,6 +61,10 @@ import {
   type SupportTicketsResponse,
   type SupportTicketsResponseDto,
   type GetSupportTicketsParams,
+  type SupportTicketConversationMessage,
+  type SupportTicketConversationMessageDto,
+  type SupportTicketMessagesPage,
+  type SupportTicketMessagesPageDto,
   toSupportTicketsResponse,
   type GetHammetLogsParams,
   type GetHammetLogStatsParams,
@@ -406,6 +410,95 @@ export async function getHammetSupportTickets(
   );
 
   return toSupportTicketsResponse(response);
+}
+
+export async function getHammetSupportTicketMessages(
+  ticketId: string,
+  params: { limit?: number; before?: string | null },
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<SupportTicketMessagesPage> {
+  const query = new URLSearchParams({ limit: String(params.limit ?? 10) });
+  if (params.before) query.set("before", params.before);
+
+  const response = await apiClient.get<SupportTicketMessagesPageDto>(
+    `/hammet/support/tickets/${encodeURIComponent(ticketId)}/messages?${query}`,
+    token,
+    { onRefresh },
+  );
+
+  return {
+    messages: response.messages.map(
+      (message: SupportTicketConversationMessageDto): SupportTicketConversationMessage => ({
+        id: message.id,
+        sender: {
+          id: message.sender.id,
+          fullName: message.sender.full_name,
+          role: message.sender.role,
+        },
+        senderRole: message.sender_role,
+        content: message.content,
+        attachments: message.attachments,
+        createdAt: message.created_at,
+      }),
+    ),
+    hasMore: response.has_more,
+    nextCursor: response.next_cursor,
+  };
+}
+
+export async function replyToHammetSupportTicket(
+  ticketId: string,
+  content: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<SupportTicketConversationMessage> {
+  const message = await apiClient.post<SupportTicketConversationMessageDto>(
+    `/hammet/support/tickets/${encodeURIComponent(ticketId)}/messages`,
+    { content },
+    token,
+    { onRefresh },
+  );
+  return {
+    id: message.id,
+    sender: {
+      id: message.sender.id,
+      fullName: message.sender.full_name,
+      role: message.sender.role,
+    },
+    senderRole: message.sender_role,
+    content: message.content,
+    attachments: message.attachments,
+    createdAt: message.created_at,
+  };
+}
+
+export async function claimHammetSupportTicket(
+  ticketId: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<void> {
+  await apiClient.post<unknown>(
+    `/hammet/support/tickets/${encodeURIComponent(ticketId)}/claim`,
+    undefined,
+    token,
+    { onRefresh },
+  );
+}
+
+export async function transferHammetSupportTicket(
+  ticketId: string,
+  targetAdminId: string,
+  reason: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<void> {
+  await apiClient.post<unknown>(
+    `/hammet/support/tickets/${encodeURIComponent(ticketId)}/transfer`,
+    { target_admin_id: targetAdminId, reason },
+    token,
+    { onRefresh },
+  );
 }
 
 // ------------------------------------------------------------
