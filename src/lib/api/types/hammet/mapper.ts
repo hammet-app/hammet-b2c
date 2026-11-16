@@ -13,6 +13,14 @@ import {
 import { toPagination } from "../support";
 import type { Coupon, CouponsResponse, CreateCouponRequest, EditCouponRequest } from "@/lib/api/types/hammet/types";
 import type { CouponDto, CouponsResponseDto, CreateCouponRequestDto, EditCouponRequestDto } from "@/lib/api/types/hammet/types-dto";
+import type {
+    SupportTicketListItem,
+    SupportTicketsResponse,
+} from "@/lib/api/types/hammet/types";
+import type {
+    SupportTicketListItemDto,
+    SupportTicketsResponseDto,
+} from "@/lib/api/types/hammet/types-dto";
 import type { LogDetail, LogStats, LogSummary, LogsResponse } from "@/lib/api/types/hammet/types";
 import type { LogDetailDto, LogStatsDto, LogSummaryDto, LogsResponseDto } from "@/lib/api/types/hammet/types-dto";
 
@@ -103,6 +111,42 @@ export function fromEditCouponRequest(model: EditCouponRequest): EditCouponReque
     const dto: EditCouponRequestDto = { activate: model.activate };
     if (model.expiresAt !== undefined) dto.expires_at = model.expiresAt;
     return dto;
+}
+
+export function toSupportTicketListItem(
+    dto: SupportTicketListItemDto,
+): SupportTicketListItem {
+    return {
+        id: dto.id,
+        learner: {
+            id: dto.learner.id,
+            fullName: dto.learner.full_name,
+            email: dto.learner.email,
+        },
+        assignedAdmin: dto.assigned_admin
+            ? {
+                id: dto.assigned_admin.id,
+                fullName: dto.assigned_admin.full_name,
+                email: dto.assigned_admin.email,
+            }
+            : null,
+        subject: dto.subject,
+        message: dto.message?.trim() || undefined,
+        category: dto.category,
+        priority: dto.priority,
+        status: dto.status,
+        createdAt: dto.created_at,
+        updatedAt: dto.updated_at,
+    };
+}
+
+export function toSupportTicketsResponse(
+    dto: SupportTicketsResponseDto,
+): SupportTicketsResponse {
+    return {
+        tickets: dto.tickets.map(toSupportTicketListItem),
+        pagination: toPagination(dto.pagination),
+    };
 }
 
 export function toLogSummary(dto: LogSummaryDto): LogSummary {

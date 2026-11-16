@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
 import {
   BookOpen,
+  LifeBuoy,
   TicketPercent,
   ChevronLeft,
   ChevronRight,
@@ -25,7 +26,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { getHammetAiSchools } from "@/lib/api/hammet";
 import type { AiSchool } from "@/lib/api/types";
 import { useTheme } from "@/lib/use-theme";
-import { canManageAdmins, canManageCoupons, canViewLogs } from "@/lib/utils/roles";
+import { canManageAdmins, canManageCoupons, canManageSupport, canViewLogs } from "@/lib/utils/roles";
 
 const baseNavigation = [
   {
@@ -62,6 +63,12 @@ const couponsNavigation = {
   icon: TicketPercent,
 };
 
+const supportNavigation = {
+  label: "Support",
+  href: "/hammet/support",
+  icon: LifeBuoy,
+};
+
 const logsNavigation = {
   label: "Logs",
   href: "/hammet/logs",
@@ -83,6 +90,7 @@ export function HammetShell({ children }: HammetShellProps) {
   const navigation = [
     ...baseNavigation,
     ...(canManageCoupons(user) ? [couponsNavigation] : []),
+    ...(canManageSupport(user) ? [supportNavigation] : []),
     ...(canManageAdmins(user) ? [adminsNavigation] : []),
     ...(canViewLogs(user) ? [logsNavigation] : []),
   ];

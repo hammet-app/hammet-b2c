@@ -11,14 +11,14 @@ import type { LogStats, LogSummary, Pagination } from "@/lib/api/types";
 import { canViewLogs } from "@/lib/utils/roles";
 import { Alert } from "@/components/ui";
 import { Notice, SessionExpiredNotice } from "@/components/layout/hammet/admin-form";
-import { LogDetailSheet } from "@/components/hammet/logs/log-detail-sheet";
-import {
+import { 
+  LogList,
   LogFilters,
+  LogOverview, 
+  LogDetailSheet,
   emptyLogFilters,
   type LogFilterValues,
-} from "@/components/hammet/logs/log-filters";
-import { LogList } from "@/components/hammet/logs/log-list";
-import { LogOverview } from "@/components/hammet/logs/log-overview";
+} from "@/components/layout/hammet/logs";
 
 const PAGE_SIZE = 20;
 

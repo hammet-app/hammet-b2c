@@ -26,7 +26,7 @@ import {
   updateAiCourse,
 } from "@/lib/api/hammet";
 import { ApiError } from "@/lib/api/api-client";
-import { is_enabled } from "@/lib/features/flags";
+import { isEnabled } from "@/lib/features/flags";
 import { trackGloriaEvent } from "@/lib/analytics";
 import { canManageAiCatalog } from "@/lib/utils/roles";
 import { Alert } from "@/components/ui";
@@ -79,7 +79,7 @@ function EditAiCourseContent() {
   const [featureEnabled, setFeatureEnabled] = useState<boolean | null>(null);
 
   useEffect(() => {
-    is_enabled("gloria_course_creation").then((value) =>
+    isEnabled("gloria_course_creation").then((value) =>
       setFeatureEnabled(Boolean(value)),
     );
   }, []);

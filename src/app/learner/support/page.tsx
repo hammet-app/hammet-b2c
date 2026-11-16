@@ -1,5 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
+
+import { useAuth } from "@/lib/auth/auth-context";
+import { ApiError } from "@/lib/api/api-client";
 import {
   useTicketStore,
   HAMMET_SUPPORT_EMAIL,
@@ -11,9 +15,92 @@ import { CreateTicketModal } from "@/components/support/create-ticket-modal";
 
 import { SectionKicker, TitleIcon } from "@/components/ui/section-title";
 import { LifeBuoy, Plus, Mail, Inbox, MessagesSquare } from "lucide-react";
+import { learnerApi } from "@/lib/api/learner";
+
+const TICKET_PAGE_SIZE = 100;
+
+function getTicketsErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 401) {
+      return "Your session has expired. Please sign in again to load your tickets.";
+    }
+    if (error.status === 403) {
+      return "This account does not have access to the support ticket history.";
+    }
+  }
+
+  return error instanceof Error
+    ? error.message
+    : "Unable to load your support tickets. Please try again.";
+}
 
 export default function SupportPage() {
-  const { setIsCreateModalOpen, selectedTicketId } = useTicketStore();
+  const { accessToken, refreshToken, isLoading: authLoading } = useAuth();
+  const {
+    setIsCreateModalOpen,
+    selectedTicketId,
+    setTickets,
+    setIsLoadingTickets,
+    setTicketsError,
+    ticketsReloadKey,
+    filterStatus,
+    searchQuery,
+  } = useTicketStore();
+
+  useEffect(() => {
+    if (authLoading || !accessToken) return;
+
+    const token = accessToken;
+    let active = true;
+
+    const timer = window.setTimeout(() => {
+      void loadTickets();
+    }, searchQuery.trim() ? 300 : 0);
+
+    async function loadTickets() {
+      setIsLoadingTickets(true);
+      setTicketsError(null);
+      try {
+        const response = await learnerApi.getSupportTickets(
+          {
+            page: 1,
+            pageSize: TICKET_PAGE_SIZE,
+            status: filterStatus === "all" ? undefined : filterStatus,
+            search: searchQuery,
+          },
+          token,
+          refreshToken
+        );
+
+        if (active) {
+          setTickets(response.tickets);
+        }
+      } catch (error) {
+        if (active) {
+          setTicketsError(getTicketsErrorMessage(error));
+        }
+      } finally {
+        if (active) {
+          setIsLoadingTickets(false);
+        }
+      }
+    }
+
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [
+    accessToken,
+    refreshToken,
+    authLoading,
+    setTickets,
+    setIsLoadingTickets,
+    setTicketsError,
+    ticketsReloadKey,
+    filterStatus,
+    searchQuery,
+  ]);
 
   return (
     <div className="min-h-screen px-4 sm:px-7 lg:px-9 py-6 sm:py-8 font-poppins">
@@ -78,9 +165,6 @@ export default function SupportPage() {
               <TitleIcon icon={Inbox} tone="indigo" size="sm" />
               Your submitted tickets
             </h2>
-            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-              Browser-local references · backend-created
-            </span>
           </div>
 
           <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">

@@ -29,7 +29,11 @@ export const HAMMET_SUPPORT_EMAIL = "support@hammetedu.com";
 export interface SupportTicket {
   id: string;
   subject: string;
-  message: string;
+  /**
+   * The ticket list endpoint only returns ticket metadata, not the message
+   * body. Tickets cached locally right after creation still keep their body.
+   */
+  message?: string;
   category: TicketCategory;
   priority: TicketPriority;
   status: TicketStatus;
@@ -49,6 +53,9 @@ interface TicketStoreState {
   filterPriority: string;
   searchQuery: string;
   isCreateModalOpen: boolean;
+  isLoadingTickets: boolean;
+  ticketsError: string | null;
+  ticketsReloadKey: number;
 
   // Actions
   setSelectedTicketId: (id: string | null) => void;
@@ -60,6 +67,11 @@ interface TicketStoreState {
 
   /** Cache a ticket that the backend has already created successfully. */
   addTicket: (ticket: SupportTicket) => void;
+  /** Replace the list with the tickets returned by the backend. */
+  setTickets: (tickets: SupportTicket[]) => void;
+  setIsLoadingTickets: (loading: boolean) => void;
+  setTicketsError: (error: string | null) => void;
+  reloadTickets: () => void;
   resetToDefaults: () => void;
 }
 
@@ -76,6 +88,9 @@ export const useTicketStore = create<TicketStoreState>()(
     (set) => ({
       tickets: [],
       selectedTicketId: null,
+      isLoadingTickets: false,
+      ticketsError: null,
+      ticketsReloadKey: 0,
       ...DEFAULT_FILTERS,
 
       setSelectedTicketId: (id) => set({ selectedTicketId: id }),
@@ -95,10 +110,40 @@ export const useTicketStore = create<TicketStoreState>()(
         }));
       },
 
+      setTickets: (tickets) => {
+        set((state) => {
+          const cachedById = new Map(
+            state.tickets.map((ticket) => [ticket.id, ticket])
+          );
+          const merged = tickets.map((ticket) => ({
+            ...ticket,
+            // The list contract omits the message body. Keep the copy cached
+            // when this browser just created the ticket.
+            message: ticket.message ?? cachedById.get(ticket.id)?.message,
+          }));
+
+          return {
+            tickets: merged,
+            selectedTicketId: merged.some(
+              (ticket) => ticket.id === state.selectedTicketId
+            )
+              ? state.selectedTicketId
+              : null,
+          };
+        });
+      },
+
+      setIsLoadingTickets: (loading) => set({ isLoadingTickets: loading }),
+      setTicketsError: (error) => set({ ticketsError: error }),
+      reloadTickets: () =>
+        set((state) => ({ ticketsReloadKey: state.ticketsReloadKey + 1 })),
+
       resetToDefaults: () => {
         set({
           tickets: [],
           selectedTicketId: null,
+          isLoadingTickets: false,
+          ticketsError: null,
           ...DEFAULT_FILTERS,
         });
       },

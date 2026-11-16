@@ -1,5 +1,5 @@
 import type { LogSummary } from "@/lib/api/types";
-import { LogLevelBadge } from "@/components/hammet/logs/log-level-badge";
+import { LogLevelBadge } from "@/components/layout/hammet/logs/log-level-badge";
 
 export function formatLogTime(value: string) {
   const date = new Date(value);

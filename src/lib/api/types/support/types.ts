@@ -17,6 +17,7 @@ export interface CreateSupportTicket {
   message: string;
   category: TicketCategory;
   priority?: TicketPriority;
+  attachments?: string[] | null;
 }
 
 export interface SupportTicketResponse {
@@ -28,7 +29,16 @@ export interface SupportTicketResponse {
   status: string;
   createdAt: string;
   updatedAt: string;
+  attachments?: string[] | null;
 }
+
+export type SupportTicketUpload = {
+  signedUrl: string;
+  token: string;
+  path: string;
+  publicUrl: string;
+  contentType: string;
+};
 
 // POST /callback
 export type CallbackForm = {

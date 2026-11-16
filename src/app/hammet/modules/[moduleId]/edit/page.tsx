@@ -16,7 +16,7 @@ import type {
 } from "@/lib/api/types";
 import { addAiQuiz, updateAiModule } from "@/lib/api/hammet";
 import { ApiError } from "@/lib/api/api-client";
-import { is_enabled } from "@/lib/features/flags";
+import { isEnabled } from "@/lib/features/flags";
 import { trackGloriaEvent } from "@/lib/analytics";
 import { canManageAiCatalog } from "@/lib/utils/roles";
 import { Alert } from "@/components/ui";
@@ -103,7 +103,7 @@ function EditAiModuleContent() {
   const [featureEnabled, setFeatureEnabled] = useState<boolean | null>(null);
 
   useEffect(() => {
-    is_enabled("gloria_module_creation").then((value) => setFeatureEnabled(Boolean(value)));
+    isEnabled("gloria_module_creation").then((value) => setFeatureEnabled(Boolean(value)));
   }, []);
 
   // Module details: there's no route to read a module back, so blank means "leave unchanged".

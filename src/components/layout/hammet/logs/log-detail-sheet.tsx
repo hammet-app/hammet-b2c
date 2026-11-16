@@ -14,8 +14,8 @@ import {
   SheetDescription,
   SheetTitle,
 } from "@/components/ui";
-import { LogLevelBadge } from "@/components/hammet/logs/log-level-badge";
-import { formatLogTime } from "@/components/hammet/logs/log-list";
+import { LogLevelBadge } from "@/components/layout/hammet/logs/log-level-badge";
+import { formatLogTime } from "@/components/layout/hammet/logs/log-list";
 
 const SENSITIVE_KEY_PATTERN =
   /pass(word|wd)?|secret|token|authori[sz]ation|cookie|api[-_]?key|credential|private[-_]?key/i;
