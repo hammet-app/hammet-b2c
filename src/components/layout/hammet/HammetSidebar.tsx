@@ -15,6 +15,7 @@ import {
   Home,
   LogOut,
   Menu,
+  ScrollText,
   Settings,
   ShieldCheck,
   Users,
@@ -25,7 +26,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { getHammetAiSchools } from "@/lib/api/hammet";
 import type { AiSchool } from "@/lib/api/types";
 import { useTheme } from "@/lib/use-theme";
-import { canManageAdmins, canManageCoupons, canManageSupport } from "@/lib/utils/roles";
+import { canManageAdmins, canManageCoupons, canManageSupport, canViewLogs } from "@/lib/utils/roles";
 
 const baseNavigation = [
   {
@@ -68,6 +69,12 @@ const supportNavigation = {
   icon: LifeBuoy,
 };
 
+const logsNavigation = {
+  label: "Logs",
+  href: "/hammet/logs",
+  icon: ScrollText,
+};
+
 const STORAGE_KEY = "hammet-admin-sidebar-collapsed";
 
 interface HammetShellProps {
@@ -85,6 +92,7 @@ export function HammetShell({ children }: HammetShellProps) {
     ...(canManageCoupons(user) ? [couponsNavigation] : []),
     ...(canManageSupport(user) ? [supportNavigation] : []),
     ...(canManageAdmins(user) ? [adminsNavigation] : []),
+    ...(canViewLogs(user) ? [logsNavigation] : []),
   ];
 
   const [schools, setSchools] = useState<AiSchool[]>([]);
