@@ -215,7 +215,7 @@ export default function LoginPage() {
           <Link
             href="/"
             title="Return to Hammet Home"
-            className="group flex h-11 w-11 items-center justify-center rounded-xl border border-black/[0.08] bg-white p-2 shadow-sm transition hover:scale-105 hover:shadow-md hover:border-purple-300 dark:border-white/10 dark:bg-white/[0.06] dark:hover:border-cyan-400/40"
+            className="group flex h-11 w-11 items-center justify-center rounded-xl border border-black/[0.08] bg-white p-2 shadow-sm transition hover:scale-105 hover:shadow-md hover:border-purple-300 dark:border-white/20 dark:bg-white/15 dark:hover:border-cyan-400/50"
           >
             <Image
               src="/icon-512x512.png"
@@ -247,11 +247,11 @@ export default function LoginPage() {
           <div>
             <AuthInput
               id="email"
-              label="Work email"
+              label="Email"
               type="email"
               value={email}
               onChange={setEmail}
-              placeholder="name@company.com"
+              placeholder="name@example.com"
               autoComplete="email"
               error={errors.email}
               disabled={isLoading}

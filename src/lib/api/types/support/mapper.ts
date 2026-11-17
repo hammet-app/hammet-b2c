@@ -23,6 +23,7 @@ export function toSupportTicketResponse(
     status: dto.status,
     createdAt: dto.created_at,
     updatedAt: dto.updated_at,
+    attachments: dto.attachments ?? null,
   };
 }
 
@@ -34,6 +35,7 @@ export function fromCreateSupportTicket(
     message: domain.message.trim(),
     category: domain.category,
     priority: domain.priority || "medium",
+    attachments: domain.attachments ?? null,
   };
 }
 

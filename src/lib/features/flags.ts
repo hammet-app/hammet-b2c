@@ -24,7 +24,7 @@ function ensureInitialized() {
 
 const client = OpenFeature.getClient("hammet-api");
 
-export async function is_enabled(
+export async function isEnabled(
   key: string,
   layout?: boolean,
   defaultVariant: string = "B",

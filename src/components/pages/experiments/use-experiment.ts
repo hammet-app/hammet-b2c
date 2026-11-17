@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { is_enabled } from "@/lib/features/flags";
+import { isEnabled } from "@/lib/features/flags";
 
 export function useExperiment(featureKey: string, defaultVariant: "A" | "B" = "B"): "A" | "B" {
   const [variant, setVariant] = useState<"A" | "B">(defaultVariant);
@@ -23,7 +23,7 @@ export function useExperiment(featureKey: string, defaultVariant: "A" | "B" = "B
 
     // 2. Evaluate from Growthbook / OpenFeature
     let isMounted = true;
-    is_enabled(featureKey, true, defaultVariant)
+    isEnabled(featureKey, true, defaultVariant)
       .then((val) => {
         if (!isMounted) return;
         if (val === "A" || val === "B") {

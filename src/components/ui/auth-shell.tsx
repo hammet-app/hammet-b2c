@@ -40,14 +40,13 @@ export function AuthShell({ children, wide, mode }: AuthShellProps) {
           <div
             className="flex h-8 w-8 items-center justify-center rounded-[9px] transition-transform duration-200 group-hover:scale-105"
             style={{
-              background:
-                "linear-gradient(135deg, #5B21B6 0%, #7C3AED 55%, #06B6D4 100%)",
-              boxShadow:
-                "0 4px 18px rgba(91,33,182,0.28), 0 0 24px rgba(6,182,212,0.08)",
+              background: "#FFFFFF",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+              border: "1px solid rgba(0,0,0,0.06)",
             }}
           >
             <Image
-              src="/favicon.ico"
+              src="/icon-512x512.png"
               alt=""
               width={20}
               height={20}
@@ -106,13 +105,14 @@ function AuthLogo() {
       <div
         className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0"
         style={{
-          background: "linear-gradient(135deg, #5B21B6, #3B0764)",
-          boxShadow: "0 2px 8px rgba(91,33,182,0.35)",
+          background: "#FFFFFF",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          border: "1px solid rgba(0,0,0,0.06)",
         }}
         aria-hidden="true"
       >
         <Image
-          src="/favicon.ico"
+          src="/icon-512x512.png"
           alt=""
           className="w-5 h-5 rounded-[5px]"
         />

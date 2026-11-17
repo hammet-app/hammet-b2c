@@ -12,6 +12,14 @@ import {
   CartResponseDto,
   toCartResponse,
 } from "@/lib/api/types";
+import type {
+  LearnerSupportTicketMessage,
+  LearnerSupportTicketMessageDto,
+  LearnerSupportTicketMessagesPage,
+  LearnerSupportTicketMessagesPageDto,
+  LearnerSupportTicketsResponse,
+  LearnerSupportTicketsResponseDto,
+} from "@/lib/api/types/learner/response";
 import {
   EntitlementResponse,
   EntitlementResponseDto,
@@ -280,5 +288,95 @@ export const learnerApi = {
       token,
       { onRefresh, skipSessionExpired: true },
     );
+  },
+
+  // ------------------------------------------------------------
+  // SUPPORT TICKETS
+  // ------------------------------------------------------------
+  
+  // Contract: GET /api/v1/learner/tickets
+  // Search matches the ticket ID, subject, or message text.
+  getSupportTickets: async (
+    params: { page?: number; pageSize?: number; status?: string | null; search?: string | null },
+    token: string,
+    onRefresh: () => Promise<string | null>,
+  ): Promise<LearnerSupportTicketsResponse> => {
+    const query = new URLSearchParams();
+    if (params.page) query.set("page", String(params.page));
+    if (params.pageSize) query.set("page_size", String(params.pageSize));
+    if (params.status) query.set("status", params.status);
+    if (params.search?.trim()) query.set("search", params.search.trim());
+  
+    const queryString = query.toString();
+    const response = await apiClient.get<LearnerSupportTicketsResponseDto>(
+      `/learner/tickets${queryString ? `?${queryString}` : ""}`,
+      token,
+      { onRefresh },
+    );
+  
+    return {
+      tickets: response.tickets.map((ticket) => ({
+        id: ticket.id,
+        subject: ticket.subject,
+        category: ticket.category,
+        priority: ticket.priority,
+        status: ticket.status,
+        createdAt: ticket.created_at,
+        updatedAt: ticket.updated_at,
+      })),
+      pagination: {
+        page: response.pagination.page,
+        pageSize: response.pagination.page_size,
+        total: response.pagination.total,
+        totalPages: response.pagination.total_pages,
+      },
+    };
+  },
+
+  getSupportTicketMessages: async (
+    ticketId: string,
+    params: { limit?: number; before?: string | null },
+    token: string,
+    onRefresh: () => Promise<string | null>,
+  ): Promise<LearnerSupportTicketMessagesPage> => {
+    const query = new URLSearchParams({ limit: String(params.limit ?? 10) });
+    if (params.before) query.set("before", params.before);
+    const response = await apiClient.get<LearnerSupportTicketMessagesPageDto>(
+      `/learner/tickets/${encodeURIComponent(ticketId)}/messages?${query}`,
+      token,
+      { onRefresh },
+    );
+    return {
+      messages: response.messages.map((message: LearnerSupportTicketMessageDto): LearnerSupportTicketMessage => ({
+        id: message.id,
+        senderRole: message.sender_role,
+        content: message.content,
+        attachments: message.attachments,
+        createdAt: message.created_at,
+      })),
+      hasMore: response.has_more,
+      nextCursor: response.next_cursor,
+    };
+  },
+
+  replyToSupportTicket: async (
+    ticketId: string,
+    content: string,
+    token: string,
+    onRefresh: () => Promise<string | null>,
+  ): Promise<LearnerSupportTicketMessage> => {
+    const response = await apiClient.post<LearnerSupportTicketMessageDto>(
+      `/learner/tickets/${encodeURIComponent(ticketId)}/messages`,
+      { content },
+      token,
+      { onRefresh },
+    );
+    return {
+      id: response.id,
+      senderRole: response.sender_role,
+      content: response.content,
+      attachments: response.attachments,
+      createdAt: response.created_at,
+    };
   },
 };

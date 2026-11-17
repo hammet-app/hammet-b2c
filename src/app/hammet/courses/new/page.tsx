@@ -10,10 +10,10 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { createAiCourse } from "@/lib/api/hammet";
 import { ApiError } from "@/lib/api/api-client";
 import type { AiSchool } from "@/lib/api/types";
-import { is_enabled } from "@/lib/features/flags";
+import { isEnabled } from "@/lib/features/flags";
 import { trackGloriaEvent } from "@/lib/analytics";
 import { Alert } from "@/components/ui";
-import { SessionExpiredNotice } from "@/components/hammet/admin-form";
+import { SessionExpiredNotice } from "@/components/layout/hammet/admin-form";
 
 const inputClassName =
   "w-full rounded-xl border border-black/[0.08] bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-purple-400 focus:ring-4 focus:ring-purple-500/10 dark:border-white/[0.08] dark:bg-white/[0.04] dark:focus:border-cyan-400 dark:focus:ring-cyan-400/10";
@@ -27,7 +27,7 @@ export default function CreateAiCoursePage() {
   const [featureEnabled, setFeatureEnabled] = useState<boolean | null>(null);
 
   useEffect(() => {
-    is_enabled("gloria_course_creation").then((value) => setFeatureEnabled(Boolean(value)));
+    isEnabled("gloria_course_creation").then((value) => setFeatureEnabled(Boolean(value)));
   }, []);
 
   const [selectedSchoolId, setSelectedSchoolId] = useState(requestedSchoolId);
