@@ -2,6 +2,9 @@
 
 import { UserAccess, UserRole, UserScope } from "@/lib/utils/roles";
 import { PaginationDto } from "../support";
+import type { TicketCategory, TicketPriority } from "../support";
+import type { SupportTicketStatus } from "./types";
+import type { LogLevel } from "./types";
 
 export type RegisterHammetAdminRequestDto = {
   full_name: string;
@@ -83,4 +86,92 @@ export type CreateCouponRequestDto = {
 export type EditCouponRequestDto = {
   activate: boolean;
   expires_at?: string | null;
+};
+
+// ------------------------------------------------------------
+// Support tickets
+// GET /api/v1/hammet/support/tickets
+// ------------------------------------------------------------
+
+export type SupportTicketLearnerDto = {
+  id: string;
+  full_name: string;
+  email: string;
+};
+
+export type SupportTicketAdminDto = {
+  id: string;
+  full_name: string;
+  email: string;
+};
+
+export type SupportTicketListItemDto = {
+  id: string;
+  learner: SupportTicketLearnerDto;
+  assigned_admin: SupportTicketAdminDto | null;
+  subject: string;
+  message?: string | null;
+  category: TicketCategory;
+  priority: TicketPriority;
+  status: SupportTicketStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SupportTicketConversationMessageDto = {
+  id: string;
+  sender: { id: string; full_name: string; role: string };
+  sender_role: string;
+  content: string;
+  attachments: string[] | null;
+  created_at: string;
+};
+
+export type SupportTicketMessagesPageDto = {
+  messages: SupportTicketConversationMessageDto[];
+  has_more: boolean;
+  next_cursor: string | null;
+};
+
+export type SupportTicketsResponseDto = {
+  tickets: SupportTicketListItemDto[];
+  pagination: PaginationDto;
+};
+
+// GET /hammet/logs
+export type LogSummaryDto = {
+  id: string;
+  timestamp: string;
+  level: LogLevel;
+  event: string;
+  message: string;
+  domain: string | null;
+  user_id: string | null;
+  request_id: string | null;
+  method: string | null;
+  path: string | null;
+  status_code: number | null;
+};
+
+// GET /hammet/logs/{log_id}
+export type LogDetailDto = LogSummaryDto & {
+  error_type: string | null;
+  error_message: string | null;
+  stack_trace: string | null;
+  duration_ms: number | null;
+  user_agent: string | null;
+  metadata: Record<string, unknown> | null;
+};
+
+export type LogsResponseDto = {
+  logs: LogSummaryDto[];
+  pagination: PaginationDto;
+};
+
+// GET /hammet/logs/stats
+export type LogStatsDto = {
+  total: number;
+  by_level: Record<LogLevel, number>;
+  start_date: string | null;
+  end_date: string | null;
 };

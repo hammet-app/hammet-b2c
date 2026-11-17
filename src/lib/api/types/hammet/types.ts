@@ -1,5 +1,5 @@
 import { UserAccess, UserRole, UserScope } from "@/lib/utils/roles";
-import { Pagination, PaginationDto } from "../support";
+import { Pagination, TicketCategory, TicketPriority } from "../support";
 
 export type RegisterHammetAdminRequest = {
   fullName: string;
@@ -88,4 +88,130 @@ export type CreateCouponRequest = {
 export type EditCouponRequest = {
   activate: boolean;
   expiresAt?: string | null;
+};
+
+// ------------------------------------------------------------
+// Support tickets
+// GET /api/v1/hammet/support/tickets
+// ------------------------------------------------------------
+
+export type SupportTicketStatus =
+  | "open"
+  | "in-progress"
+  | "pending"
+  | "resolved"
+  | "closed";
+
+export type SupportTicketLearner = {
+  id: string;
+  fullName: string;
+  email: string;
+};
+
+export type SupportTicketAdmin = {
+  id: string;
+  fullName: string;
+  email: string;
+};
+
+export type SupportTicketListItem = {
+  id: string;
+  learner: SupportTicketLearner;
+  assignedAdmin: SupportTicketAdmin | null;
+  subject: string;
+  /**
+   * The list endpoint may omit the ticket body. When it is returned, the
+   * admin detail modal shows it; otherwise the UI falls back to email contact.
+   */
+  message?: string;
+  category: TicketCategory;
+  priority: TicketPriority;
+  status: SupportTicketStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SupportTicketConversationMessage = {
+  id: string;
+  sender: { id: string; fullName: string; role: string };
+  senderRole: string;
+  content: string;
+  attachments: string[] | null;
+  createdAt: string;
+};
+
+export type SupportTicketMessagesPage = {
+  messages: SupportTicketConversationMessage[];
+  hasMore: boolean;
+  nextCursor: string | null;
+};
+
+export type SupportTicketsResponse = {
+  tickets: SupportTicketListItem[];
+  pagination: Pagination;
+};
+
+export type GetSupportTicketsParams = {
+  page?: number;
+  pageSize?: number;
+  status?: SupportTicketStatus | null;
+};
+
+export type LogLevel = "debug" | "info" | "warning" | "error" | "critical";
+
+export type LogSortOrder = "desc" | "asc";
+
+// GET /hammet/logs
+export type LogSummary = {
+  id: string;
+  timestamp: string;
+  level: LogLevel;
+  event: string;
+  message: string;
+  domain: string | null;
+  userId: string | null;
+  requestId: string | null;
+  method: string | null;
+  path: string | null;
+  statusCode: number | null;
+};
+
+// GET /hammet/logs/{log_id}
+export type LogDetail = LogSummary & {
+  errorType: string | null;
+  errorMessage: string | null;
+  stackTrace: string | null;
+  durationMs: number | null;
+  userAgent: string | null;
+  metadata: Record<string, unknown> | null;
+};
+
+export type LogsResponse = {
+  logs: LogSummary[];
+  pagination: Pagination;
+};
+
+export type GetHammetLogsParams = {
+  page?: number;
+  pageSize?: number;
+  level?: LogLevel | null;
+  event?: string | null;
+  search?: string | null;
+  userId?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  order?: LogSortOrder | null;
+};
+
+// GET /hammet/logs/stats
+export type LogStats = {
+  total: number;
+  byLevel: Record<LogLevel, number>;
+  startDate: string | null;
+  endDate: string | null;
+};
+
+export type GetHammetLogStatsParams = {
+  startDate?: string | null;
+  endDate?: string | null;
 };

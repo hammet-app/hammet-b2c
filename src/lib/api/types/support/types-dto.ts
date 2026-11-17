@@ -17,6 +17,7 @@ export interface CreateSupportTicketDto {
   message: string;
   category: TicketCategoryDto;
   priority?: TicketPriorityDto;
+  attachments?: string[] | null;
 }
 
 export interface SupportTicketResponseDto {
@@ -28,7 +29,17 @@ export interface SupportTicketResponseDto {
   status: string;
   created_at: string;
   updated_at: string;
+  attachments?: string[] | null;
 }
+
+export type SupportTicketUploadResponseDto = {
+  signed_url: string;
+  signedUrl: string;
+  token: string;
+  path: string;
+  public_url: string;
+  content_type: string;
+};
 
 // POST /callback
 export type CallbackFormDto = {

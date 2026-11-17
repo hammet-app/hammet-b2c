@@ -58,6 +58,25 @@ import {
   fromEditCouponRequest,
   toCoupon,
   ResendVerificationRequest,
+  type SupportTicketsResponse,
+  type SupportTicketsResponseDto,
+  type GetSupportTicketsParams,
+  type SupportTicketConversationMessage,
+  type SupportTicketConversationMessageDto,
+  type SupportTicketMessagesPage,
+  type SupportTicketMessagesPageDto,
+  toSupportTicketsResponse,
+  type GetHammetLogsParams,
+  type GetHammetLogStatsParams,
+  type LogDetail,
+  type LogDetailDto,
+  type LogStats,
+  type LogStatsDto,
+  type LogsResponse,
+  type LogsResponseDto,
+  toLogDetail,
+  toLogStats,
+  toLogsResponse,
 } from "@/lib/api/types";
 
 // ------------------------------------------------------------
@@ -365,4 +384,182 @@ export async function deleteHammetCoupon(
     token,
     { onRefresh },
   );
+}
+
+// ------------------------------------------------------------
+// SUPPORT TICKETS
+// ------------------------------------------------------------
+
+// Contract: GET /api/v1/hammet/support/tickets
+// Returns the newest tickets first. An optional status filters to one exact status.
+export async function getHammetSupportTickets(
+  params: GetSupportTicketsParams,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<SupportTicketsResponse> {
+  const query = new URLSearchParams();
+  if (params.page) query.set("page", String(params.page));
+  if (params.pageSize) query.set("page_size", String(params.pageSize));
+  if (params.status) query.set("status", params.status);
+
+  const queryString = query.toString();
+  const response = await apiClient.get<SupportTicketsResponseDto>(
+    `/hammet/support/tickets${queryString ? `?${queryString}` : ""}`,
+    token,
+    { onRefresh },
+  );
+
+  return toSupportTicketsResponse(response);
+}
+
+export async function getHammetSupportTicketMessages(
+  ticketId: string,
+  params: { limit?: number; before?: string | null },
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<SupportTicketMessagesPage> {
+  const query = new URLSearchParams({ limit: String(params.limit ?? 10) });
+  if (params.before) query.set("before", params.before);
+
+  const response = await apiClient.get<SupportTicketMessagesPageDto>(
+    `/hammet/support/tickets/${encodeURIComponent(ticketId)}/messages?${query}`,
+    token,
+    { onRefresh },
+  );
+
+  return {
+    messages: response.messages.map(
+      (message: SupportTicketConversationMessageDto): SupportTicketConversationMessage => ({
+        id: message.id,
+        sender: {
+          id: message.sender.id,
+          fullName: message.sender.full_name,
+          role: message.sender.role,
+        },
+        senderRole: message.sender_role,
+        content: message.content,
+        attachments: message.attachments,
+        createdAt: message.created_at,
+      }),
+    ),
+    hasMore: response.has_more,
+    nextCursor: response.next_cursor,
+  };
+}
+
+export async function replyToHammetSupportTicket(
+  ticketId: string,
+  content: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<SupportTicketConversationMessage> {
+  const message = await apiClient.post<SupportTicketConversationMessageDto>(
+    `/hammet/support/tickets/${encodeURIComponent(ticketId)}/messages`,
+    { content },
+    token,
+    { onRefresh },
+  );
+  return {
+    id: message.id,
+    sender: {
+      id: message.sender.id,
+      fullName: message.sender.full_name,
+      role: message.sender.role,
+    },
+    senderRole: message.sender_role,
+    content: message.content,
+    attachments: message.attachments,
+    createdAt: message.created_at,
+  };
+}
+
+export async function claimHammetSupportTicket(
+  ticketId: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<void> {
+  await apiClient.post<unknown>(
+    `/hammet/support/tickets/${encodeURIComponent(ticketId)}/claim`,
+    undefined,
+    token,
+    { onRefresh },
+  );
+}
+
+export async function transferHammetSupportTicket(
+  ticketId: string,
+  targetAdminId: string,
+  reason: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<void> {
+  await apiClient.post<unknown>(
+    `/hammet/support/tickets/${encodeURIComponent(ticketId)}/transfer`,
+    { target_admin_id: targetAdminId, reason },
+    token,
+    { onRefresh },
+  );
+}
+
+// ------------------------------------------------------------
+// LOGS
+// ------------------------------------------------------------
+
+export async function getHammetLogs(
+  params: GetHammetLogsParams,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<LogsResponse> {
+  const query = new URLSearchParams();
+  if (params.page) query.set("page", String(params.page));
+  if (params.pageSize) query.set("page_size", String(params.pageSize));
+  if (params.level) query.set("level", params.level);
+  if (params.event?.trim()) query.set("event", params.event.trim());
+  if (params.search?.trim()) query.set("search", params.search.trim());
+  if (params.userId?.trim()) query.set("user_id", params.userId.trim());
+  if (params.startDate) query.set("start_date", params.startDate);
+  if (params.endDate) query.set("end_date", params.endDate);
+  if (params.order) query.set("order", params.order);
+
+  const queryString = query.toString();
+  const response = await apiClient.get<LogsResponseDto>(
+    `/hammet/logs${queryString ? `?${queryString}` : ""}`,
+    token,
+    { onRefresh },
+  );
+
+  return toLogsResponse(response);
+}
+
+export async function getHammetLog(
+  logId: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<LogDetail> {
+  const response = await apiClient.get<LogDetailDto>(
+    `/hammet/logs/${encodeURIComponent(logId)}`,
+    token,
+    { onRefresh },
+  );
+
+  return toLogDetail(response);
+}
+
+export async function getHammetLogStats(
+  params: GetHammetLogStatsParams,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<LogStats> {
+  const query = new URLSearchParams();
+  if (params.startDate) query.set("start_date", params.startDate);
+  if (params.endDate) query.set("end_date", params.endDate);
+
+  const queryString = query.toString();
+  const response = await apiClient.get<LogStatsDto>(
+    `/hammet/logs/stats${queryString ? `?${queryString}` : ""}`,
+    token,
+    { onRefresh },
+  );
+
+  return toLogStats(response);
 }

@@ -24,6 +24,35 @@ export interface EntitlementResponse {
   courses: CourseEntitlement[] | null;
 }
 
+export type LearnerSupportTicket = {
+  id: string;
+  subject: string;
+  category: "technical" | "billing" | "account" | "courseware" | "certification" | "general";
+  priority: "low" | "medium" | "high" | "critical";
+  status: "open" | "in-progress" | "pending" | "resolved" | "closed";
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type LearnerSupportTicketsResponse = {
+  tickets: LearnerSupportTicket[];
+  pagination: { page: number; pageSize: number; total: number; totalPages: number };
+};
+
+export type LearnerSupportTicketMessage = {
+  id: string;
+  senderRole: string;
+  content: string;
+  attachments: string[] | null;
+  createdAt: string;
+};
+
+export type LearnerSupportTicketMessagesPage = {
+  messages: LearnerSupportTicketMessage[];
+  hasMore: boolean;
+  nextCursor: string | null;
+};
+
 // ============================================================
 // AI SCHOOL COURSES
 // ============================================================

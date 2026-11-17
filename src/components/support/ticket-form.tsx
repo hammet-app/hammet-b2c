@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useTicketStore,
   TicketCategory,
@@ -23,6 +23,8 @@ import {
   Check,
   AlertCircle,
   PlusCircle,
+  ImagePlus,
+  X,
 } from "lucide-react";
 import { GlowingMagicSparkle } from "@/components/ui/vibrant-ai-icons";
 import { motion, AnimatePresence } from "motion/react";
@@ -43,7 +45,7 @@ const VALID_STATUSES: TicketStatus[] = [
 
 export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFormProps) {
   const { addTicket, setSelectedTicketId } = useTicketStore();
-  const { accessToken } = useAuth();
+  const { accessToken, refreshToken } = useAuth();
 
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
@@ -51,6 +53,8 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
   const [priority, setPriority] = useState<TicketPriority>("medium");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
   const [submittedTicket, setSubmittedTicket] = useState<{
     id: string;
     subject: string;
@@ -59,6 +63,16 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
     status: TicketStatus;
     createdAt: string;
   } | null>(null);
+
+  useEffect(() => {
+    if (!screenshot) {
+      setScreenshotPreview(null);
+      return;
+    }
+    const previewUrl = URL.createObjectURL(screenshot);
+    setScreenshotPreview(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [screenshot]);
 
   const categories: {
     id: TicketCategory;
@@ -131,10 +145,25 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
       setErrorMessage("Please describe your inquiry or issue.");
       return;
     }
+    if (screenshot && !accessToken) {
+      setErrorMessage("Sign in again before uploading a screenshot.");
+      return;
+    }
 
     setIsSubmitting(true);
 
     try {
+      const attachments = screenshot
+        ? [
+            (
+              await supportApi.uploadScreenshot(
+                screenshot,
+                accessToken!,
+                refreshToken,
+              )
+            ).publicUrl,
+          ]
+        : undefined;
       // Single source of truth: the backend creates the ticket. There is no
       // silent local fallback, so a failure is always surfaced to the learner.
       const apiRes = await supportApi.createTicket(
@@ -143,8 +172,10 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
           message: cleanMessage,
           category,
           priority,
+          attachments,
         },
-        accessToken
+        accessToken,
+        refreshToken,
       );
 
       if (!apiRes.success || !apiRes.data) {
@@ -200,6 +231,7 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
     setSubmittedTicket(null);
     setSubject("");
     setMessage("");
+    setScreenshot(null);
     setCategory("technical");
     setPriority("medium");
     setErrorMessage(null);
@@ -452,15 +484,51 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
               />
             </div>
 
-            {/* Contract notice */}
-            <div className="flex items-center gap-2 rounded-xl bg-purple-50/60 px-3 py-2 text-[11px] text-purple-700 dark:bg-purple-950/30 dark:text-purple-300">
-              <GlowingMagicSparkle className="h-3.5 w-3.5 shrink-0" />
-              <span>
-                Submitted to the learner tickets API. Need to add context later?
-                Write to{" "}
-                <strong className="font-mono">{HAMMET_SUPPORT_EMAIL}</strong>{" "}
-                and include your ticket reference.
-              </span>
+            {/* Optional screenshot */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                <ImagePlus className="h-3.5 w-3.5 text-purple-600" />
+                Screenshot <span className="font-normal text-slate-400">(optional)</span>
+              </label>
+              {screenshot && screenshotPreview ? (
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-2.5 dark:border-white/10 dark:bg-slate-950/40">
+                  <img src={screenshotPreview} alt="Screenshot preview" className="h-16 w-20 rounded-lg border border-slate-200 object-cover dark:border-white/10" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200">{screenshot.name}</p>
+                    <p className="text-[10px] text-slate-500">{(screenshot.size / 1024 / 1024).toFixed(1)} MB</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setScreenshot(null)}
+                    aria-label="Remove screenshot"
+                    className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 bg-white px-3 py-4 text-xs font-medium text-slate-600 transition hover:border-purple-400 hover:bg-purple-50/50 dark:border-white/15 dark:bg-slate-950/30 dark:text-slate-300 dark:hover:bg-purple-950/20">
+                  <ImagePlus className="h-4 w-4 text-purple-600 dark:text-purple-300" />
+                  Add an image (JPEG, PNG, or WebP)
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="sr-only"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      event.target.value = "";
+                      if (!file) return;
+                      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+                        setErrorMessage("Choose a JPEG, PNG, or WebP screenshot.");
+                        return;
+                      }
+                      setErrorMessage(null);
+                      setScreenshot(file);
+                    }}
+                  />
+                </label>
+              )}
+              <p className="text-[10px] text-slate-400">One screenshot per ticket.</p>
             </div>
 
             {/* Action Buttons */}

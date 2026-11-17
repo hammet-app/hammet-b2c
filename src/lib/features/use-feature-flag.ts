@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { is_enabled } from "@/lib/features/flags";
+import { isEnabled } from "@/lib/features/flags";
 
 export function useFeatureFlag(key: string, defaultValue = false): boolean {
   const [enabled, setEnabled] = useState(defaultValue);
@@ -9,7 +9,7 @@ export function useFeatureFlag(key: string, defaultValue = false): boolean {
   useEffect(() => {
     let active = true;
 
-    void is_enabled(key, false, "B", defaultValue).then((value) => {
+    void isEnabled(key, false, "B", defaultValue).then((value) => {
       if (active && typeof value === "boolean") {
         setEnabled(value);
       }

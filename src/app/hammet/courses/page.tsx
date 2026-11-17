@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { getHammetAiSchoolCourses, getHammetAiSchools } from "@/lib/api/hammet";
 import type { AiSchool, AiSchoolCourse } from "@/lib/api/types";
 import { Alert } from "@/components/ui";
-import { SessionExpiredNotice } from "@/components/hammet/admin-form";
+import { SessionExpiredNotice } from "@/components/layout/hammet/admin-form";
 
 const inputClassName =
   "w-full rounded-xl border border-black/[0.08] bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-purple-400 focus:ring-4 focus:ring-purple-500/10 dark:border-white/[0.08] dark:bg-white/[0.04] dark:focus:border-cyan-400 dark:focus:ring-cyan-400/10";

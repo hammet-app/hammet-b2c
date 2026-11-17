@@ -14,7 +14,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { CreateAiSchoolRequest } from "@/lib/api/types";
 import { createAiSchool } from "@/lib/api/hammet";
 import { ApiError } from "@/lib/api/api-client";
-import { is_enabled } from "@/lib/features/flags";
+import { isEnabled } from "@/lib/features/flags";
 import { trackGloriaEvent } from "@/lib/analytics";
 import { Alert } from "@/components/ui";
 
@@ -37,7 +37,7 @@ export default function CreateAiSchoolPage() {
   const [featureEnabled, setFeatureEnabled] = useState<boolean | null>(null);
 
   useEffect(() => {
-    is_enabled("gloria_school_creation").then((value) => setFeatureEnabled(Boolean(value)));
+    isEnabled("gloria_school_creation").then((value) => setFeatureEnabled(Boolean(value)));
   }, []);
 
   const [name, setName] = useState("");
