@@ -1,4 +1,3 @@
-export * from "./adire-background"
 export * from "./alert"
 export * from "./auth-input"
 export * from "./auth-shell"
