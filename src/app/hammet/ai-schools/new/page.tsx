@@ -14,7 +14,6 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { CreateAiSchoolRequest } from "@/lib/api/types";
 import { createAiSchool } from "@/lib/api/hammet";
 import { ApiError } from "@/lib/api/api-client";
-import { trackGloriaEvent } from "@/lib/analytics";
 import { Alert } from "@/components/ui";
 
 const inputClassName =
@@ -71,17 +70,10 @@ export default function CreateAiSchoolPage() {
       } satisfies CreateAiSchoolRequest;
 
       const school = await createAiSchool(body, accessToken, refreshToken);
-      trackGloriaEvent("gloria_school_created", {
-        schoolId: school.id,
-        price: school.price,
-      });
 
       setCreatedSchoolId(school.id);
       setIsSuccessful(true);
     } catch (err) {
-      trackGloriaEvent("gloria_school_create_failed", {
-        error: err instanceof Error ? err.message : "Unknown error",
-      });
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
