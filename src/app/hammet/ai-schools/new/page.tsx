@@ -120,10 +120,6 @@ export default function CreateAiSchoolPage() {
               School created
             </p>
 
-            <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-slate-950 dark:text-white">
-              Gloria school ready
-            </h1>
-
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-500 dark:text-slate-400">
               <span className="font-medium text-slate-700 dark:text-slate-200">
                 {name}
@@ -178,10 +174,6 @@ export default function CreateAiSchoolPage() {
           <h1 className="text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-4xl dark:text-white">
             Create AI school
           </h1>
-
-          <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-            Create the Gloria school record. Its courses can be added immediately.
-          </p>
         </motion.section>
 
         <div className="mx-auto max-w-[760px]">
