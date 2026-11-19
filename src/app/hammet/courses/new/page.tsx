@@ -10,8 +10,6 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { createAiCourse } from "@/lib/api/hammet";
 import { ApiError } from "@/lib/api/api-client";
 import type { AiSchool } from "@/lib/api/types";
-import { isEnabled } from "@/lib/features/flags";
-import { trackGloriaEvent } from "@/lib/analytics";
 import { Alert } from "@/components/ui";
 import { SessionExpiredNotice } from "@/components/layout/hammet/admin-form";
 
@@ -24,11 +22,7 @@ export default function CreateAiCoursePage() {
   const requestedSchoolId = searchParams.get("schoolId") ?? "";
 
   const [schools, setSchools] = useState<AiSchool[]>([]);
-  const [featureEnabled, setFeatureEnabled] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    isEnabled("gloria_course_creation").then((value) => setFeatureEnabled(Boolean(value)));
-  }, []);
 
   const [selectedSchoolId, setSelectedSchoolId] = useState(requestedSchoolId);
   const [title, setTitle] = useState("");
@@ -100,17 +94,8 @@ export default function CreateAiCoursePage() {
         refreshToken
       );
 
-      trackGloriaEvent("gloria_course_created", {
-        courseId: course.id,
-        schoolId: course.aiSchoolId,
-        published,
-      });
       setIsSuccessful(true);
     } catch (err) {
-      trackGloriaEvent("gloria_course_create_failed", {
-        schoolId: selectedSchoolId,
-        error: err instanceof Error ? err.message : "Unknown error",
-      });
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {
       setIsCreating(false);
@@ -119,17 +104,6 @@ export default function CreateAiCoursePage() {
 
   if (!authLoading && !accessToken) {
     return <SessionExpiredNotice />;
-  }
-
-  if (featureEnabled === false) {
-    return (
-      <div className="px-5 pb-28 pt-8 sm:px-7 sm:pt-10 lg:px-10 lg:pb-12 lg:pt-10">
-        <div className="mx-auto max-w-[900px] rounded-[28px] border border-amber-200 bg-amber-50 p-8 text-amber-900 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200">
-          <h1 className="text-2xl font-semibold">Course creation is disabled</h1>
-          <p className="mt-2 text-sm leading-6">Turn on the gloria_course_creation flag in Growthbook to roll out course creation.</p>
-        </div>
-      </div>
-    );
   }
 
   if (isSuccessful) {

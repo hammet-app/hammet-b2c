@@ -14,8 +14,6 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { CreateAiSchoolRequest } from "@/lib/api/types";
 import { createAiSchool } from "@/lib/api/hammet";
 import { ApiError } from "@/lib/api/api-client";
-import { isEnabled } from "@/lib/features/flags";
-import { trackGloriaEvent } from "@/lib/analytics";
 import { Alert } from "@/components/ui";
 
 const inputClassName =
@@ -33,12 +31,6 @@ export default function CreateAiSchoolPage() {
     adminScope == "b2c" && access.includes("courses");
 
   const canCreate = isHammetAdmin && (isPlatformAdmin || isB2CCoursesAdmin);
-
-  const [featureEnabled, setFeatureEnabled] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    isEnabled("gloria_school_creation").then((value) => setFeatureEnabled(Boolean(value)));
-  }, []);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -78,17 +70,10 @@ export default function CreateAiSchoolPage() {
       } satisfies CreateAiSchoolRequest;
 
       const school = await createAiSchool(body, accessToken, refreshToken);
-      trackGloriaEvent("gloria_school_created", {
-        schoolId: school.id,
-        price: school.price,
-      });
 
       setCreatedSchoolId(school.id);
       setIsSuccessful(true);
     } catch (err) {
-      trackGloriaEvent("gloria_school_create_failed", {
-        error: err instanceof Error ? err.message : "Unknown error",
-      });
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
@@ -110,21 +95,6 @@ export default function CreateAiSchoolPage() {
 
             <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
               You do not have access to create AI schools.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (featureEnabled === false) {
-    return (
-      <div className="px-5 pb-28 pt-8 sm:px-7 sm:pt-10 lg:px-10 lg:pb-12 lg:pt-10">
-        <div className="mx-auto max-w-[900px]">
-          <div className="rounded-[28px] border border-amber-200 bg-amber-50 p-8 text-amber-900 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200">
-            <h1 className="text-2xl font-semibold">School creation is disabled</h1>
-            <p className="mt-2 text-sm leading-6">
-              Turn on the gloria_school_creation flag in Growthbook to roll out school creation.
             </p>
           </div>
         </div>

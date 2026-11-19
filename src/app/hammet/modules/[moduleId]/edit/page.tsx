@@ -16,8 +16,6 @@ import type {
 } from "@/lib/api/types";
 import { addAiQuiz, updateAiModule } from "@/lib/api/hammet";
 import { ApiError } from "@/lib/api/api-client";
-import { isEnabled } from "@/lib/features/flags";
-import { trackGloriaEvent } from "@/lib/analytics";
 import { canManageAiCatalog } from "@/lib/utils/roles";
 import { Alert } from "@/components/ui";
 import {
@@ -100,11 +98,6 @@ function EditAiModuleContent() {
   const { user, accessToken, refreshToken, isLoading: authLoading } = useAuth();
   const canEdit = canManageAiCatalog(user);
 
-  const [featureEnabled, setFeatureEnabled] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    isEnabled("gloria_module_creation").then((value) => setFeatureEnabled(Boolean(value)));
-  }, []);
 
   // Module details: there's no route to read a module back, so blank means "leave unchanged".
   const [title, setTitle] = useState("");
@@ -172,9 +165,6 @@ function EditAiModuleContent() {
       } satisfies UpdateAiModuleRequest;
 
       const updated = await updateAiModule(moduleId, body, accessToken, refreshToken);
-      if (resourceRows.length > 0) {
-        trackGloriaEvent("gloria_resources_created", { moduleId, count: resourceRows.length });
-      }
       setAddedResources((current) => [...current, ...updated.resources]);
       setResourceRows([]);
       setTitle("");
@@ -237,12 +227,7 @@ function EditAiModuleContent() {
       } satisfies AddAiQuizRequest;
 
       const quiz = await addAiQuiz(moduleId, body, accessToken, refreshToken);
-      trackGloriaEvent("gloria_quiz_created", {
-        moduleId,
-        quizId: quiz.id,
-        questions: quiz.questions.length,
-        isExam,
-      });
+
       setCreatedQuizzes((current) => [...current, quiz]);
       setQuizTitle("");
       setQuizDescription("");
@@ -251,10 +236,7 @@ function EditAiModuleContent() {
       setIsExam(false);
       setQuestions([emptyQuestionRow()]);
     } catch (err) {
-      trackGloriaEvent("gloria_quiz_create_failed", {
-        moduleId,
-        error: err instanceof Error ? err.message : "Unknown error",
-      });
+
       setQuizError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {
       setIsCreatingQuiz(false);
@@ -269,13 +251,7 @@ function EditAiModuleContent() {
     return <Notice title="Edit AI module">You do not have access to edit AI modules.</Notice>;
   }
 
-  if (featureEnabled === false) {
-    return (
-      <Notice title="Module editing is disabled">
-        Turn on the gloria_module_creation flag in Growthbook to roll out module editing.
-      </Notice>
-    );
-  }
+
 
   const backHref = courseId
     ? `/hammet/courses/${encodeURIComponent(courseId)}/edit?schoolId=${encodeURIComponent(schoolId)}`
