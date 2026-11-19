@@ -10,7 +10,6 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { UpdateAiSchoolRequest } from "@/lib/api/types";
 import { getHammetAiSchoolCourses, updateAiSchool } from "@/lib/api/hammet";
 import { ApiError } from "@/lib/api/api-client";
-import { isEnabled } from "@/lib/features/flags";
 import { canManageAiCatalog } from "@/lib/utils/roles";
 import { Alert } from "@/components/ui";
 import { Notice, PublishSelect, SessionExpiredNotice, inputClassName } from "@/components/layout/hammet/admin-form";
@@ -20,12 +19,6 @@ export default function EditAiSchoolPage() {
   const { user, accessToken, refreshToken, isLoading: authLoading } = useAuth();
 
   const canEdit = canManageAiCatalog(user);
-
-  const [featureEnabled, setFeatureEnabled] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    isEnabled("gloria_school_creation").then((value) => setFeatureEnabled(Boolean(value)));
-  }, []);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -113,14 +106,6 @@ export default function EditAiSchoolPage() {
 
   if (!canEdit) {
     return <Notice title="Edit AI school">You do not have access to edit AI schools.</Notice>;
-  }
-
-  if (featureEnabled === false) {
-    return (
-      <Notice title="School editing is disabled">
-        Turn on the gloria_school_creation flag in Growthbook to roll out school editing.
-      </Notice>
-    );
   }
 
   if (notFound) {
