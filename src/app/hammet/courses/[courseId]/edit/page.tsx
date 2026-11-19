@@ -26,8 +26,6 @@ import {
   updateAiCourse,
 } from "@/lib/api/hammet";
 import { ApiError } from "@/lib/api/api-client";
-import { isEnabled } from "@/lib/features/flags";
-import { trackGloriaEvent } from "@/lib/analytics";
 import { canManageAiCatalog } from "@/lib/utils/roles";
 import { Alert } from "@/components/ui";
 import {
@@ -75,14 +73,6 @@ function EditAiCourseContent() {
   const schoolId = searchParams.get("schoolId") ?? "";
   const { user, accessToken, refreshToken, isLoading: authLoading } = useAuth();
   const canEdit = canManageAiCatalog(user);
-
-  const [featureEnabled, setFeatureEnabled] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    isEnabled("gloria_course_creation").then((value) =>
-      setFeatureEnabled(Boolean(value)),
-    );
-  }, []);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -209,12 +199,6 @@ function EditAiCourseContent() {
         accessToken,
         refreshToken,
       );
-      if (response.modules.length > 0) {
-        trackGloriaEvent("gloria_modules_created", {
-          courseId,
-          count: response.modules.length,
-        });
-      }
       setCreatedModules((current) => [...current, ...response.modules]);
       setModuleRows([]);
       setIsSaved(true);
@@ -237,15 +221,6 @@ function EditAiCourseContent() {
     return (
       <Notice title="Edit AI course">
         You do not have access to edit AI courses.
-      </Notice>
-    );
-  }
-
-  if (featureEnabled === false) {
-    return (
-      <Notice title="Course editing is disabled">
-        Turn on the gloria_course_creation flag in Growthbook to roll out course
-        editing.
       </Notice>
     );
   }
