@@ -119,7 +119,6 @@ export default function CreateAiCoursePage() {
               <Check className="h-8 w-8" />
             </div>
             <p className="mt-6 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-300">Course created</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em]">Gloria course ready</h1>
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-500 dark:text-slate-400">
               {title} has been created with slug {courseSlug(title)}.
             </p>
@@ -142,13 +141,11 @@ export default function CreateAiCoursePage() {
           </Link>
           <p className="mb-2 text-sm font-medium text-purple-600 dark:text-cyan-400">AI Schools</p>
           <h1 className="text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Create AI course</h1>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-400">Add a course to an existing Gloria school.</p>
         </motion.section>
 
         <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="rounded-[28px] border border-black/[0.06] bg-white p-7 dark:border-white/[0.06] dark:bg-white/[0.03] sm:p-8">
           <div className="mb-7 flex items-center gap-4">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-300"><BookOpen className="h-5 w-5" /></div>
-            <div><h2 className="text-xl font-semibold tracking-[-0.03em]">Course details</h2><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">The course is created exactly as supplied by Gloria.</p></div>
           </div>
 
           <div className="space-y-5">
@@ -158,7 +155,6 @@ export default function CreateAiCoursePage() {
                 {schools.map((school) => <option key={school.id} value={school.id}>{school.name}</option>)}
               </select>
               {loadingSchools && <span className="mt-2 block text-xs text-slate-400">Loading schools...</span>}
-              {!loadingSchools && schools.length === 0 && <span className="mt-2 block text-xs text-red-600 dark:text-red-400">Create a Gloria school before creating a course.</span>}
             </label>
 
             <label className="block"><span className="mb-2 block text-sm font-medium">Title</span><input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Introduction to AI Product Design" className={inputClassName} /></label>
