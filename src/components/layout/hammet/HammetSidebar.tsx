@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
 import {
   BookOpen,
+  Newspaper,
   LifeBuoy,
   TicketPercent,
   ChevronLeft,
@@ -26,7 +27,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { getHammetAiSchools } from "@/lib/api/hammet";
 import type { AiSchool } from "@/lib/api/types";
 import { useTheme } from "@/lib/use-theme";
-import { canManageAdmins, canManageCoupons, canManageSupport, canViewLogs } from "@/lib/utils/roles";
+import { canManageAdmins, canManageBlog, canManageCoupons, canManageSupport, canViewLearnerSummary, canViewLogs } from "@/lib/utils/roles";
 
 const baseNavigation = [
   {
@@ -69,6 +70,8 @@ const supportNavigation = {
   icon: LifeBuoy,
 };
 
+const blogNavigation = { label: "Blog", href: "/hammet/blog", icon: Newspaper };
+
 const logsNavigation = {
   label: "Logs",
   href: "/hammet/logs",
@@ -88,9 +91,10 @@ export function HammetShell({ children }: HammetShellProps) {
 
   // Only admins who can manage other admins see the Administrators link.
   const navigation = [
-    ...baseNavigation,
+    ...baseNavigation.filter((item) => item.href !== "/hammet/learners" || canViewLearnerSummary(user)),
     ...(canManageCoupons(user) ? [couponsNavigation] : []),
     ...(canManageSupport(user) ? [supportNavigation] : []),
+    ...(canManageBlog(user) ? [blogNavigation] : []),
     ...(canManageAdmins(user) ? [adminsNavigation] : []),
     ...(canViewLogs(user) ? [logsNavigation] : []),
   ];
@@ -145,6 +149,13 @@ export function HammetShell({ children }: HammetShellProps) {
 
   const currentPage =
     navigation.find((item) => isActive(item.href))?.label ?? "Hammet";
+  const primaryMobileNavigation = navigation.slice(0, 4);
+  const activeNavigationItem = navigation.find((item) => isActive(item.href));
+  const mobileNavigation =
+    activeNavigationItem &&
+    !primaryMobileNavigation.some((item) => item.href === activeNavigationItem.href)
+      ? [...primaryMobileNavigation.slice(0, 3), activeNavigationItem]
+      : primaryMobileNavigation;
 
   return (
     <div className="min-h-screen bg-[#F5F3FF] text-slate-950 transition-colors dark:bg-[#0D0A17] dark:text-white">
@@ -216,7 +227,7 @@ export function HammetShell({ children }: HammetShellProps) {
           )}
 
           {/* Primary navigation */}
-          <nav className="w-full space-y-1">
+          <nav aria-label="Hammet admin navigation" className="w-full space-y-1">
             {!collapsed && (
               <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
                 Workspace
@@ -231,13 +242,14 @@ export function HammetShell({ children }: HammetShellProps) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-current={active ? "page" : undefined}
                   className={[
-                    "group relative flex h-11 items-center rounded-xl text-sm font-medium transition",
+                    "group relative flex h-11 items-center rounded-xl text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 dark:focus-visible:ring-cyan-400 dark:focus-visible:ring-offset-[#120E1D]",
                     collapsed
                       ? "justify-center"
                       : "gap-3 px-3",
                     active
-                      ? "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300"
+                      ? "bg-purple-100/80 font-semibold text-purple-900 ring-1 ring-purple-200/80 dark:bg-purple-500/15 dark:text-cyan-200 dark:ring-cyan-400/20"
                       : "text-slate-500 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-white",
                   ].join(" ")}
                 >
@@ -399,7 +411,7 @@ export function HammetShell({ children }: HammetShellProps) {
           </button>
         </div>
 
-        <nav className="space-y-1 px-4">
+        <nav aria-label="Hammet admin navigation" className="space-y-1 px-4">
           {navigation.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -409,10 +421,11 @@ export function HammetShell({ children }: HammetShellProps) {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
+                aria-current={active ? "page" : undefined}
                 className={[
-                  "flex h-12 items-center gap-3 rounded-xl px-3 text-sm font-medium transition",
+                  "relative flex h-12 items-center gap-3 rounded-xl px-3 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500",
                   active
-                    ? "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300"
+                    ? "bg-purple-100/80 font-semibold text-purple-900 ring-1 ring-purple-200/80 dark:bg-purple-500/15 dark:text-cyan-200 dark:ring-cyan-400/20"
                     : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-white/[0.05]",
                 ].join(" ")}
               >
@@ -504,9 +517,9 @@ export function HammetShell({ children }: HammetShellProps) {
       </div>
 
       {/* Mobile bottom navigation */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.06] bg-white/90 px-2 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#120E1D]/90 lg:hidden">
+      <nav aria-label="Hammet admin mobile navigation" className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.06] bg-white/90 px-2 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#120E1D]/90 lg:hidden">
         <div className="mx-auto flex max-w-md items-center justify-around">
-          {navigation.slice(0, 4).map((item) => {
+          {mobileNavigation.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
 
@@ -514,10 +527,11 @@ export function HammetShell({ children }: HammetShellProps) {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={active ? "page" : undefined}
                 className={[
-                  "flex min-w-[68px] flex-col items-center gap-1 rounded-xl py-1.5 text-[10px] font-medium transition",
+                  "flex min-h-12 min-w-[68px] flex-col items-center justify-center gap-1 rounded-xl px-2 py-1.5 text-[10px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500",
                   active
-                    ? "text-purple-700 dark:text-cyan-400"
+                    ? "bg-purple-100/80 font-semibold text-purple-900 dark:bg-purple-500/15 dark:text-cyan-200"
                     : "text-slate-400",
                 ].join(" ")}
               >

@@ -14,6 +14,7 @@ export type UserAccess =
   | "coupons"
   | "support"
   | "beta_access"
+  | "blog"
 
 export type UserScope = 
   | "b2b"
@@ -62,8 +63,18 @@ export function canManageSupport(user: AuthUser | null | undefined): boolean {
   return user.scope === "b2c" && (user.access ?? []).includes("support");
 }
 
+export function canManageBlog(user: AuthUser | null | undefined): boolean {
+  if (user?.role !== "hammet_admin") return false;
+  return user.scope === "platform" || (user.access ?? []).includes("blog");
+}
+
 /** Hammet admins with platform scope view application logs. */
 export function canViewLogs(user: AuthUser | null | undefined): boolean {
+  return user?.role === "hammet_admin" && user.scope === "platform";
+}
+
+/** Only platform admins can view aggregate B2C learner information. */
+export function canViewLearnerSummary(user: AuthUser | null | undefined): boolean {
   return user?.role === "hammet_admin" && user.scope === "platform";
 }
 

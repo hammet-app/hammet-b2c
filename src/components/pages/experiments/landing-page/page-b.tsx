@@ -512,10 +512,10 @@ export default function HomePage() {
                         onClick={() => setActiveExplainerIdx(i)}
                         aria-label={`Jump to message ${i + 1}`}
                         className={cn(
-                          "h-1.5 rounded-full transition-all duration-300",
+                          "flex h-8 min-w-8 items-center justify-center rounded-full transition-all duration-300 before:h-1.5 before:rounded-full before:content-['']",
                           i === activeExplainerIdx
-                            ? "w-4 bg-purple-600 dark:bg-cyan-400"
-                            : "w-1.5 bg-slate-300 hover:bg-slate-400 dark:bg-slate-700 dark:hover:bg-slate-500"
+                            ? "before:w-4 before:bg-purple-600 dark:before:bg-cyan-400"
+                            : "before:w-1.5 before:bg-slate-300 hover:before:bg-slate-400 dark:before:bg-slate-700 dark:hover:before:bg-slate-500"
                         )}
                       />
                     ))}
@@ -525,7 +525,7 @@ export default function HomePage() {
                     onClick={() => setIsExplainerPlaying(!isExplainerPlaying)}
                     title={isExplainerPlaying ? "Pause auto-typing" : "Resume auto-typing"}
                     aria-label={isExplainerPlaying ? "Pause auto-typing" : "Resume auto-typing"}
-                    className="flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-black/5 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/10 transition-colors"
+                    className="flex h-10 w-10 items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/10 transition-colors"
                   >
                     {isExplainerPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3 ml-0.5" />}
                   </button>
@@ -534,7 +534,7 @@ export default function HomePage() {
                     onClick={() => setActiveExplainerIdx((prev) => (prev + 1) % AI_EXPLAINER_MESSAGES.length)}
                     title="Next message"
                     aria-label="Next message"
-                    className="flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-black/5 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/10 transition-colors"
+                    className="flex h-10 w-10 items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/10 transition-colors"
                   >
                     <ChevronRight className="h-3.5 w-3.5" />
                   </button>
