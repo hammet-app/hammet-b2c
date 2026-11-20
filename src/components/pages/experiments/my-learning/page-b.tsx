@@ -375,6 +375,7 @@ export default function MyLearningPage() {
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                 <input
                   type="search"
+                  aria-label="Search your AI courses"
                   placeholder="Search your AI courses..."
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}

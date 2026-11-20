@@ -40,6 +40,7 @@ import {
   type HammetAdmin,
   type HammetAdminDto,
   type HammetAdminsResponse,
+  type HammetLearnerSummary,
   type HammetAdminsResponseDto,
   type GetHammetAdminsParams,
   type EditHammetAdminRequest,
@@ -120,6 +121,13 @@ export async function getHammetAdmins(
   );
 
   return toHammetAdminsResponse(response);
+}
+
+export async function getHammetLearnerSummary(
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<HammetLearnerSummary> {
+  return apiClient.get<HammetLearnerSummary>("/hammet/learners/summary", token, { onRefresh });
 }
 
 export async function editHammetAdmin(
@@ -277,9 +285,12 @@ export async function addAiQuiz(
 export async function getHammetAiSchools(
   token: string,
   onRefresh: () => Promise<string | null>,
+  page = 1,
+  pageSize = 50,
 ): Promise<AiSchool[]> {
+  const query = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
   const response = await apiClient.get<AiSchoolsResponseDto>(
-    "/hammet/ai-schools",
+    `/hammet/ai-schools?${query.toString()}`,
     token,
     { onRefresh },
   );
