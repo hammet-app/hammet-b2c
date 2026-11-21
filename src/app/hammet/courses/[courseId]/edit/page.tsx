@@ -89,13 +89,13 @@ function EditAiCourseContent() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!accessToken || !canEdit || !schoolId) return;
+    if (!accessToken || !canEdit) return;
 
     const token = accessToken;
     let active = true;
     async function loadCourse() {
       try {
-        // There is no single-course admin route, so find it in its school's course list.
+        // Load the course's admin detail response, including its modules.
         const course = await getHammetAiCourse(
           courseId,
           token,
@@ -519,13 +519,6 @@ function EditAiCourseContent() {
 
                 {createdModules.length > 0 && (
                   <div className="mt-6 border-t border-black/[0.06] pt-6 dark:border-white/[0.06]">
-                    <p className="mb-1 text-sm font-semibold">
-                      Modules added in this session
-                    </p>
-                    <p className="mb-3 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                      The backend has no route to list a course&apos;s modules
-                      yet, so only modules added here are shown.
-                    </p>
                     <ul className="space-y-2">
                       {createdModules.map((item) => (
                         <li

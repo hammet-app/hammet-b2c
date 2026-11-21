@@ -13,6 +13,15 @@ import {
   type UpdateAiCourseResponse,
   type UpdateAiCourseResponseDto,
   type UpdateAiModuleRequest,
+  type HammetAiModuleContent,
+  type HammetAiModuleContentDto,
+  type UpdateAiResourceRequest,
+  type UpdateAiProjectRequest,
+  type UpdateAiQuizRequest,
+  type AiResource,
+  type AiResourceDto,
+  type AiProject,
+  type AiProjectDto,
   type AiModule,
   type AiModuleDto,
   type AddAiQuizRequest,
@@ -27,6 +36,12 @@ import {
   toUpdateAiCourseResponse,
   fromUpdateAiModuleRequest,
   toAiModule,
+  toHammetAiModuleContent,
+  fromUpdateAiResourceRequest,
+  fromUpdateAiProjectRequest,
+  fromUpdateAiQuizRequest,
+  toAiResource,
+  toAiProject,
   fromAddAiQuizRequest,
   toAiQuiz,
   type HammetAiSchoolCoursesResponse,
@@ -281,6 +296,103 @@ export async function addAiQuiz(
   );
 
   return toAiQuiz(response);
+}
+
+export async function getHammetAiModule(
+  moduleId: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<HammetAiModuleContent> {
+  const response = await apiClient.get<HammetAiModuleContentDto>(
+    `/hammet/ai-modules/${encodeURIComponent(moduleId)}`,
+    token,
+    { onRefresh },
+  );
+  return toHammetAiModuleContent(response);
+}
+
+export async function updateAiResource(
+  resourceId: string,
+  body: UpdateAiResourceRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<AiResource> {
+  const response = await apiClient.patch<AiResourceDto>(
+    `/hammet/edit/ai-resources/${encodeURIComponent(resourceId)}`,
+    fromUpdateAiResourceRequest(body),
+    token,
+    { onRefresh },
+  );
+  return toAiResource(response);
+}
+
+export async function deleteAiResource(
+  resourceId: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<void> {
+  await apiClient.delete<void>(
+    `/hammet/edit/ai-resources/${encodeURIComponent(resourceId)}`,
+    undefined,
+    token,
+    { onRefresh },
+  );
+}
+
+export async function updateAiProject(
+  projectId: string,
+  body: UpdateAiProjectRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<AiProject> {
+  const response = await apiClient.patch<AiProjectDto>(
+    `/hammet/edit/ai-projects/${encodeURIComponent(projectId)}`,
+    fromUpdateAiProjectRequest(body),
+    token,
+    { onRefresh },
+  );
+  return toAiProject(response);
+}
+
+export async function deleteAiProject(
+  projectId: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<void> {
+  await apiClient.delete<void>(
+    `/hammet/edit/ai-projects/${encodeURIComponent(projectId)}`,
+    undefined,
+    token,
+    { onRefresh },
+  );
+}
+
+export async function updateAiQuiz(
+  quizId: string,
+  body: UpdateAiQuizRequest,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<AiQuiz> {
+  const response = await apiClient.patch<AiQuizDto>(
+    `/hammet/edit/ai-quizzes/${encodeURIComponent(quizId)}`,
+    fromUpdateAiQuizRequest(body),
+    token,
+    { onRefresh },
+  );
+  return toAiQuiz(response);
+}
+
+export async function deleteAiQuiz(
+  quizId: string,
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<void> {
+  await apiClient.delete<void>(
+    `/hammet/edit/ai-quizzes/${encodeURIComponent(quizId)}`,
+    undefined,
+    token,
+    { onRefresh },
+  );
 }
 
 export async function getHammetAiSchoolsPage(

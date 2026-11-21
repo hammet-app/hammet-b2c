@@ -671,8 +671,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
 
               {/* Detailed Pause Message */}
               <p className="mt-3.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-sans max-w-md">
-                This section is on pause for now while the backend services and
-                APIs are being wired up. All active learning curriculums, AI
+                This section is being prepared. All active learning curriculums, AI
                 schools, and course projects are fully live and operational.
               </p>
 
@@ -680,7 +679,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
               <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-1.5 text-[11px] font-semibold text-slate-700 dark:bg-white/[0.05] dark:text-slate-300 border border-black/[0.04] dark:border-white/[0.06]">
                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                  Backend Integration Pending
+                  Coming Soon
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-1.5 text-[11px] font-semibold text-slate-700 dark:bg-white/[0.05] dark:text-slate-300 border border-black/[0.04] dark:border-white/[0.06]">
                   <CheckCircle2 className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />

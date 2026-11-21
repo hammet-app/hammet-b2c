@@ -259,7 +259,7 @@ export function TicketList() {
               </h4>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-xs">
                 {tickets.length === 0
-                  ? "Create your first ticket and the backend will record it against your learner account."
+                  ? "Create your first ticket and it will be linked to your learner account."
                   : "No tickets match your active filter criteria. Try adjusting your search or reset your filters."}
               </p>
               {tickets.length === 0 ? (

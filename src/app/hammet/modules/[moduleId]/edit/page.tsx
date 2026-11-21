@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
-import { ArrowLeft, Check, FileText, Layers, ListChecks, Plus, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, FileText, FolderKanban, Layers, ListChecks, Plus, Save, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 import { useAuth } from "@/lib/auth/auth-context";
@@ -14,7 +14,7 @@ import type {
   AiResourceType,
   UpdateAiModuleRequest,
 } from "@/lib/api/types";
-import { addAiQuiz, updateAiModule } from "@/lib/api/hammet";
+import { addAiQuiz, getHammetAiModule, updateAiModule } from "@/lib/api/hammet";
 import { ApiError } from "@/lib/api/api-client";
 import { canManageAiCatalog } from "@/lib/utils/roles";
 import { Alert } from "@/components/ui";
@@ -106,6 +106,7 @@ function EditAiModuleContent() {
   const [masterclass, setMasterclass] = useState("");
   const [resourceRows, setResourceRows] = useState<ResourceRow[]>([]);
   const [addedResources, setAddedResources] = useState<AiResource[]>([]);
+  const [existingResources, setExistingResources] = useState<AiResource[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -120,12 +121,31 @@ function EditAiModuleContent() {
   const [isCreatingQuiz, setIsCreatingQuiz] = useState(false);
   const [quizError, setQuizError] = useState("");
 
+  useEffect(() => {
+    if (!accessToken || !canEdit) return;
+    let active = true;
+    void getHammetAiModule(moduleId, accessToken, refreshToken)
+      .then((content) => {
+        if (active) setExistingResources(content.resources);
+      })
+      .catch(() => {
+        // The save route still validates positions if module details cannot be loaded.
+      });
+    return () => {
+      active = false;
+    };
+  }, [accessToken, canEdit, moduleId, refreshToken]);
+
   // ---- module details + resources ----
 
   const parsedPosition = position.trim() === "" ? undefined : parseWholeNumber(position);
   const isPositionValid = parsedPosition !== null;
   const isMasterclassValid = masterclass.trim() === "" || isValidUrl(masterclass.trim());
-  const areResourcesValid = resourceRows.every(isResourceRowValid);
+  const areResourcesValid = resourceRows.every((row) =>
+    isResourceRowValid(row) &&
+    !existingResources.some((item) => item.position === Number(row.position)) &&
+    !resourceRows.some((item) => item.key !== row.key && Number(item.position) === Number(row.position)),
+  );
   const hasDetailChanges =
     title.trim() !== "" || description.trim() !== "" || position.trim() !== "" || masterclass.trim() !== "";
   const canSaveModule =
@@ -136,7 +156,11 @@ function EditAiModuleContent() {
   }
 
   function addResourceRow() {
-    const used = [...addedResources.map((item) => item.position), ...resourceRows.map((row) => Number(row.position) || 0)];
+    const used = [
+      ...existingResources.map((item) => item.position),
+      ...addedResources.map((item) => item.position),
+      ...resourceRows.map((row) => Number(row.position) || 0),
+    ];
     setResourceRows((rows) => [...rows, emptyResourceRow(String(Math.max(0, ...used) + 1))]);
   }
 
@@ -166,6 +190,7 @@ function EditAiModuleContent() {
 
       const updated = await updateAiModule(moduleId, body, accessToken, refreshToken);
       setAddedResources((current) => [...current, ...updated.resources]);
+      setExistingResources((current) => [...current, ...updated.resources]);
       setResourceRows([]);
       setTitle("");
       setDescription("");
@@ -281,8 +306,22 @@ function EditAiModuleContent() {
           </h1>
 
           <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-            Update the module, add resources, and add quizzes.
+            Update the module details or manage its learning content.
           </p>
+          <nav aria-label="Module content" className="mt-5 grid gap-3 sm:grid-cols-3">
+            {[
+              { label: "Manage resources", href: `/hammet/modules/${encodeURIComponent(moduleId)}/resources`, icon: FileText },
+              { label: "Manage quizzes", href: `/hammet/modules/${encodeURIComponent(moduleId)}/quizzes`, icon: ListChecks },
+              { label: "Manage projects", href: `/hammet/modules/${encodeURIComponent(moduleId)}/projects`, icon: FolderKanban },
+            ].map(({ label, href, icon: Icon }) => {
+              const query = new URLSearchParams({ courseId, schoolId, title: moduleTitle }).toString();
+              return (
+                <Link key={label} href={`${href}?${query}`} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-black/[0.08] bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.06]">
+                  <Icon className="h-4 w-4" /> {label}
+                </Link>
+              );
+            })}
+          </nav>
         </motion.section>
 
         <div className="mx-auto max-w-[760px] space-y-6">
@@ -347,7 +386,7 @@ function EditAiModuleContent() {
                 </div>
                 <h2 className="text-xl font-semibold tracking-[-0.03em]">Add resources</h2>
                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                  Links to videos, articles and documents. File upload isn&apos;t available yet.
+                  Add a URL for a video, article, document, or other learning resource.
                 </p>
               </div>
 
@@ -413,6 +452,9 @@ function EditAiModuleContent() {
                           Title, a full http(s) URL and a whole-number position are required.
                         </span>
                       )}
+                      {existingResources.some((item) => item.position === Number(row.position)) || resourceRows.some((item) => item.key !== row.key && Number(item.position) === Number(row.position)) ? (
+                        <span className="block text-xs text-red-600 dark:text-red-400">Each position can contain only one resource in this module.</span>
+                      ) : null}
                     </div>
                   </div>
                 ))}
