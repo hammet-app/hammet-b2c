@@ -146,7 +146,7 @@ export function ChatWidget() {
                         Dr. Elena Rostova
                       </p>
                       <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                        Welcome! Our community study sessions on autonomous agent swarms begin this week.
+                        Welcome! Our community study sessions on using AI at work begin this week.
                       </p>
                     </div>
                   </div>

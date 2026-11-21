@@ -386,6 +386,7 @@ export function fromAddAiQuizRequest(
     position: req.position,
     passing_score: req.passingScore,
     is_exam: req.isExam,
+    duration_minutes: req.durationMinutes,
     questions: req.questions.map((question) => ({
       question: question.question,
       position: question.position,
@@ -406,6 +407,7 @@ export function toAiQuiz(dto: AiQuizDto): AiQuiz {
     position: dto.position,
     passingScore: dto.passing_score,
     isExam: dto.is_exam,
+    durationMinutes: dto.duration_minutes,
     questions: dto.questions.map((question) => ({
       id: question.id,
       quizId: question.quiz_id,
@@ -429,6 +431,7 @@ export function fromUpdateAiQuizRequest(req: UpdateAiQuizRequest): EditAiQuizReq
     position: req.position,
     passing_score: req.passingScore,
     is_exam: req.isExam,
+    duration_minutes: req.durationMinutes,
     questions: req.questions.map((question) => ({
       question: question.question,
       position: question.position,

@@ -388,7 +388,7 @@ export default function LearnerHomePage() {
                   </span>
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    Accredited Certificate
+                    Course Certificate
                   </span>
                 </div>
               </div>
@@ -414,7 +414,7 @@ export default function LearnerHomePage() {
                     href={school ? `/learner/ai-schools/${school.id}` : "/learner/ai-schools"}
                     className="inline-flex flex-1 sm:flex-initial items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-purple-600/25 transition-all hover:bg-purple-700 hover:scale-[1.02]"
                   >
-                    {school ? "View Curriculum" : "Browse Schools"}
+                    {school ? "View Courses" : "Browse Schools"}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
@@ -492,7 +492,7 @@ export default function LearnerHomePage() {
                           <span className="h-2.5 w-2.5 rounded-full bg-purple-600 ring-4 ring-purple-100 dark:bg-cyan-400 dark:ring-cyan-500/20" />
                         </span>
                         <span className="font-medium text-slate-800 dark:text-slate-200">
-                          Module 02 · Prompt engineering
+                          Module 02 · Writing clear instructions for AI
                         </span>
                       </div>
                       <span className="shrink-0 whitespace-nowrap text-[10px] font-bold text-purple-600 dark:text-cyan-400">
@@ -504,7 +504,7 @@ export default function LearnerHomePage() {
                       <div className="flex items-center gap-2">
                         <Lock className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" />
                         <span className="font-medium text-slate-500 dark:text-slate-400">
-                          Module 03 · Model evaluation
+                          Module 03 · Checking AI answers
                         </span>
                       </div>
                       <span className="shrink-0 whitespace-nowrap text-[10px] font-bold text-slate-400">Up next</span>
@@ -539,7 +539,7 @@ export default function LearnerHomePage() {
               >
                 <span className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-200">
                   <BookOpen className="h-4 w-4 text-purple-600 dark:text-cyan-400" />
-                  Continue your curriculum
+                  Continue learning
                 </span>
                 <ArrowRight className="h-3.5 w-3.5 text-purple-600 transition-transform group-hover:translate-x-0.5 dark:text-cyan-400" />
               </Link>
@@ -657,7 +657,7 @@ export default function LearnerHomePage() {
                       </span>
                       <div>
                         <p className="text-xs font-bold text-slate-900 dark:text-white">
-                          Prompt evaluation harness
+                          Practice: testing instructions for AI
                         </p>
                         <p className="text-[10px] text-slate-400">Project submission</p>
                       </div>

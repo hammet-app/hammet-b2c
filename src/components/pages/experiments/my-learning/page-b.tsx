@@ -79,7 +79,7 @@ export default function MyLearningPage() {
         setSchools([]);
         setCourses([]);
         setError(
-          "Unable to load your learning entitlements. Please try again.",
+          "We couldn't load your courses. Please try again.",
         );
       } finally {
         if (!cancelled) setLoading(false);
@@ -159,19 +159,19 @@ export default function MyLearningPage() {
             </h1>
 
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-600 dark:text-slate-300 sm:text-base">
-              Access your AI schools and courses in one place. Advance your skills, earn verifiable certificates, and master production-grade artificial intelligence.
+              Access your AI schools and courses in one place. Learn practical ways to use AI at work, earn certificates, and build confidence with everyday tools.
             </p>
 
             {/* Educational Metrics & Reassurance Pills */}
             <div className="mt-6 flex flex-wrap items-center gap-2.5">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-200/80 bg-white px-3.5 py-1.5 text-xs font-semibold text-purple-800 shadow-xs dark:border-white/10 dark:bg-white/5 dark:text-purple-300">
                 <GraduationCap className="h-3.5 w-3.5 text-purple-600 dark:text-cyan-400" />
-                <span>Accredited AI Curriculums</span>
+                <span>Practical AI Courses</span>
               </span>
 
               <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200/80 bg-white px-3.5 py-1.5 text-xs font-semibold text-indigo-800 shadow-xs dark:border-white/10 dark:bg-white/5 dark:text-indigo-300">
                 <Zap className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-                <span>Self-Paced Mastery</span>
+                <span>Learn at Your Own Pace</span>
               </span>
 
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-white px-3.5 py-1.5 text-xs font-semibold text-emerald-800 shadow-xs dark:border-white/10 dark:bg-white/5 dark:text-emerald-300">
@@ -226,8 +226,8 @@ export default function MyLearningPage() {
                 </h2>
               </div>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Schools you are entitled to access. Complete tracks for
-                career-defining AI capability.
+                Schools you can access. Complete courses to build
+                practical AI skills you can use at work.
               </p>
             </div>
             {!loading && !error && (
@@ -251,7 +251,7 @@ export default function MyLearningPage() {
             <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
               <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
               <div>
-                <p className="font-semibold">Entitlements unavailable</p>
+                <p className="font-semibold">Courses unavailable</p>
                 <p className="mt-1">{error}</p>
               </div>
             </div>
@@ -262,7 +262,7 @@ export default function MyLearningPage() {
               </div>
               <BookOpen className="mx-auto mb-3 h-10 w-10 text-purple-500 dark:text-cyan-400" />
               <p className="text-lg font-bold text-slate-900 dark:text-white">
-                No entitled AI schools yet
+                No AI schools yet
               </p>
               <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">
                 Schools you have access to will appear here once registered or
@@ -360,8 +360,8 @@ export default function MyLearningPage() {
                 </h2>
               </div>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Courses included in your entitlements. Self-paced, interactive
-                AI labs.
+                Courses included with your enrollment. Learn at your own pace
+                with practical exercises.
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -396,7 +396,7 @@ export default function MyLearningPage() {
             </div>
           ) : error ? (
             <div className="rounded-3xl border border-purple-500/15 bg-white/70 p-6 text-sm text-slate-500 dark:border-white/[0.06] dark:bg-white/[0.02] dark:text-slate-400">
-              Courses will be shown here once your entitlements can be loaded.
+              Courses will appear here once your enrollment is available.
             </div>
           ) : visibleCourses.length === 0 ? (
             <div className="relative overflow-hidden rounded-3xl border border-dashed border-purple-300/80 bg-gradient-to-br from-white/70 to-purple-50/30 p-10 text-center dark:border-white/10">
@@ -407,7 +407,7 @@ export default function MyLearningPage() {
               <p className="text-lg font-bold text-slate-900 dark:text-white">
                 {searchQuery
                   ? "No matching courses found"
-                  : "No entitled courses yet"}
+              : "No courses yet"}
               </p>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 {searchQuery

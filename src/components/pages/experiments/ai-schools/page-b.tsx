@@ -182,7 +182,7 @@ export default function AiSchoolsPage() {
           className="mb-10 max-w-2xl"
         >
           <DoodleKicker icon={<KnowledgeAppleIcon size="sm" />} tone="violet">
-            AI Academy Tracks
+            Learn AI
           </DoodleKicker>
 
           <h1 className="mt-3 flex items-center gap-3 text-3xl font-extrabold tracking-[-0.04em] text-slate-950 sm:text-4xl lg:text-5xl dark:text-white">
@@ -191,9 +191,8 @@ export default function AiSchoolsPage() {
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base dark:text-slate-400">
-            Explore comprehensive AI diploma tracks designed to build end-to-end
-            mastery in machine learning, neural networks, and generative
-            architectures.
+            Explore courses that explain what AI is and show you practical ways
+            to use it in business and everyday work.
           </p>
         </motion.header>
 
@@ -378,20 +377,17 @@ export default function AiSchoolsPage() {
                             </div>
 
                             <p className="mt-3 text-sm leading-relaxed text-slate-600 sm:text-base dark:text-slate-300">
-                              A rigorous, production-grade curriculum designed
-                              to take you from foundational mathematics, prompt
-                              engineering, and deep learning architectures all
-                              the way to deploying autonomous agentic workflows
-                              and computer vision pipelines in production.
+                              Learn the basics of AI and practice using AI tools
+                              for common tasks at work and in everyday life.
                             </p>
 
                             {/* Curriculum Highlights */}
                             <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
                               {[
-                                "Introduction to AI & Modern LLMs",
-                                "Neural Networks & Deep Learning Architectures",
-                                "Generative AI Systems: Prompt Engineering & RAG",
-                                "Autonomous AI Agents & Multi-Tool Execution",
+                                "What AI is and how it works",
+                                "Choosing AI tools for everyday tasks",
+                                "Writing clear instructions for AI",
+                                "Reviewing and improving AI answers",
                               ].map((courseName, i) => (
                                 <div
                                   key={i}
@@ -409,11 +405,11 @@ export default function AiSchoolsPage() {
                             <div className="mt-6 flex flex-wrap gap-4 text-xs font-medium text-slate-500 dark:text-slate-400">
                               <div className="flex items-center gap-1.5">
                                 <Award className="h-4 w-4 text-purple-600 dark:text-cyan-400" />
-                                <span>Accredited AI Certificate</span>
+                                <span>AI Certificate</span>
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <Clock className="h-4 w-4 text-purple-600 dark:text-cyan-400" />
-                                <span>Hours of Curriculum</span>
+                                <span>Hours of Learning</span>
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <Layers className="h-4 w-4 text-purple-600 dark:text-cyan-400" />
@@ -451,8 +447,8 @@ export default function AiSchoolsPage() {
 
                               <p className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
                                 {isPaid
-                                  ? "You hold full lifetime access to all 4 courses, projects, and future curriculum updates."
-                                  : "Includes all 4 courses, module exercises, downloadable source code, and verified certification."}
+                                  ? "You have ongoing access to all 4 courses, projects, and future course updates."
+                                  : "Includes all 4 courses, practice activities, and a certificate."}
                               </p>
                             </div>
 
@@ -466,7 +462,7 @@ export default function AiSchoolsPage() {
                                 }}
                                 className="w-full rounded-xl bg-purple-600 font-bold text-white shadow-md shadow-purple-600/20 hover:bg-purple-700 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400"
                               >
-                                <span>Explore School Curriculum</span>
+                                <span>Explore Courses</span>
                                 <ArrowRight className="ml-2 h-4 w-4" />
                               </Button>
 

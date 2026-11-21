@@ -131,6 +131,8 @@ export type LearnerQuiz = {
   title: string;
   description: string;
   isExam: boolean;
+  durationMinutes: number;
+  attemptLimit: number;
   questions: QuizQuestion[];
 };
 
@@ -142,6 +144,7 @@ export type QuizAttempt = {
   score: number;
   answers: Record<string, string>;
   startedAt: string;
+  endsAt: string;
   submittedAt: string | null;
 };
 
