@@ -36,7 +36,7 @@ export function TicketStats() {
       label: "Latest Reference",
       value: latest?.id ?? "—",
       sublabel:
-        latest?.subject ?? "Create a ticket to receive a backend reference",
+        latest?.subject ?? "Create a ticket to receive a reference",
       icon: Hash,
       color:
         "from-emerald-500/15 to-teal-500/10 text-emerald-600 dark:text-emerald-400",

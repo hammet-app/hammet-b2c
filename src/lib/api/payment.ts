@@ -139,12 +139,9 @@ export const paymentApi = {
       };
     } catch (err: unknown) {
       console.error("[paymentApi.verifyPayment] Backend error:", err);
-      const error = err instanceof Error ? err.message : undefined;
       return {
         success: false,
-        error:
-          error ||
-          `Backend payment verification failed for reference ${orderId}.`,
+        error: "We couldn't verify this payment right now. Please try again.",
       };
     }
   },

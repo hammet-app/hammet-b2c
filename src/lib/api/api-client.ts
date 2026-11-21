@@ -21,7 +21,9 @@ async function buildApiError(response: Response): Promise<ApiError> {
   return new ApiError(
     response.status,
     error,
-    error.error?.message ?? "Request failed",
+    response.status >= 500
+      ? "Something went wrong. Please try again."
+      : error.error?.message ?? "Request failed",
   );
 }
 
@@ -138,6 +140,8 @@ async function request<T>(
         }
         throw await buildApiError(retryRes);
       }
+
+      if (retryRes.status === 204) return undefined as T;
 
       return retryRes.json() as Promise<T>;
     }

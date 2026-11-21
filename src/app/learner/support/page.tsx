@@ -123,7 +123,7 @@ export default function SupportPage() {
 
               <p className="mt-2 max-w-xl text-xs leading-relaxed text-slate-600 dark:text-slate-300 font-sans sm:text-[13px]">
                 Have a question, technical issue, or billing inquiry? Submit a
-                ticket and the backend records it against your learner account.
+                ticket and it will be linked to your learner account.
                 Keep the ticket reference for follow-up, or reach the team at{" "}
                 <span className="font-semibold text-purple-700 dark:text-purple-300">
                   {HAMMET_SUPPORT_EMAIL}

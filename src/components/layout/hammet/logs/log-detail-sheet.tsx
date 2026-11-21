@@ -67,8 +67,8 @@ export function LogDetailSheet({ log, open, onOpenChange }: LogDetailSheetProps)
           err instanceof ApiError && err.notFound
             ? "Details for this log entry aren't available."
             : err instanceof ApiError
-              ? err.message
-              : "Couldn't reach the server. Check your connection and try again.";
+              ? "We couldn't load these details right now. Please try again."
+              : "We couldn't load these details right now. Please check your connection and try again.";
         setResult({ logId: id, detail: null, error: message });
       }
     }
