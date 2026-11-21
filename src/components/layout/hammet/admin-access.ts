@@ -15,6 +15,11 @@ export const adminScopes: { id: UserScope; description: string }[] = [
 
 export const b2bAccess: AccessOption[] = [
   {
+    id: "blog",
+    label: "Blog",
+    description: "Write and publish Hammet blog posts.",
+  },
+  {
     id: "schools",
     label: "Schools",
     description: "Manage B2B school administration.",
@@ -32,6 +37,11 @@ export const b2bAccess: AccessOption[] = [
 ];
 
 export const b2cAccess: AccessOption[] = [
+  {
+    id: "blog",
+    label: "Blog",
+    description: "Write and publish Hammet blog posts.",
+  },
   {
     id: "courses",
     label: "Courses",

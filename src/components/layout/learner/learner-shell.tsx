@@ -156,6 +156,19 @@ export function LearnerShell({ children }: LearnerShellProps) {
   const visibleNavigation = navigation.filter(
     (item) => item.featureFlag !== "exam" || examsEnabled,
   );
+  const isNavigationActive = (href: string) =>
+    href === "/learner"
+      ? pathname === "/learner"
+      : pathname === href || pathname.startsWith(`${href}/`);
+  const primaryMobileNavigation = visibleNavigation.slice(0, 4);
+  const activeNavigationItem = visibleNavigation.find((item) =>
+    isNavigationActive(item.href),
+  );
+  const mobileNavigation =
+    activeNavigationItem &&
+    !primaryMobileNavigation.some((item) => item.href === activeNavigationItem.href)
+      ? [...primaryMobileNavigation.slice(0, 3), activeNavigationItem]
+      : primaryMobileNavigation;
 
   //const cartItems = useCart((state) => state.items);
   const syncAccountState = useLearnerStore((state) => state.syncAccountState);
@@ -317,7 +330,7 @@ export function LearnerShell({ children }: LearnerShellProps) {
           )}
 
           {/* Primary navigation */}
-          <nav className="w-full space-y-1">
+          <nav aria-label="Learner navigation" className="w-full space-y-1">
             <motion.div
               animate={{
                 height: collapsed ? 0 : 16,
@@ -341,22 +354,19 @@ export function LearnerShell({ children }: LearnerShellProps) {
 
             {visibleNavigation.map((item) => {
               const Icon = item.icon;
-              const active =
-                item.href === "/learner"
-                  ? pathname === "/learner"
-                  : pathname === item.href ||
-                    pathname.startsWith(item.href + "/");
+              const active = isNavigationActive(item.href);
 
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   title={collapsed ? item.label : undefined}
+                  aria-current={active ? "page" : undefined}
                   className={[
                     "group relative flex h-11 items-center rounded-xl text-sm font-medium transition-colors duration-150 overflow-hidden select-none",
                     collapsed ? "justify-center px-0" : "px-3 gap-3",
                     active
-                      ? "text-purple-700 font-semibold dark:text-cyan-300"
+                      ? "bg-purple-100/75 text-purple-900 font-semibold shadow-sm dark:bg-cyan-500/10 dark:text-cyan-200"
                       : "text-slate-600 hover:text-purple-700 dark:text-slate-400 dark:hover:text-purple-300",
                   ].join(" ")}
                 >
@@ -530,24 +540,21 @@ export function LearnerShell({ children }: LearnerShellProps) {
                 </button>
               </div>
 
-              <nav className="space-y-1 px-4">
+              <nav aria-label="Learner navigation" className="space-y-1 px-4">
                 {visibleNavigation.map((item) => {
                   const Icon = item.icon;
-                  const active =
-                    item.href === "/learner"
-                      ? pathname === "/learner"
-                      : pathname === item.href ||
-                        pathname.startsWith(item.href + "/");
+                  const active = isNavigationActive(item.href);
 
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       onClick={() => setMobileOpen(false)}
+                      aria-current={active ? "page" : undefined}
                       className={[
                         "group flex h-12 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors duration-150 select-none",
                         active
-                          ? "text-purple-700 font-semibold dark:text-cyan-300"
+                          ? "bg-purple-100/75 text-purple-900 font-semibold shadow-sm dark:bg-cyan-500/10 dark:text-cyan-200"
                           : "text-slate-600 hover:text-purple-700 dark:text-slate-400 dark:hover:text-purple-300",
                       ].join(" ")}
                     >
@@ -791,20 +798,17 @@ export function LearnerShell({ children }: LearnerShellProps) {
         className="fixed inset-x-0 bottom-0 z-40 border-t border-black/[0.06] bg-white/95 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#120E1D]/95 lg:hidden shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.35)]"
       >
         <div className="relative mx-auto flex w-full max-w-md items-center justify-around px-2 py-0.5">
-          {visibleNavigation.map((item) => {
+          {mobileNavigation.map((item) => {
             const Icon = item.icon;
-            const active =
-              item.href === "/learner"
-                ? pathname === "/learner"
-                : pathname === item.href ||
-                  (item.href !== "/learner" && pathname.startsWith(item.href));
+            const active = isNavigationActive(item.href);
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl py-1.5 px-1 text-[11px] font-medium transition-all duration-150 active:scale-95 max-w-[84px] select-none",
+                  "flex min-h-12 flex-1 flex-col items-center justify-center gap-1 rounded-2xl py-1.5 px-1 text-[11px] font-medium transition-all duration-150 active:scale-95 max-w-[84px] select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500",
                   active
                     ? "text-purple-700 bg-purple-100/75 dark:text-cyan-300 dark:bg-cyan-500/15 font-bold shadow-xs"
                     : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100/60 dark:hover:bg-white/[0.04]",

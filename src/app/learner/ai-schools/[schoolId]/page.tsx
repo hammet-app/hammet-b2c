@@ -257,6 +257,7 @@ export default function AiSchoolDetailsPage({
               <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
               <input
                 type="text"
+                aria-label={`Search ${school?.name ?? "school"} courses`}
                 placeholder={`Search ${school?.name} courses...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}

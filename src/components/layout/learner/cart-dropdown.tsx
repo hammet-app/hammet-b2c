@@ -42,6 +42,7 @@ export function CartDropdown() {
   const [cartItems, setCartItems] = useState<CartItemResponse[]>([]);
   const [cartLoading, setCartLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [cartError, setCartError] = useState<string | null>(null);
   //const getTotal = useCart((state) => state.getTotal);
   //const couponCode = useCart((state) => state.couponCode);
   //const discountPercentage = useCart((state) => state.discountPercentage);
@@ -72,11 +73,13 @@ export function CartDropdown() {
     }
 
     try {
+      setCartError(null);
       setCartLoading(true);
       const cart = await cartApi.getCart(accessToken, refreshToken);
       setCartItems(cart?.carts ?? []);
     } catch (err) {
       console.warn("CartDropdown: fetchCart failed:", err);
+      setCartError("We couldn’t load your cart. Please try again.");
     } finally {
       setCartLoading(false);
     }
@@ -101,6 +104,7 @@ export function CartDropdown() {
 
   const handleCheckout = async () => {
     if (!accessToken || checkoutLoading) return;
+    setCartError(null);
 
     try {
       setCheckoutLoading(true);
@@ -122,10 +126,10 @@ export function CartDropdown() {
       router.push("/learner/checkout");
     } catch (error) {
       console.warn("Backend checkout initialization warning:", error);
+      setCartError("We couldn’t prepare checkout. Please try again.");
     } finally {
       setCheckoutLoading(false);
       setOpen(false);
-      router.push("/learner/checkout");
     }
   };
 
@@ -160,6 +164,11 @@ export function CartDropdown() {
             <div className="p-4 text-slate-900 dark:text-white">
               {cartLoading ? (
                 <CartDropdownSkeleton />
+              ) : cartError ? (
+                <div role="alert" className="py-4 text-center">
+                  <p className="text-sm text-rose-700 dark:text-rose-300">{cartError}</p>
+                  <Button className="mt-3" onClick={() => void fetchCart()}>Try again</Button>
+                </div>
               ) : cartItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-6 text-center">
                   <ShoppingCart className="mb-3 h-8 w-8 text-slate-300 dark:text-slate-600" />

@@ -74,7 +74,7 @@ export default function SettingsPage() {
 
         <div className="grid gap-8 md:grid-cols-[240px_1fr]">
           {/* Sidebar Tabs */}
-          <nav className="space-y-1.5">
+          <nav aria-label="Settings sections" className="space-y-1.5">
             {[
               { id: "profile", label: "Profile Details", icon: User },
               { id: "notifications", label: "Notifications", icon: Bell },
@@ -272,15 +272,18 @@ export default function SettingsPage() {
                       <button
                         type="button"
                         onClick={item.toggle}
+                        role="switch"
+                        aria-label={item.title}
+                        aria-checked={item.state}
                         className={cn(
-                          "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                          "relative inline-flex h-8 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 dark:focus-visible:ring-cyan-400 dark:focus-visible:ring-offset-[#120E1D]",
                           item.state ? "bg-purple-600 dark:bg-cyan-500" : "bg-slate-300 dark:bg-slate-700"
                         )}
                       >
                         <span
                           className={cn(
                             "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out",
-                            item.state ? "translate-x-5" : "translate-x-0"
+                            item.state ? "translate-x-4" : "translate-x-0"
                           )}
                         />
                       </button>

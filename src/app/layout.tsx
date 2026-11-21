@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { SerwistProvider } from "@serwist/next/react";
 import { Analytics } from "@vercel/analytics/react";
+import { MotionConfig } from "motion/react";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import { SmoothScrollProvider } from "@/components/providers/smooth-scroll-provider";
 import { Poppins, Geist_Mono } from "next/font/google";
@@ -70,7 +71,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           disable={process.env.NODE_ENV !== "production"}
         >
           <AuthProvider>
-            <SmoothScrollProvider>{children}</SmoothScrollProvider>
+            <MotionConfig reducedMotion="user">
+              <SmoothScrollProvider>{children}</SmoothScrollProvider>
+            </MotionConfig>
           </AuthProvider>
         </SerwistProvider>
       </body>

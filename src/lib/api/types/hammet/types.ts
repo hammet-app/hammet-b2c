@@ -26,6 +26,15 @@ export type HammetAdminsResponse = {
   pagination: Pagination;
 }
 
+export type HammetLearnerSummary = {
+  total: number;
+  active: number;
+  pending: number;
+  suspended: number;
+  graduated: number;
+  inactive: number;
+}
+
 export type GetHammetAdminsParams = {
   page?: number;
   pageSize?: number;
