@@ -133,6 +133,8 @@ export type LearnerQuizResponseDto = {
   title: string;
   description: string;
   is_exam: boolean;
+  duration_minutes: number;
+  attempt_limit: number;
   questions: QuizQuestionResponseDto[];
 };
 
@@ -144,6 +146,7 @@ export type QuizAttemptResponseDto = {
   score: number;
   answers: Record<string, string>;
   started_at: string;
+  ends_at: string;
   submitted_at: string | null;
 };
 

@@ -162,6 +162,8 @@ export function toLearnerQuiz(dto: LearnerQuizResponseDto): LearnerQuiz {
     title: dto.title,
     description: dto.description,
     isExam: dto.is_exam,
+    durationMinutes: dto.duration_minutes,
+    attemptLimit: dto.attempt_limit,
     questions: dto.questions ? dto.questions.map(toQuizQuestion) : [],
   };
 }
@@ -174,6 +176,7 @@ export function toQuizAttempt(dto: QuizAttemptResponseDto): QuizAttempt {
     score: dto.score,
     answers: dto.answers ?? {},
     startedAt: dto.started_at,
+    endsAt: dto.ends_at,
     submittedAt: dto.submitted_at,
   };
 }

@@ -58,7 +58,7 @@ export default function AiSchoolsPage() {
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-slate-500 sm:text-base dark:text-slate-400">
-            Explore our specialized AI learning paths and schools tailored to your goals.
+            Explore courses that explain what AI is and how to use it in everyday work.
           </p>
         </motion.header>
 

@@ -252,6 +252,7 @@ export type AddAiQuizRequestDto = {
   position: number;
   passing_score: number;
   is_exam: boolean;
+  duration_minutes: number;
   questions: {
     question: string;
     position: number;
@@ -280,6 +281,7 @@ export type AiQuizDto = {
   position: number;
   passing_score: number;
   is_exam: boolean;
+  duration_minutes: number;
   questions: {
     id: string;
     quiz_id: string;

@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Clock3,
   ClipboardCheck,
   GraduationCap,
   HelpCircle,
@@ -72,6 +73,12 @@ function sortQuiz(data: LearnerQuiz): LearnerQuiz {
   };
 }
 
+function formatTimeRemaining(totalSeconds: number) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
 export default function QuizPage({ params }: QuizPageProps) {
   const { courseId, moduleId } = use(params);
   const { accessToken, refreshToken } = useAuth();
@@ -96,12 +103,15 @@ export default function QuizPage({ params }: QuizPageProps) {
   >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const questionHeadingRef = useRef<HTMLHeadingElement>(null);
   const hasNavigatedRef = useRef(false);
   const unsavedAnswersRef = useRef<Set<string>>(new Set());
   const saveQueuesRef = useRef<Record<string, Promise<unknown>>>({});
+  const autoSubmitRef = useRef<() => void>(() => undefined);
+  const lastAutoSubmitRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -277,32 +287,36 @@ export default function QuizPage({ params }: QuizPageProps) {
     persistAnswer(questionId, optionId);
   }
 
-  async function handleSubmitQuiz() {
-    if (!quiz || isSubmitting || !isComplete) return;
+  async function handleSubmitQuiz(timedOut = false) {
+    if (!quiz || isSubmitting || (!isComplete && !timedOut)) return;
 
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
       if (attempt?.id && accessToken) {
-        const pendingAnswers = [...unsavedAnswersRef.current];
+        if (timedOut) {
+          await Promise.allSettled(Object.values(saveQueuesRef.current));
+        } else {
+          const pendingAnswers = [...unsavedAnswersRef.current];
 
-        if (pendingAnswers.length > 0) {
-          await Promise.allSettled(
-            pendingAnswers.map((questionId) =>
-              learnerApi
-                .saveQuizAnswer(
-                  attempt.id,
-                  questionId,
-                  selectedAnswers[questionId],
-                  accessToken,
-                  refreshToken,
-                )
-                .then(() => {
-                  unsavedAnswersRef.current.delete(questionId);
-                }),
-            ),
-          );
+          if (pendingAnswers.length > 0) {
+            await Promise.allSettled(
+              pendingAnswers.map((questionId) =>
+                learnerApi
+                  .saveQuizAnswer(
+                    attempt.id,
+                    questionId,
+                    selectedAnswers[questionId],
+                    accessToken,
+                    refreshToken,
+                  )
+                  .then(() => {
+                    unsavedAnswersRef.current.delete(questionId);
+                  }),
+              ),
+            );
+          }
         }
 
         await learnerApi.submitQuizAttempt(
@@ -315,6 +329,10 @@ export default function QuizPage({ params }: QuizPageProps) {
 
       setIsSubmitted(true);
     } catch (submitError) {
+      if (submitError instanceof ApiError && submitError.status === 409) {
+        setIsSubmitted(true);
+        return;
+      }
       console.warn("Unable to submit quiz attempt:", submitError);
       setSubmitError(
         "We couldn't submit your answers. Check your connection and try again.",
@@ -324,26 +342,55 @@ export default function QuizPage({ params }: QuizPageProps) {
     }
   }
 
+  useEffect(() => {
+    autoSubmitRef.current = () => {
+      void handleSubmitQuiz(true);
+    };
+  });
+
+  useEffect(() => {
+    const endsAt = attempt?.endsAt;
+    if (!endsAt || isSubmitted) return;
+
+    const updateRemaining = () => {
+      const remaining = Math.max(
+        0,
+        Math.ceil((Date.parse(endsAt) - Date.now()) / 1000),
+      );
+      setTimeRemaining(remaining);
+      if (remaining === 0 && Date.now() - lastAutoSubmitRef.current >= 5000) {
+        lastAutoSubmitRef.current = Date.now();
+        autoSubmitRef.current();
+      }
+    };
+
+    updateRemaining();
+    const timer = window.setInterval(updateRemaining, 1000);
+    return () => window.clearInterval(timer);
+  }, [attempt?.endsAt, isSubmitted]);
+
   async function handleRetakeQuiz() {
-    if (!quiz || !accessToken) return;
+    if (!quiz || !accessToken || (attempt?.attemptNumber ?? 0) >= quiz.attemptLimit) return;
 
     setSelectedAnswers({});
     setCurrentQuestionIndex(0);
     setDirection(0);
-    setIsSubmitted(false);
     setSubmitError(null);
     setSyncWarning(false);
     setAttemptWarning(false);
     unsavedAnswersRef.current = new Set();
     saveQueuesRef.current = {};
+    lastAutoSubmitRef.current = 0;
 
     try {
       const nextAttempt = await learnerApi.startQuizAttempt(
         quiz.id,
         accessToken,
         refreshToken,
+        true,
       );
       setAttempt(nextAttempt);
+      setIsSubmitted(Boolean(nextAttempt.submittedAt));
 
       if (
         nextAttempt.answers &&
@@ -539,8 +586,9 @@ export default function QuizPage({ params }: QuizPageProps) {
                 <span className="font-semibold text-slate-900 dark:text-white">
                   {quiz.title}
                 </span>{" "}
-                have been recorded. You can retake it any time to sharpen your
-                recall.
+                have been recorded. {attempt && attempt.attemptNumber < quiz.attemptLimit
+                  ? `${quiz.attemptLimit - attempt.attemptNumber} attempt${quiz.attemptLimit - attempt.attemptNumber === 1 ? "" : "s"} remaining.`
+                  : "You have used all available attempts."}
               </p>
             </div>
 
@@ -582,15 +630,17 @@ export default function QuizPage({ params }: QuizPageProps) {
             )}
 
             <div className="relative mt-6 flex flex-col-reverse items-stretch gap-2.5 sm:flex-row sm:items-center sm:justify-center">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => void handleRetakeQuiz()}
-                className="h-11 rounded-xl border-slate-200 px-5 text-sm font-bold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/[0.06]"
-              >
-                <RotateCcw className="mr-1.5 h-4 w-4" />
-                Retake quiz
-              </Button>
+              {attempt && attempt.attemptNumber < quiz.attemptLimit && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void handleRetakeQuiz()}
+                  className="h-11 rounded-xl border-slate-200 px-5 text-sm font-bold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/[0.06]"
+                >
+                  <RotateCcw className="mr-1.5 h-4 w-4" />
+                  Retake quiz
+                </Button>
+              )}
               <Link
                 href="/learner/quizzes"
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-purple-700 dark:bg-cyan-400 dark:text-slate-950 dark:hover:bg-cyan-300"
@@ -729,7 +779,22 @@ export default function QuizPage({ params }: QuizPageProps) {
               </span>
               {attempt && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 font-mono text-[10px] font-bold text-purple-700 dark:border-white/10 dark:bg-white/5 dark:text-cyan-300">
-                  Attempt #{attempt.attemptNumber}
+                  Attempt #{attempt.attemptNumber} of {quiz.attemptLimit}
+                </span>
+              )}
+              {attempt && timeRemaining !== null && (
+                <span
+                  role="timer"
+                  aria-live={timeRemaining <= 60 ? "polite" : undefined}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[10px] font-bold",
+                    timeRemaining <= 60
+                      ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/25 dark:bg-rose-500/10 dark:text-rose-300"
+                      : "border-slate-200 bg-white text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300",
+                  )}
+                >
+                  <Clock3 className="h-3 w-3" />
+                  {formatTimeRemaining(timeRemaining)} left
                 </span>
               )}
             </div>
@@ -976,8 +1041,8 @@ export default function QuizPage({ params }: QuizPageProps) {
                   ) : (
                     <Button
                       type="button"
-                      onClick={() => void handleSubmitQuiz()}
-                      disabled={!isComplete || isSubmitting}
+                      onClick={() => void handleSubmitQuiz(timeRemaining === 0)}
+                      disabled={(!isComplete && timeRemaining !== 0) || isSubmitting}
                       className="h-10 rounded-xl bg-purple-600 px-4 text-xs font-bold text-white shadow-sm hover:bg-purple-700 lg:hidden dark:bg-cyan-400 dark:text-slate-950 dark:hover:bg-cyan-300"
                     >
                       {isSubmitting ? (
@@ -1071,8 +1136,8 @@ export default function QuizPage({ params }: QuizPageProps) {
 
               <Button
                 type="button"
-                onClick={() => void handleSubmitQuiz()}
-                disabled={!isComplete || isSubmitting}
+                onClick={() => void handleSubmitQuiz(timeRemaining === 0)}
+                disabled={(!isComplete && timeRemaining !== 0) || isSubmitting}
                 className="mt-5 h-11 w-full rounded-xl bg-purple-600 text-sm font-bold text-white shadow-sm hover:bg-purple-700 dark:bg-cyan-400 dark:text-slate-950 dark:hover:bg-cyan-300"
               >
                 {isSubmitting ? (
@@ -1088,7 +1153,9 @@ export default function QuizPage({ params }: QuizPageProps) {
                 )}
               </Button>
               <p className="mt-2 text-center text-[10px] leading-relaxed text-slate-400 dark:text-slate-500">
-                {isComplete
+                {timeRemaining === 0
+                  ? "Time is up. Your saved answers will be submitted."
+                  : isComplete
                   ? "All questions answered. You're good to submit."
                   : `Answer all ${totalQuestions} questions to unlock submission.`}
               </p>

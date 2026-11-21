@@ -76,6 +76,7 @@ type QuizDraft = {
   description: string;
   position: string;
   passingScore: string;
+  durationMinutes: string;
   isExam: boolean;
   questions: QuestionDraft[];
 };
@@ -114,6 +115,7 @@ function emptyQuiz(position = "1"): QuizDraft {
     description: "",
     position,
     passingScore: "",
+    durationMinutes: "30",
     isExam: false,
     questions: [emptyQuestion()],
   };
@@ -135,6 +137,7 @@ function quizToDraft(quiz: AiQuiz): QuizDraft {
     description: quiz.description,
     position: String(quiz.position),
     passingScore: String(quiz.passingScore),
+    durationMinutes: String(quiz.durationMinutes),
     isExam: quiz.isExam,
     questions: quiz.questions.map((question) => ({
       id: question.id,
@@ -348,12 +351,13 @@ export function ModuleContentManager({ kind }: { kind: ModuleContentKind }) {
     if (!accessToken || !module || !quiz.title.trim() || !quiz.description.trim()) return;
     const position = parseWholeNumber(quiz.position);
     const passingScore = parseWholeNumber(quiz.passingScore);
+    const durationMinutes = parseWholeNumber(quiz.durationMinutes);
     const validQuestions = quiz.questions.length > 0 && quiz.questions.every((question) =>
       question.question.trim() && question.options.length === 4 &&
       question.options.every((option) => option.text.trim()) &&
       question.options.filter((option) => option.isCorrect).length === 1,
     );
-    if (position === null || passingScore === null || !validQuestions) return;
+    if (position === null || passingScore === null || durationMinutes === null || durationMinutes < 1 || !validQuestions) return;
 
     setSaving(true);
     setError("");
@@ -365,6 +369,7 @@ export function ModuleContentManager({ kind }: { kind: ModuleContentKind }) {
         description: quiz.description.trim(),
         position,
         passingScore,
+        durationMinutes,
         isExam: quiz.isExam,
         questions: quiz.questions.map((question, questionIndex) => ({
           ...(question.id ? { id: question.id } : {}),
@@ -515,14 +520,14 @@ export function ModuleContentManager({ kind }: { kind: ModuleContentKind }) {
               <div className="space-y-4">
                 <label className="block"><span className="mb-2 block text-sm font-medium">Title</span><input value={quiz.title} onChange={(event) => setQuiz({ ...quiz, title: event.target.value })} className={inputClassName} /></label>
                 <label className="block"><span className="mb-2 block text-sm font-medium">Description</span><textarea rows={3} value={quiz.description} onChange={(event) => setQuiz({ ...quiz, description: event.target.value })} className={`${inputClassName} resize-y`} /></label>
-                <div className="grid gap-4 sm:grid-cols-2"><label className="block"><span className="mb-2 block text-sm font-medium">Position</span><input type="number" min={0} step={1} value={quiz.position} onChange={(event) => setQuiz({ ...quiz, position: event.target.value })} className={inputClassName} /></label><label className="block"><span className="mb-2 block text-sm font-medium">Passing score</span><input type="number" min={0} step={1} value={quiz.passingScore} onChange={(event) => setQuiz({ ...quiz, passingScore: event.target.value })} className={inputClassName} /></label></div>
+                <div className="grid gap-4 sm:grid-cols-3"><label className="block"><span className="mb-2 block text-sm font-medium">Position</span><input type="number" min={0} step={1} value={quiz.position} onChange={(event) => setQuiz({ ...quiz, position: event.target.value })} className={inputClassName} /></label><label className="block"><span className="mb-2 block text-sm font-medium">Passing score</span><input type="number" min={0} step={1} value={quiz.passingScore} onChange={(event) => setQuiz({ ...quiz, passingScore: event.target.value })} className={inputClassName} /></label><label className="block"><span className="mb-2 block text-sm font-medium">Duration (minutes)</span><input type="number" min={1} step={1} value={quiz.durationMinutes} onChange={(event) => setQuiz({ ...quiz, durationMinutes: event.target.value })} className={inputClassName} /></label></div>
                 <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-black/[0.06] p-4 dark:border-white/[0.06]"><input type="checkbox" checked={quiz.isExam} onChange={(event) => setQuiz({ ...quiz, isExam: event.target.checked })} className="h-4 w-4 accent-purple-600" /><span className="text-sm font-medium">This quiz is an exam</span></label>
                 <div className="space-y-4">
                   {quiz.questions.map((question, questionIndex) => <fieldset key={question.key} className="rounded-2xl border border-black/[0.06] p-4 dark:border-white/[0.06]"><div className="mb-3 flex items-center justify-between gap-3"><legend className="text-sm font-semibold">Question {questionIndex + 1}</legend>{quiz.questions.length > 1 && <button type="button" onClick={() => setQuiz((current) => ({ ...current, questions: current.questions.filter((item) => item.key !== question.key) }))} className="inline-flex min-h-10 items-center gap-1 rounded-lg px-2 text-sm text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:hover:bg-red-400/10"><Trash2 className="h-4 w-4" /> Remove</button>}</div><input value={question.question} onChange={(event) => updateQuestion(question.key, { question: event.target.value })} aria-label={`Question ${questionIndex + 1}`} placeholder="Question text" className={inputClassName} /><p className="mb-2 mt-4 text-xs text-slate-500 dark:text-slate-400">Select the correct answer.</p><div className="space-y-2">{question.options.map((option, optionIndex) => <div key={option.id ?? optionIndex} className="flex min-h-11 items-center gap-3"><input type="radio" name={`correct-${question.key}`} checked={option.isCorrect} onChange={() => question.options.forEach((_, index) => updateOption(question.key, index, { isCorrect: index === optionIndex }))} aria-label={`Option ${optionIndex + 1} is correct`} className="h-4 w-4 shrink-0 accent-purple-600" /><input value={option.text} onChange={(event) => updateOption(question.key, optionIndex, { text: event.target.value })} aria-label={`Question ${questionIndex + 1} option ${optionIndex + 1}`} placeholder={`Option ${optionIndex + 1}`} className={inputClassName} /></div>)}</div></fieldset>)}
                 </div>
                 <button type="button" onClick={() => setQuiz((current) => ({ ...current, questions: [...current.questions, emptyQuestion()] }))} className={secondaryButtonClassName}><Plus className="h-4 w-4" /> Add question</button>
                 {quiz.questions.some((question) => question.options.filter((option) => option.isCorrect).length !== 1) && <p className="text-sm text-amber-700 dark:text-amber-300">Choose one correct answer for each question.</p>}
-                <button type="button" onClick={handleQuizSave} disabled={saving || !quiz.title.trim() || !quiz.description.trim() || parseWholeNumber(quiz.position) === null || parseWholeNumber(quiz.passingScore) === null || quiz.questions.length === 0 || quiz.questions.some((question) => !question.question.trim() || question.options.some((option) => !option.text.trim()) || question.options.filter((option) => option.isCorrect).length !== 1)} className={primaryButtonClassName}><Save className="h-4 w-4" />{saving ? "Saving…" : quiz.id ? "Save quiz" : "Add quiz"}</button>
+                <button type="button" onClick={handleQuizSave} disabled={saving || !quiz.title.trim() || !quiz.description.trim() || parseWholeNumber(quiz.position) === null || parseWholeNumber(quiz.passingScore) === null || parseWholeNumber(quiz.durationMinutes) === null || Number(quiz.durationMinutes) < 1 || quiz.questions.length === 0 || quiz.questions.some((question) => !question.question.trim() || question.options.some((option) => !option.text.trim()) || question.options.filter((option) => option.isCorrect).length !== 1)} className={primaryButtonClassName}><Save className="h-4 w-4" />{saving ? "Saving…" : quiz.id ? "Save quiz" : "Add quiz"}</button>
               </div>
             </section>
           </div>
