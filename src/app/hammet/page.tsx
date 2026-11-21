@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { ArrowUpRight, BookOpen, Building2, Plus, RefreshCw, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { getHammetAiSchoolCourses, getHammetAiSchools, getHammetLearnerSummary } from "@/lib/api/hammet";
+import { getAllHammetAiSchools, getHammetAiSchoolCourses, getHammetLearnerSummary } from "@/lib/api/hammet";
 import type { AiSchool, AiSchoolCourse, HammetLearnerSummary } from "@/lib/api/types";
 import { canManageAiCatalog, canViewLearnerSummary } from "@/lib/utils/roles";
 
@@ -28,7 +28,7 @@ export default function HammetDashboardPage() {
     try {
       const onRefresh = refreshToken ?? (async () => null);
       const [schoolData, learnerData] = await Promise.all([
-        canManageCatalog ? getHammetAiSchools(accessToken, onRefresh, 1, 100) : Promise.resolve([]),
+        canManageCatalog ? getAllHammetAiSchools(accessToken, onRefresh) : Promise.resolve([]),
         canViewLearners ? getHammetLearnerSummary(accessToken, onRefresh) : Promise.resolve(null),
       ]);
       const courseGroups = await Promise.all(

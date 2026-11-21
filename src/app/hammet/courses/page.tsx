@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { useAuth } from "@/lib/auth/auth-context";
-import { getHammetAiSchoolCourses, getHammetAiSchools } from "@/lib/api/hammet";
+import { getAllHammetAiSchools, getHammetAiSchoolCourses } from "@/lib/api/hammet";
 import type { AiSchool, AiSchoolCourse } from "@/lib/api/types";
 import { Alert } from "@/components/ui";
 import { SessionExpiredNotice } from "@/components/layout/hammet/admin-form";
@@ -36,7 +36,7 @@ function AiCoursesContent() {
     let active = true;
     async function loadSchools() {
       try {
-        const response = await getHammetAiSchools(token, refreshToken ?? (async () => null));
+        const response = await getAllHammetAiSchools(token, refreshToken ?? (async () => null));
         if (active) setSchools(response);
       } catch (err) {
         if (active) setError(err instanceof Error ? err.message : "Unable to load schools.");

@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-context";
-import { getHammetAiSchools } from "@/lib/api/hammet";
+import { getAllHammetAiSchools } from "@/lib/api/hammet";
 import type { AiSchool } from "@/lib/api/types";
 import { useTheme } from "@/lib/use-theme";
 import { canManageAdmins, canManageBlog, canManageCoupons, canManageSupport, canViewLearnerSummary, canViewLogs } from "@/lib/utils/roles";
@@ -116,7 +116,7 @@ export function HammetShell({ children }: HammetShellProps) {
     let active = true;
     async function loadSchools() {
       try {
-        const schoolsResponse = await getHammetAiSchools(token, refreshToken ?? (async () => null));
+        const schoolsResponse = await getAllHammetAiSchools(token, refreshToken ?? (async () => null));
         if (active) setSchools(schoolsResponse);
       } catch {
         if (active) setSchools([]);
