@@ -19,6 +19,7 @@ import {
   type AiQuiz,
   type AiQuizDto,
   type AiSchool,
+  type AiSchoolsResponse,
   type AiSchoolsResponseDto,
   fromUpdateAiSchoolRequest,
   toUpdateAiSchoolResponse,
@@ -282,12 +283,12 @@ export async function addAiQuiz(
   return toAiQuiz(response);
 }
 
-export async function getHammetAiSchools(
+export async function getHammetAiSchoolsPage(
   token: string,
   onRefresh: () => Promise<string | null>,
   page = 1,
   pageSize = 50,
-): Promise<AiSchool[]> {
+): Promise<AiSchoolsResponse> {
   const query = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
   const response = await apiClient.get<AiSchoolsResponseDto>(
     `/hammet/ai-schools?${query.toString()}`,
@@ -295,7 +296,35 @@ export async function getHammetAiSchools(
     { onRefresh },
   );
 
-  return toAiSchoolsResponse(response).aiSchools;
+  return toAiSchoolsResponse(response);
+}
+
+/** Fetch every AI school, following the backend pagination metadata. */
+export async function getAllHammetAiSchools(
+  token: string,
+  onRefresh: () => Promise<string | null>,
+  pageSize = 100,
+): Promise<AiSchool[]> {
+  const firstPage = await getHammetAiSchoolsPage(token, onRefresh, 1, pageSize);
+  const schools = [...firstPage.aiSchools];
+
+  for (let page = 2; page <= firstPage.pagination.totalPages; page += 1) {
+    const response = await getHammetAiSchoolsPage(token, onRefresh, page, pageSize);
+    schools.push(...response.aiSchools);
+  }
+
+  return schools;
+}
+
+/** Backwards-compatible first-page list fetch for callers that only need a list. */
+export async function getHammetAiSchools(
+  token: string,
+  onRefresh: () => Promise<string | null>,
+  page = 1,
+  pageSize = 50,
+): Promise<AiSchool[]> {
+  const response = await getHammetAiSchoolsPage(token, onRefresh, page, pageSize);
+  return response.aiSchools;
 }
 
 // Returns the school (drafts included) together with its courses.
