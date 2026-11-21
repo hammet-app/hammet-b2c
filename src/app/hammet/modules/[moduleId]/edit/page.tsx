@@ -115,6 +115,7 @@ function EditAiModuleContent() {
   const [quizDescription, setQuizDescription] = useState("");
   const [quizPosition, setQuizPosition] = useState("1");
   const [passingScore, setPassingScore] = useState("");
+  const [durationMinutes, setDurationMinutes] = useState("30");
   const [isExam, setIsExam] = useState(false);
   const [questions, setQuestions] = useState<QuestionRow[]>(() => [emptyQuestionRow()]);
   const [createdQuizzes, setCreatedQuizzes] = useState<AiQuiz[]>([]);
@@ -208,11 +209,13 @@ function EditAiModuleContent() {
 
   const parsedQuizPosition = parseWholeNumber(quizPosition);
   const parsedPassingScore = parseWholeNumber(passingScore);
+  const parsedDurationMinutes = parseWholeNumber(durationMinutes);
   const isQuizValid =
     quizTitle.trim() !== "" &&
     quizDescription.trim() !== "" &&
     parsedQuizPosition !== null &&
     parsedPassingScore !== null &&
+    parsedDurationMinutes !== null && parsedDurationMinutes > 0 &&
     questions.length > 0 &&
     questions.every(isQuestionRowValid);
 
@@ -229,7 +232,7 @@ function EditAiModuleContent() {
   }
 
   async function handleCreateQuiz() {
-    if (!user || !accessToken || !isQuizValid || parsedQuizPosition === null || parsedPassingScore === null) return;
+    if (!user || !accessToken || !isQuizValid || parsedQuizPosition === null || parsedPassingScore === null || parsedDurationMinutes === null) return;
     setIsCreatingQuiz(true);
     setQuizError("");
 
@@ -239,6 +242,7 @@ function EditAiModuleContent() {
         description: quizDescription.trim(),
         position: parsedQuizPosition,
         passingScore: parsedPassingScore,
+        durationMinutes: parsedDurationMinutes,
         isExam,
         questions: questions.map((row, questionIndex) => ({
           question: row.question.trim(),
@@ -258,6 +262,7 @@ function EditAiModuleContent() {
       setQuizDescription("");
       setQuizPosition(String(parsedQuizPosition + 1));
       setPassingScore("");
+      setDurationMinutes("30");
       setIsExam(false);
       setQuestions([emptyQuestionRow()]);
     } catch (err) {
@@ -544,6 +549,11 @@ function EditAiModuleContent() {
                   <input type="number" min={0} step={1} value={passingScore} onChange={(event) => setPassingScore(event.target.value)} placeholder="e.g. 70" className={inputClassName} />
                 </label>
               </div>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium">Duration (minutes)</span>
+                <input type="number" min={1} step={1} value={durationMinutes} onChange={(event) => setDurationMinutes(event.target.value)} className={inputClassName} />
+              </label>
 
               <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-black/[0.06] p-4 dark:border-white/[0.06]">
                 <input type="checkbox" checked={isExam} onChange={(event) => setIsExam(event.target.checked)} className="h-4 w-4 accent-purple-600" />

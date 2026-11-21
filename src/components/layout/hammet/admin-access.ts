@@ -38,6 +38,11 @@ export const b2bAccess: AccessOption[] = [
 
 export const b2cAccess: AccessOption[] = [
   {
+    id: "admins",
+    label: "Admins",
+    description: "Register and manage B2C administrators.",
+  },
+  {
     id: "blog",
     label: "Blog",
     description: "Write and publish Hammet blog posts.",
@@ -56,6 +61,11 @@ export const b2cAccess: AccessOption[] = [
     id: "support",
     label: "Support",
     description: "View learner support tickets.",
+  },
+  {
+    id: "legal",
+    label: "Legal",
+    description: "Manage legal documents and policies.",
   },
 ];
 

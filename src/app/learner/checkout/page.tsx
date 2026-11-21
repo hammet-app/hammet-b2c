@@ -93,7 +93,7 @@ export default function CheckoutPage() {
           item.productName ??
           item.product_name ??
           item.title ??
-          "Curriculum Track",
+          "Course",
         productPrice: Number(
           item.productPrice ?? item.product_price ?? item.price ?? 0,
         ),
@@ -306,7 +306,7 @@ export default function CheckoutPage() {
                 Review Your Learning Cart
               </h1>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                Confirm your selected curriculum tracks and proceed to secure
+                Confirm the courses you selected and continue to secure
                 checkout.
               </p>
             </div>
@@ -367,8 +367,8 @@ export default function CheckoutPage() {
                     <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
                       {orderItems && orderItems.length}{" "}
                       {orderItems && orderItems.length === 1
-                        ? "Curriculum Track"
-                        : "Curriculum Tracks"}
+                        ? "Course"
+                        : "Courses"}
                     </span>
                     {orderItems && orderItems.length > 0 && (
                       <button
@@ -410,10 +410,10 @@ export default function CheckoutPage() {
                             </h3>
                             <div className="mt-1 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                               <Award className="h-3.5 w-3.5 text-amber-500" />
-                              <span>Accredited Skill Certificate</span>
+                              <span>Skill Certificate</span>
                               <span>•</span>
                               <Zap className="h-3.5 w-3.5 text-purple-500" />
-                              <span>Full Sandbox Access</span>
+                              <span>Full Practice Access</span>
                             </div>
                           </div>
                         </div>
@@ -524,7 +524,7 @@ export default function CheckoutPage() {
 
                     <div className="space-y-3 border-b border-slate-100 pb-4 text-sm dark:border-white/5">
                       <div className="flex justify-between text-slate-600 dark:text-slate-400 text-xs">
-                        <span>Curriculum Subtotal</span>
+                        <span>Course Subtotal</span>
                         <span className="font-semibold text-slate-900 dark:text-white">
                           ₦{rawTotal.toLocaleString()}
                         </span>
@@ -541,7 +541,7 @@ export default function CheckoutPage() {
                       )*/}
 
                       <div className="flex justify-between text-slate-600 dark:text-slate-400 text-xs">
-                        <span>Accreditation & Sandbox Access</span>
+                        <span>Certificate & Practice Access</span>
                         <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                           Included
                         </span>

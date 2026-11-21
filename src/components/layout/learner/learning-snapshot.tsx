@@ -67,7 +67,7 @@ export function LearningSnapshot({ className }: { className?: string }) {
       tone: "emerald" as const,
     },
     {
-      label: "Active builds",
+      label: "Projects in progress",
       value: activeProjects.length,
       icon: FolderKanban,
       tone: "amber" as const,
@@ -113,8 +113,8 @@ export function LearningSnapshot({ className }: { className?: string }) {
 
           <p className="mt-1 max-w-md text-xs leading-relaxed text-slate-500 dark:text-slate-400 sm:text-[13px]">
             {nextProject
-              ? `Next up: ${nextProject.title}. Keep the loop moving — one module, one quiz, one build at a time.`
-              : "Every project in this path is complete. Revisit a build or start a new school to keep growing."}
+              ? `Next up: ${nextProject.title}. Continue one module, quiz, or project at a time.`
+              : "Every project in this path is complete. Revisit a project or explore another school to keep growing."}
           </p>
 
           <div className="mt-4">

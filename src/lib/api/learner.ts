@@ -189,9 +189,11 @@ export const learnerApi = {
     quizId: string,
     token: string,
     onRefresh: () => Promise<string | null>,
+    startNew = false,
   ): Promise<QuizAttempt> => {
+    const query = startNew ? "?start_new=true" : "";
     const response = await apiClient.post<QuizAttemptResponseDto>(
-      `/learner/quizzes/${encodeURIComponent(quizId)}/attempts`,
+      `/learner/quizzes/${encodeURIComponent(quizId)}/attempts${query}`,
       undefined,
       token,
       { onRefresh, skipSessionExpired: true },

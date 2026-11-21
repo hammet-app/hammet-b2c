@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth/auth-context";
+import { learnerApi } from "@/lib/api/learner";
 import { AiSchool, AiSchoolCourse } from "@/lib/api/types";
 //import { useCart } from "@/lib/store/use-cart";
 import { useWishlist } from "@/lib/store/use-wishlist";
@@ -25,11 +27,13 @@ export function CourseCard({
   mounted: boolean;
 }) {
   const router = useRouter();
+  const { accessToken, refreshToken } = useAuth();
   //const { addItem, hasItem, hasPaidItem } = useCart();
   const wishlist = useWishlist();
   const isWishlisted = wishlist.hasItem(course.id);
   const [hovered, setHovered] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const hasItem = hasCartItem;
 
@@ -47,6 +51,39 @@ export function CourseCard({
     setIsAdding(false);
     if (result.success) router.push("/learner/checkout");
     else setAddError(result.error ?? "Unable to add this course to your cart.");
+  }
+
+  async function startCourse() {
+    if (!accessToken) {
+      setAddError("Sign in to start this course.");
+      return;
+    }
+
+    setAddError(null);
+    setIsStarting(true);
+    try {
+      await learnerApi.enrollCourse(course.id, accessToken, refreshToken);
+      router.push(`/learner/courses/${course.id}`);
+    } catch (error) {
+      setAddError(
+        error instanceof Error
+          ? error.message
+          : "Unable to enroll in this course. Please try again.",
+      );
+    } finally {
+      setIsStarting(false);
+    }
+  }
+
+  async function handleCourseAction(e: MouseEvent<HTMLButtonElement>) {
+    e.preventDefault();
+    if (course.isEntitled || school?.isEntitled) {
+      await startCourse();
+    } else if (hasItem) {
+      router.push("/learner/checkout");
+    } else {
+      await addCourseToCart();
+    }
   }
 
   return (
@@ -169,19 +206,12 @@ export function CourseCard({
                   ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/20 dark:text-emerald-300"
                   : "bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-500/20 dark:text-purple-300"
               }`}
-              disabled={isAdding}
-              onClick={async (e) => {
-                e.preventDefault();
-                if (course.isEntitled || school.isEntitled) {
-                  router.push(`/learner/courses/${course.id}`);
-                } else if (hasItem) {
-                  router.push("/learner/checkout");
-                } else {
-                  await addCourseToCart();
-                }
-              }}
+              disabled={isAdding || isStarting}
+              onClick={handleCourseAction}
             >
-              {!mounted
+              {isStarting
+                ? "Starting…"
+                : !mounted
                 ? null
                 : course.isEntitled || school.isEntitled
                   ? "Start course"
@@ -225,7 +255,7 @@ export function CourseCard({
 
               <div className="flex w-full items-center justify-end gap-3">
                 <button
-                  disabled={isAdding}
+                  disabled={isAdding || isStarting}
                   onClick={async (e) => {
                     e.preventDefault();
                     if (isWishlisted) {
@@ -261,18 +291,11 @@ export function CourseCard({
                       ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/20 dark:text-emerald-300"
                       : "bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-500/20 dark:text-purple-300"
                   }`}
-                  onClick={async (e) => {
-                    e.preventDefault();
-                    if (course.isEntitled || school.isEntitled) {
-                      router.push(`/learner/courses/${course.id}`);
-                    } else if (hasItem) {
-                      router.push("/learner/checkout");
-                    } else {
-                      await addCourseToCart();
-                    }
-                  }}
+                  onClick={handleCourseAction}
                 >
-                  {!mounted
+                  {isStarting
+                    ? "Starting…"
+                    : !mounted
                     ? null
                     : course.isEntitled || school.isEntitled
                       ? "Start course"

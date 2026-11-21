@@ -227,7 +227,7 @@ function PaystackCallbackContent() {
         </h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
           Congratulations! Your payment has been securely confirmed on Paystack
-          and your curriculum access is officially activated.
+          and your course access is ready.
         </p>
       </div>
 
@@ -239,7 +239,7 @@ function PaystackCallbackContent() {
           </div>
           <div className="flex-1 text-xs">
             <div className="flex flex-wrap items-center gap-2 font-bold text-amber-900 dark:text-amber-200">
-              <span>Curriculum Activation Notice</span>
+              <span>Course Access Notice</span>
               <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
                 Instant Access Active
               </span>
@@ -290,7 +290,7 @@ function PaystackCallbackContent() {
         {/* Enrolled Courses / Schools List */}
         <div className="pt-3">
           <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
-            Unlocked Curriculums
+            Courses and Schools
           </div>
           <div className="space-y-1.5">
             {purchasedItems.map((item) => (
