@@ -57,7 +57,10 @@ function describeListError(err: unknown): ListError {
   if (err.validation || err.is(400)) {
     return { title: "Invalid filters", message: err.message };
   }
-  return { title: "Error loading logs", message: err.message };
+  return {
+    title: "Error loading logs",
+    message: "We couldn't load logs right now. Please try again.",
+  };
 }
 
 export default function HammetLogsPage() {

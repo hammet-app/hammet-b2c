@@ -13,6 +13,15 @@ export type AiSchoolDto = {
   is_entitled: boolean;
   is_enrolled: boolean;
   has_finished: boolean;
+  published?: boolean;
+};
+
+export type HammetAiSchoolDto = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  published: boolean;
 };
 
 export type AiSchoolsResponseDto = {
@@ -36,6 +45,18 @@ export type AiSchoolCourseDto = {
   is_entitled: boolean;
   is_enrolled: boolean;
   has_finished: boolean;
+  published?: boolean;
+};
+
+export type HammetAiSchoolCourseDto = {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  ai_school_id: string;
+  position: number;
+  price: number;
+  published: boolean;
 };
 
 export type AiSchoolCoursesResponseDto = {
@@ -44,8 +65,8 @@ export type AiSchoolCoursesResponseDto = {
 
 // GET /api/v1/hammet/ai-schools/{ai_school_id}/courses
 export type HammetAiSchoolCoursesResponseDto = {
-  ai_school: AiSchoolDto;
-  courses: AiSchoolCourseDto[];
+  ai_school: HammetAiSchoolDto;
+  courses: HammetAiSchoolCourseDto[];
 };
 
 // ============================================================
@@ -150,6 +171,8 @@ export type AiModuleDto = {
   position: number;
   masterclass: string | null;
   resources: AiResourceDto[] | null;
+  projects?: AiProjectDto[] | null;
+  quizzes?: string[] | null;
   created_at: string;
   updated_at: string | null;
 };
@@ -163,6 +186,7 @@ export type UpdateAiModuleRequestDto = Partial<
 > & {
   id: string;
   resources?: CreateAiResourceRequestDto[];
+  projects?: CreateAiProjectRequestDto[];
 };
 
 // ============================================================
@@ -178,10 +202,43 @@ export type CreateAiResourceRequestDto = {
 };
 
 export type AiResourceDto = {
+  id?: string;
+  module_id?: string;
   title: string;
   resource_type: string;
   url: string;
   position: number;
+};
+
+export type CreateAiProjectRequestDto = {
+  title: string;
+  module_id: string;
+  description: string;
+  instructions: string;
+  position: number;
+};
+
+export type AiProjectDto = {
+  id: string;
+  module_id?: string;
+  title: string;
+  description: string;
+  instructions: string;
+  position: number;
+};
+
+export type UpdateAiResourceRequestDto = Partial<
+  Pick<CreateAiResourceRequestDto, "title" | "resource_type" | "url" | "position">
+>;
+
+export type UpdateAiProjectRequestDto = Partial<
+  Pick<CreateAiProjectRequestDto, "title" | "description" | "instructions" | "position">
+>;
+
+export type HammetAiModuleContentDto = Omit<AiModuleDto, "quizzes"> & {
+  resources: AiResourceDto[];
+  projects: AiProjectDto[];
+  quizzes: AiQuizDto[];
 };
 
 // ============================================================
@@ -202,10 +259,26 @@ export type AddAiQuizRequestDto = {
   }[];
 };
 
+export type EditAiQuizRequestDto = Omit<AddAiQuizRequestDto, "questions"> & {
+  questions: ({
+    id?: string;
+    question: string;
+    position: number;
+    options: ({
+      id?: string;
+      text: string;
+      position: number;
+      is_correct: boolean;
+    })[];
+  })[];
+};
+
 export type AiQuizDto = {
   id: string;
   title: string;
   description: string;
+  position: number;
+  passing_score: number;
   is_exam: boolean;
   questions: {
     id: string;
@@ -217,6 +290,7 @@ export type AiQuizDto = {
       question_id: string;
       text: string;
       position: number;
+      is_correct: boolean;
     }[];
   }[];
 };

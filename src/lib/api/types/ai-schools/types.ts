@@ -37,6 +37,7 @@ export type AiSchoolCourse = {
   aiSchoolId: string;
   position: number;
   price: number;
+  published?: boolean;
 };
 
 export type AiSchoolCoursesResponse = {
@@ -154,6 +155,8 @@ export type AiModule = {
   position: number;
   masterclass: string | null;
   resources: AiResource[];
+  projects: AiProject[];
+  quizzes: string[];
   createdAt: string;
   updatedAt: string | null;
 };
@@ -167,6 +170,7 @@ export type UpdateAiModuleRequest = Partial<
   >
 > & {
   resources?: CreateAiResourceRequest[];
+  projects?: CreateAiProjectRequest[];
 };
 
 // ============================================================
@@ -184,10 +188,37 @@ export type CreateAiResourceRequest = {
 };
 
 export type AiResource = {
+  id?: string;
+  moduleId?: string;
   title: string;
   resourceType: string;
   url: string;
   position: number;
+};
+
+export type CreateAiProjectRequest = {
+  title: string;
+  moduleId: string;
+  description: string;
+  instructions: string;
+  position: number;
+};
+
+export type AiProject = Omit<CreateAiProjectRequest, "moduleId"> & {
+  id: string;
+  moduleId?: string;
+};
+
+export type UpdateAiResourceRequest = Partial<
+  Pick<CreateAiResourceRequest, "title" | "resourceType" | "url" | "position">
+>;
+
+export type UpdateAiProjectRequest = Partial<
+  Pick<CreateAiProjectRequest, "title" | "description" | "instructions" | "position">
+>;
+
+export type HammetAiModuleContent = Omit<AiModule, "quizzes"> & {
+  quizzes: AiQuiz[];
 };
 
 // ============================================================
@@ -209,11 +240,13 @@ export type AddAiQuizRequest = {
   }[];
 };
 
-// The response leaves out position, passing_score and is_correct.
+// The Hammet admin response includes correct answers; learner quiz responses do not.
 export type AiQuiz = {
   id: string;
   title: string;
   description: string;
+  position: number;
+  passingScore: number;
   isExam: boolean;
   questions: {
     id: string;
@@ -225,6 +258,16 @@ export type AiQuiz = {
       questionId: string;
       text: string;
       position: number;
+      isCorrect: boolean;
     }[];
+  }[];
+};
+
+export type UpdateAiQuizRequest = Omit<AddAiQuizRequest, "questions"> & {
+  questions: {
+    id?: string;
+    question: string;
+    position: number;
+    options: { id?: string; text: string; position: number; isCorrect: boolean }[];
   }[];
 };
