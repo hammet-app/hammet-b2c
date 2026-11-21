@@ -880,7 +880,7 @@ export default function CourseDetailsPage({ params }: CourseDetailsPageProps) {
                     <span>
                       {course.hasFinished
                         ? "Course completed"
-                        : "Progress saved by the backend"}
+                        : "Your progress is saved"}
                     </span>
                   </div>
                 </div>

@@ -87,7 +87,7 @@ export default function AiSchoolDetailsPage({
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Failed to load courses from backend");
+        setError("Unable to load courses. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -298,7 +298,7 @@ export default function AiSchoolDetailsPage({
               <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
               <div className="flex-1">
                 <h4 className="font-semibold text-slate-900 dark:text-white">
-                  Unable to Load Courses from Backend
+                  Unable to Load Courses
                 </h4>
                 <p className="mt-1 text-sm text-red-700 dark:text-red-300 leading-relaxed">
                   {error}

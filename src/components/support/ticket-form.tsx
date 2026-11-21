@@ -274,7 +274,7 @@ export function TicketForm({ onSuccess, onCancel, isEmbedded = false }: TicketFo
             </h3>
 
             <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-md leading-relaxed">
-              Your ticket was created on the Hammet backend. Keep the reference
+              Your ticket was created. Keep the reference
               above for follow-up, or contact the team at{" "}
               <strong className="font-mono text-purple-700 dark:text-purple-300">
                 {HAMMET_SUPPORT_EMAIL}
