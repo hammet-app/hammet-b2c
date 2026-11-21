@@ -42,8 +42,8 @@ export default function CreateAiCoursePage() {
     let active = true;
     async function loadSchools() {
       try {
-        const { getHammetAiSchools } = await import("@/lib/api/hammet");
-        const schoolsResponse = await getHammetAiSchools(token, refreshToken ?? (async () => null));
+        const { getAllHammetAiSchools } = await import("@/lib/api/hammet");
+        const schoolsResponse = await getAllHammetAiSchools(token, refreshToken ?? (async () => null));
         if (!active) return;
         setSchools(schoolsResponse);
         if (!requestedSchoolId && schoolsResponse[0]) {
