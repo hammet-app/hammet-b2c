@@ -2,7 +2,7 @@
 
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, CheckCircle2, GraduationCap, Loader2, RefreshCw } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, GraduationCap, Loader2, RefreshCw } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-context";
 import { learnerApi } from "@/lib/api/learner";
@@ -24,10 +24,19 @@ export default function CourseExamPage({ params }: ExamPageProps) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const saveQueuesRef = useRef<Record<string, Promise<void>>>({});
+  const autoSubmitRef = useRef<() => void>(() => undefined);
+  const lastAutoSubmitRef = useRef(0);
+
+  function formatTimeRemaining(totalSeconds: number) {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -122,32 +131,60 @@ export default function CourseExamPage({ params }: ExamPageProps) {
     saveQueuesRef.current[questionId] = next;
   }
 
-  async function submitExam() {
-    if (!exam || !attempt || !accessToken || submitting || answeredCount !== questions.length) return;
+  async function submitExam(timedOut = false) {
+    if (!exam || !attempt || !accessToken || submitting || (!timedOut && answeredCount !== questions.length)) return;
     setSubmitting(true);
     setError(null);
     try {
       await Promise.all(Object.values(saveQueuesRef.current));
-      await Promise.all(
-        questions.map((question) =>
-          learnerApi.saveQuizAnswer(
-            attempt.id,
-            question.id,
-            answers[question.id],
-            accessToken,
-            refreshToken,
+      if (!timedOut) {
+        await Promise.all(
+          questions.map((question) =>
+            learnerApi.saveQuizAnswer(
+              attempt.id,
+              question.id,
+              answers[question.id],
+              accessToken,
+              refreshToken,
+            ),
           ),
-        ),
-      );
+        );
+      }
       await learnerApi.submitQuizAttempt(attempt.id, accessToken, refreshToken);
       setSubmitted(true);
     } catch (submitError) {
+      if (submitError instanceof ApiError && submitError.status === 409) {
+        setSubmitted(true);
+        return;
+      }
       console.error("Unable to submit exam:", submitError);
       setError("We couldn't submit your exam. Check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
   }
+
+  useEffect(() => {
+    autoSubmitRef.current = () => {
+      void submitExam(true);
+    };
+  });
+
+  useEffect(() => {
+    const endsAt = attempt?.endsAt;
+    if (!endsAt || submitted) return;
+    const updateRemaining = () => {
+      const remaining = Math.max(0, Math.ceil((Date.parse(endsAt) - Date.now()) / 1000));
+      setTimeRemaining(remaining);
+      if (remaining === 0 && Date.now() - lastAutoSubmitRef.current >= 5000) {
+        lastAutoSubmitRef.current = Date.now();
+        autoSubmitRef.current();
+      }
+    };
+    updateRemaining();
+    const timer = window.setInterval(updateRemaining, 1000);
+    return () => window.clearInterval(timer);
+  }, [attempt?.endsAt, submitted]);
 
   if (!examsEnabled) {
     return (
@@ -216,7 +253,17 @@ export default function CourseExamPage({ params }: ExamPageProps) {
               <div className="mt-5 flex flex-wrap gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400">
                 <span>Question {questionIndex + 1} of {questions.length}</span>
                 <span>{answeredCount} answered</span>
-                <span>Attempt #{attempt?.attemptNumber ?? "—"}</span>
+                <span>Attempt #{attempt?.attemptNumber ?? "—"} of 1</span>
+                {timeRemaining !== null && (
+                  <span
+                    role="timer"
+                    aria-live={timeRemaining <= 60 ? "polite" : undefined}
+                    className={timeRemaining <= 60 ? "inline-flex items-center gap-1 text-rose-700 dark:text-rose-300" : "inline-flex items-center gap-1"}
+                  >
+                    <Clock3 className="h-3.5 w-3.5" />
+                    {formatTimeRemaining(timeRemaining)} left
+                  </span>
+                )}
               </div>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-purple-100 dark:bg-white/10">
                 <div className="h-full rounded-full bg-gradient-to-r from-purple-600 to-cyan-500 transition-all" style={{ width: `${questions.length ? (answeredCount / questions.length) * 100 : 0}%` }} />
@@ -249,7 +296,7 @@ export default function CourseExamPage({ params }: ExamPageProps) {
                 {questionIndex < questions.length - 1 ? (
                   <button type="button" onClick={() => setQuestionIndex((index) => index + 1)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-bold text-white dark:bg-cyan-400 dark:text-slate-950">Next <ArrowRight className="h-4 w-4" /></button>
                 ) : (
-                  <button type="button" disabled={answeredCount !== questions.length || submitting || !attempt} onClick={() => void submitExam()} className="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-cyan-400 dark:text-slate-950">
+                  <button type="button" disabled={(answeredCount !== questions.length && timeRemaining !== 0) || submitting || !attempt} onClick={() => void submitExam(timeRemaining === 0)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-cyan-400 dark:text-slate-950">
                     {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                     {submitting ? "Submitting…" : "Submit exam"}
                   </button>

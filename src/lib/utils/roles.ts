@@ -15,6 +15,7 @@ export type UserAccess =
   | "support"
   | "beta_access"
   | "blog"
+  | "legal"
 
 export type UserScope = 
   | "b2b"

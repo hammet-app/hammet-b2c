@@ -41,6 +41,11 @@ const b2bAccess = [
 
 const b2cAccess = [
   {
+    id: "admins" as UserAccess,
+    label: "Admins",
+    description: "Register and manage B2C administrators.",
+  },
+  {
     id: "courses" as UserAccess,
     label: "Courses",
     description: "Create and manage B2C courses.",
@@ -49,7 +54,22 @@ const b2cAccess = [
     id: "coupons" as UserAccess,
     label: "Coupons",
     description: "Create and manage B2C coupons.",
-  }
+  },
+  {
+    id: "support" as UserAccess,
+    label: "Support",
+    description: "View learner support tickets.",
+  },
+  {
+    id: "blog" as UserAccess,
+    label: "Blog",
+    description: "Write and publish Hammet blog posts.",
+  },
+  {
+    id: "legal" as UserAccess,
+    label: "Legal",
+    description: "Manage legal documents and policies.",
+  },
 ];
 
 export default function RegisterAdminPage() {

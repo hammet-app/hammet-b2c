@@ -31,7 +31,7 @@ export default function SettingsPage() {
   // Form states
   const [fullName, setFullName] = useState(user?.fullName || "Godswill Nwafor");
   const [headline, setHeadline] = useState("AI Systems Engineer & Full-Stack Architect");
-  const [bio, setBio] = useState("Exploring deep learning architectures, LLM fine-tuning, and production multi-agent systems.");
+  const [bio, setBio] = useState("Learning practical ways to use AI for everyday work.");
   const [learningMode, setLearningMode] = useState<"guided" | "autonomous">("guided");
   const [savedSuccess, setSavedSuccess] = useState(false);
 
@@ -245,14 +245,14 @@ export default function SettingsPage() {
                     {
                       id: "courses",
                       title: "New School & Course Drops",
-                      desc: "Instant notifications when new curriculum or capstone labs release.",
+                      desc: "Instant notifications when new courses or projects are available.",
                       state: courseAnnouncements,
                       toggle: () => setCourseAnnouncements(!courseAnnouncements),
                     },
                     {
                       id: "reviews",
                       title: "Project Grading & Feedback",
-                      desc: "Automated test runner results when you submit capstone repositories.",
+                      desc: "Feedback when you submit a project for review.",
                       state: projectReviews,
                       toggle: () => setProjectReviews(!projectReviews),
                     },
@@ -377,7 +377,7 @@ export default function SettingsPage() {
                   </div>
                   <h3 className="text-xl font-bold">School of AI Foundation</h3>
                   <p className="text-xs text-slate-300 mt-1">
-                    Unlimited lab sandboxes, multi-agent capstones, and verified skill passport badges.
+                    Hands-on practice, practical AI projects, and skill badges.
                   </p>
                 </div>
 
@@ -397,7 +397,7 @@ export default function SettingsPage() {
                       },
                       {
                         ref: "TXN-HMT-782109",
-                        item: "Introduction to AI & Vector Latent Spaces",
+                        item: "Introduction to AI",
                         amount: "Free",
                         date: "Sep 28, 2026",
                         status: "Enrolled",

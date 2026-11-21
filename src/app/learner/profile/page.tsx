@@ -39,27 +39,23 @@ import { useLearnerStore } from "@/lib/store/use-learner-store";
 import { Button } from "@/components/ui/button";
 
 const DEFAULT_SKILLS = [
-  "PyTorch",
-  "LangGraph",
-  "DSPy",
-  "Milvus Vector DB",
-  "vLLM Serving",
-  "Model Context Protocol (MCP)",
-  "LoRA & QLoRA",
-  "CUDA",
-  "Python",
-  "FastAPI",
+  "AI tools",
+  "Clear instructions for AI",
+  "Research",
+  "Summarizing documents",
+  "Writing and editing",
+  "Task planning",
+  "Reviewing AI answers",
+  "Business planning",
 ];
 
 const SUGGESTED_SKILLS = [
-  "TensorRT",
-  "Ollama",
-  "Triton Inference",
-  "Hugging Face",
-  "DeepSpeed",
-  "LangChain",
-  "Vector Embeddings",
-  "Kubernetes",
+  "Creating content",
+  "Preparing presentations",
+  "Summarizing information",
+  "Customer communication",
+  "Organizing research",
+  "Improving work processes",
 ];
 
 export default function LearnerProfilePage() {
@@ -82,7 +78,7 @@ export default function LearnerProfilePage() {
   const [username, setUsername] = useState("user_learner");
   const [email, setEmail] = useState(user?.email || "user_learner@gmail.com");
   const [bio, setBio] = useState(
-    "AI Engineer & Systems Builder mastering autonomous agent swarms, vector retrieval with Milvus, and production DSPy compilation."
+    "I’m learning practical ways to use AI to save time and improve my work."
   );
   const [location, setLocation] = useState("San Francisco, CA");
   const [github, setGithub] = useState("https://github.com/hammet-ai-builder");
@@ -400,7 +396,7 @@ export default function LearnerProfilePage() {
                 <span>•</span>
                 <span className="flex items-center gap-1.5">
                   <Cpu className="h-4 w-4 text-cyan-500" />
-                  <strong className="text-slate-900 dark:text-white">AI Practice Lab Active</strong>
+                  <strong className="text-slate-900 dark:text-white">AI Practice Available</strong>
                 </span>
               </div>
             </div>
@@ -408,28 +404,28 @@ export default function LearnerProfilePage() {
         </motion.div>
 
         {/* ── METRIC STATS STRIP ── */}
-        <div className="mt-6 grid grid-cols-2 gap-3.5 sm:grid-cols-4 sm:gap-4">
+        <div className="mt-6 grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-4">
           <div className="rounded-2xl border border-purple-200/50 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#140F22]">
             <p className="font-poppins text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Enrolled Tracks
+              AI Schools
             </p>
             <p className="mt-1 font-poppins text-2xl font-black text-slate-900 dark:text-white">
               4
             </p>
             <p className="mt-0.5 font-poppins text-[11px] font-medium text-purple-600 dark:text-cyan-400">
-              Active Foundations
+              Available to learn
             </p>
           </div>
 
           <div className="rounded-2xl border border-purple-200/50 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#140F22]">
             <p className="font-poppins text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Modules Completed
+              Courses Completed
             </p>
             <p className="mt-1 font-poppins text-2xl font-black text-slate-900 dark:text-white">
               21 / 28
             </p>
             <p className="mt-0.5 font-poppins text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-              75% Curriculum Done
+              75% Complete
             </p>
           </div>
 
@@ -441,21 +437,10 @@ export default function LearnerProfilePage() {
               6
             </p>
             <p className="mt-0.5 font-poppins text-[11px] font-medium text-cyan-600 dark:text-cyan-300">
-              Proof-of-Work Badges
+              Badges earned
             </p>
           </div>
 
-          <div className="rounded-2xl border border-purple-200/50 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-[#140F22]">
-            <p className="font-poppins text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Compute Hours
-            </p>
-            <p className="mt-1 font-poppins text-2xl font-black text-slate-900 dark:text-white">
-              134.5h
-            </p>
-            <p className="mt-0.5 font-poppins text-[11px] font-medium text-purple-600 dark:text-purple-300">
-              45.5h Remaining
-            </p>
-          </div>
         </div>
 
         {/* ── TABS NAVIGATION ── */}
@@ -471,7 +456,7 @@ export default function LearnerProfilePage() {
               }`}
             >
               {tab === "overview" && "Profile Overview"}
-              {tab === "edit" && "Edit Personal Details & Stack"}
+              {tab === "edit" && "Edit Personal Details & Skills"}
               {tab === "activity" && "Recent Milestones"}
             </button>
           ))}
@@ -491,11 +476,11 @@ export default function LearnerProfilePage() {
                   {bio}
                 </p>
 
-                {/* Technical Stack Tags in Poppins font */}
+                {/* Profile skills */}
                 <div className="mt-5 border-t border-black/[0.06] pt-4 dark:border-white/10">
                   <div className="flex items-center justify-between mb-3">
                     <p className="font-poppins text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                      Production Stack &amp; Skills
+                      Skills for My Profile
                     </p>
                     <button
                       type="button"
@@ -519,12 +504,12 @@ export default function LearnerProfilePage() {
                 </div>
               </div>
 
-              {/* Active Capstone Highlight */}
+              {/* Featured project */}
               <div className="rounded-3xl border border-purple-200/60 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#140F22]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 font-poppins text-xs font-bold text-purple-600 dark:text-cyan-400">
                     <FolderKanban className="h-4 w-4" />
-                    <span>Featured Capstone Project</span>
+                    <span>Featured Project</span>
                   </div>
                   <Link
                     href="/learner/projects"
@@ -534,17 +519,14 @@ export default function LearnerProfilePage() {
                   </Link>
                 </div>
                 <h4 className="mt-2 font-poppins text-lg font-bold text-slate-900 dark:text-white">
-                  Autonomous Multi-Agent Customer Support Swarm
+                  Customer Support Assistant
                 </h4>
                 <p className="mt-1 font-poppins text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                  Built using LangGraph and Model Context Protocol (MCP) with live state checkpointing, automated red-teaming eval suites, and Milvus vector search.
+                  Created an assistant that answers common customer questions and directs more complex requests to a person.
                 </p>
                 <div className="mt-4 flex items-center gap-3">
-                  <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 font-poppins text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
-                    ✓ Evaluated &amp; Verified
-                  </span>
-                  <span className="font-poppins text-[11px] font-medium text-slate-400">
-                    99.4% Latency SLA (&lt;48ms)
+                    <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 font-poppins text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                      Example project
                   </span>
                 </div>
               </div>
@@ -566,7 +548,7 @@ export default function LearnerProfilePage() {
                     Pro Privileges Active
                   </h4>
                   <p className="mt-1 font-poppins text-xs text-slate-300 leading-relaxed">
-                    Custom passport themes, verified recruiter badges, interactive AI practice sandboxes, and portfolio themes unlocked.
+                    Custom profile designs, skill badges, hands-on AI practice, and portfolio themes unlocked.
                   </p>
                   <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-4">
                     <span className="font-poppins text-xs font-semibold text-amber-200/90">₦2,000 / month</span>
@@ -591,7 +573,7 @@ export default function LearnerProfilePage() {
                     Hammet Pro
                   </h4>
                   <p className="mt-1 font-poppins text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Unlock verified Pro badges, portfolio themes, and custom passport designs for just ₦2,000/mo.
+                    Unlock skill badges, profile designs, and portfolio themes for ₦2,000/mo.
                   </p>
                   <Link
                     href="/learner/pro"
@@ -607,18 +589,18 @@ export default function LearnerProfilePage() {
               <div className="rounded-3xl border border-purple-400/40 bg-gradient-to-br from-purple-950/90 to-[#120B24] p-6 text-white shadow-xl">
                 <div className="flex items-center justify-between">
                   <span className="rounded-full bg-purple-500/30 px-3 py-1 font-poppins text-[10px] font-bold tracking-wider text-purple-200 border border-purple-400/30">
-                    PROOF-OF-WORK
+                    SKILL RECORD
                   </span>
                   <span className="font-poppins text-xs font-semibold text-cyan-300">#HMT-9942-8810</span>
                 </div>
                 <h4 className="mt-3 font-poppins text-lg font-black text-white">
-                  Verified Skill Passport
+                  My Skill Record
                 </h4>
                 <p className="mt-1 font-poppins text-xs text-slate-300 leading-relaxed">
-                  Cryptographically verified certificates of competency endorsed by top AI engineering partners.
+                  Certificates that recognize the skills you have developed.
                 </p>
                 <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-4">
-                  <span className="font-poppins text-xs font-semibold text-slate-300">6 Verified Badges</span>
+                  <span className="font-poppins text-xs font-semibold text-slate-300">6 Badges Earned</span>
                   <Link
                     href="/learner/passport"
                     className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 font-poppins text-xs font-bold text-slate-900 shadow-md transition hover:bg-cyan-100"
@@ -782,10 +764,10 @@ export default function LearnerProfilePage() {
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <h4 className="font-poppins text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-cyan-300">
-                    Production Stack &amp; Skills Editor
+                    Edit My Skills
                   </h4>
                   <p className="font-poppins text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Add or remove the tools and frameworks visible on your public learner profile.
+                    Choose the skills you want to show on your public learner profile.
                   </p>
                 </div>
                 <span className="font-poppins text-xs font-semibold text-slate-400">
@@ -841,7 +823,7 @@ export default function LearnerProfilePage() {
               {/* Suggested Skills Pill Shortcuts */}
               <div>
                 <p className="font-poppins text-[11px] font-semibold text-slate-400 mb-2">
-                  Suggested AI Frameworks &amp; Tools:
+                  Suggested skills:
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {SUGGESTED_SKILLS.filter((s) => !skills.includes(s)).map((suggestion) => (
@@ -989,22 +971,22 @@ export default function LearnerProfilePage() {
             <div className="relative pl-6 space-y-6 border-l-2 border-purple-200 dark:border-purple-900/60">
               {[
                 {
-                  title: "Completed Module 04: Production Agent Orchestration & DSPy",
+                  title: "Completed Module 04: Using AI for Everyday Work",
                   date: "Today, 4:15 PM",
                   badge: "Module Verified",
-                  desc: "Chained autonomous reasoning loops with live unit tests in cloud AI learning sandbox.",
+                  desc: "Practiced using AI tools to plan tasks and draft clear responses.",
                 },
                 {
-                  title: "Earned Skill Passport Badge: RAG Architecture & Milvus",
+                  title: "Earned Skill Badge: Working with AI Tools",
                   date: "Yesterday",
                   badge: "Badge Earned",
-                  desc: "Demonstrated contextual retrieval and vector indexing with sub-50ms latency.",
+                  desc: "Practiced finding key points in documents and checking AI answers.",
                 },
                 {
-                  title: "Launched Interactive AI Practice Sandbox",
+                  title: "Completed an AI Practice Activity",
                   date: "3 days ago",
-                  badge: "Practice Lab",
-                  desc: "Ran hands-on code exercises for fine-tuning open weights with LoRA.",
+                  badge: "Practice",
+                  desc: "Practiced using AI to summarize information and improve instructions.",
                 },
                 {
                   title: "Joined Hammet AI Academy Cohort 2026",

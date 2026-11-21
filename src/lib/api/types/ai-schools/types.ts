@@ -233,6 +233,7 @@ export type AddAiQuizRequest = {
   position: number;
   passingScore: number;
   isExam: boolean;
+  durationMinutes: number;
   questions: {
     question: string;
     position: number;
@@ -248,6 +249,7 @@ export type AiQuiz = {
   position: number;
   passingScore: number;
   isExam: boolean;
+  durationMinutes: number;
   questions: {
     id: string;
     quizId: string;
