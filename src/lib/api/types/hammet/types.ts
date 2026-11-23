@@ -35,6 +35,10 @@ export type HammetLearnerSummary = {
   inactive: number;
 }
 
+export type HammetExamPasserEmails = {
+  emails: string[];
+}
+
 export type GetHammetAdminsParams = {
   page?: number;
   pageSize?: number;

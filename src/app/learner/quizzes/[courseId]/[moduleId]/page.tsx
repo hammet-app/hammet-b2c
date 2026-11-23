@@ -641,13 +641,13 @@ export default function QuizPage({ params }: QuizPageProps) {
                   Retake quiz
                 </Button>
               )}
-              <Link
-                href="/learner/quizzes"
+              {/*<Link
+                href={`/learner/courses/${courseId}`}
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-purple-700 dark:bg-cyan-400 dark:text-slate-950 dark:hover:bg-cyan-300"
               >
                 Back to all quizzes
                 <ArrowRight className="h-4 w-4" />
-              </Link>
+              </Link>*/}
             </div>
 
             <div className="relative mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t border-slate-100 pt-4 text-[11px] font-medium text-slate-500 dark:border-white/[0.07] dark:text-slate-400">
@@ -787,13 +787,13 @@ export default function QuizPage({ params }: QuizPageProps) {
                   role="timer"
                   aria-live={timeRemaining <= 60 ? "polite" : undefined}
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[10px] font-bold",
+                    "inline-flex min-h-10 items-center gap-2 rounded-xl border px-4 py-2 font-mono text-base font-bold tabular-nums sm:text-lg",
                     timeRemaining <= 60
                       ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/25 dark:bg-rose-500/10 dark:text-rose-300"
                       : "border-slate-200 bg-white text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300",
                   )}
                 >
-                  <Clock3 className="h-3 w-3" />
+                  <Clock3 className="h-5 w-5" />
                   {formatTimeRemaining(timeRemaining)} left
                 </span>
               )}
