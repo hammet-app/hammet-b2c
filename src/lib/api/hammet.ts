@@ -57,6 +57,7 @@ import {
   type HammetAdminDto,
   type HammetAdminsResponse,
   type HammetLearnerSummary,
+  type HammetExamPasserEmails,
   type HammetAdminsResponseDto,
   type GetHammetAdminsParams,
   type EditHammetAdminRequest,
@@ -144,6 +145,21 @@ export async function getHammetLearnerSummary(
   onRefresh: () => Promise<string | null>,
 ): Promise<HammetLearnerSummary> {
   return apiClient.get<HammetLearnerSummary>("/hammet/learners/summary", token, { onRefresh });
+}
+
+export async function getHammetExamPasserEmails(
+  params: { schoolId?: string; courseId?: string },
+  token: string,
+  onRefresh: () => Promise<string | null>,
+): Promise<HammetExamPasserEmails> {
+  const query = new URLSearchParams();
+  if (params.schoolId) query.set("school_id", params.schoolId);
+  if (params.courseId) query.set("course_id", params.courseId);
+  return apiClient.get<HammetExamPasserEmails>(
+    `/hammet/learners/exam-passers?${query.toString()}`,
+    token,
+    { onRefresh },
+  );
 }
 
 export async function editHammetAdmin(
