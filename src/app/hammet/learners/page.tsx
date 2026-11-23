@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, GraduationCap, RefreshCw, Users } from "lucide-react";
+import { ArrowLeft, Download, GraduationCap, RefreshCw, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { getHammetLearnerSummary } from "@/lib/api/hammet";
-import type { HammetLearnerSummary } from "@/lib/api/types";
+import { getAllHammetAiSchools, getHammetAiSchoolCourses, getHammetExamPasserEmails, getHammetLearnerSummary } from "@/lib/api/hammet";
+import type { AiSchool, AiSchoolCourse, HammetLearnerSummary } from "@/lib/api/types";
 import { canViewLearnerSummary } from "@/lib/utils/roles";
 
 export default function HammetLearnersPage() {
@@ -14,6 +14,15 @@ export default function HammetLearnersPage() {
   const [summary, setSummary] = useState<HammetLearnerSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [schools, setSchools] = useState<AiSchool[]>([]);
+  const [courses, setCourses] = useState<AiSchoolCourse[]>([]);
+  const [selectedSchoolId, setSelectedSchoolId] = useState("");
+  const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [exportType, setExportType] = useState<"school" | "course">("school");
+  const [courseLoading, setCourseLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportMessage, setExportMessage] = useState("");
+  const [exportError, setExportError] = useState("");
 
   const loadSummary = useCallback(async () => {
     if (!accessToken || !canView) return;
@@ -27,6 +36,51 @@ export default function HammetLearnersPage() {
       setLoading(false);
     }
   }, [accessToken, canView, refreshToken]);
+
+  useEffect(() => {
+    if (!accessToken || !canView) return;
+    let active = true;
+    void getAllHammetAiSchools(accessToken, refreshToken ?? (async () => null))
+      .then((items) => { if (active) setSchools(items.filter((school) => school.published !== false)); })
+      .catch((err) => { if (active) setExportError(err instanceof Error ? err.message : "Unable to load schools."); });
+    return () => { active = false; };
+  }, [accessToken, canView, refreshToken]);
+
+  useEffect(() => {
+    if (!accessToken || !canView || !selectedSchoolId) return;
+    let active = true;
+    void getHammetAiSchoolCourses(selectedSchoolId, accessToken, refreshToken ?? (async () => null))
+      .then((result) => { if (active) setCourses(result.courses.filter((course) => course.published !== false)); })
+      .catch((err) => { if (active) setExportError(err instanceof Error ? err.message : "Unable to load courses."); })
+      .finally(() => { if (active) setCourseLoading(false); });
+    return () => { active = false; };
+  }, [accessToken, canView, refreshToken, selectedSchoolId]);
+
+  const downloadPasserEmails = async () => {
+    if (!accessToken || !selectedSchoolId || (exportType === "course" && !selectedCourseId)) return;
+    setExporting(true);
+    setExportError("");
+    setExportMessage("");
+    try {
+      const result = await getHammetExamPasserEmails(
+        exportType === "school" ? { schoolId: selectedSchoolId } : { courseId: selectedCourseId },
+        accessToken,
+        refreshToken ?? (async () => null),
+      );
+      const csv = ["email", ...result.emails.map((email) => `"${email.replaceAll('"', '""')}"`)].join("\r\n");
+      const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${exportType}-exam-passers-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      setExportMessage(`${result.emails.length.toLocaleString()} learner email${result.emails.length === 1 ? "" : "s"} downloaded.`);
+    } catch (err) {
+      setExportError(err instanceof Error ? err.message : "Unable to download learner emails.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     if (authLoading) return;
@@ -111,6 +165,45 @@ export default function HammetLearnersPage() {
                   </div>
                 ))}
               </dl>
+            </section>
+
+            <section aria-labelledby="exam-passers-heading" className="mt-8 rounded-2xl border border-black/[0.06] bg-white p-6 dark:border-white/[0.08] dark:bg-white/[0.03]">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 id="exam-passers-heading" className="text-lg font-semibold text-slate-950 dark:text-white">Download exam passers</h2>
+                  <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-400">Export learner email addresses for course or school certificates.</p>
+                </div>
+              </div>
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <label className="grid gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                  Certificate type
+                  <select value={exportType} onChange={(event) => setExportType(event.target.value as "school" | "course")} className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-slate-900">
+                    <option value="school">School certificate</option>
+                    <option value="course">Course certificate</option>
+                  </select>
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                  AI school
+                  <select value={selectedSchoolId} onChange={(event) => { setSelectedSchoolId(event.target.value); setCourses([]); setSelectedCourseId(""); setCourseLoading(Boolean(event.target.value)); }} className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-slate-900">
+                    <option value="">Select an AI school</option>
+                    {schools.map((school) => <option key={school.id} value={school.id}>{school.name}</option>)}
+                  </select>
+                </label>
+                {exportType === "course" && (
+                  <label className="grid gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 sm:col-span-2">
+                    Course
+                    <select value={selectedCourseId} onChange={(event) => setSelectedCourseId(event.target.value)} disabled={!selectedSchoolId || courseLoading} className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 disabled:opacity-60 dark:border-white/10 dark:bg-slate-900">
+                      <option value="">{courseLoading ? "Loading courses…" : "Select a course"}</option>
+                      {courses.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}
+                    </select>
+                  </label>
+                )}
+              </div>
+              {exportError && <p role="alert" className="mt-3 text-sm text-rose-700 dark:text-rose-300">{exportError}</p>}
+              {exportMessage && <p role="status" className="mt-3 text-sm text-emerald-700 dark:text-emerald-300">{exportMessage}</p>}
+              <button type="button" onClick={() => void downloadPasserEmails()} disabled={exporting || !selectedSchoolId || (exportType === "course" && !selectedCourseId)} className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-purple-700 px-4 text-sm font-semibold text-white hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 dark:bg-cyan-600 dark:hover:bg-cyan-500">
+                <Download className="h-4 w-4" /> {exporting ? "Preparing download…" : "Download emails"}
+              </button>
             </section>
           </>
         )}
