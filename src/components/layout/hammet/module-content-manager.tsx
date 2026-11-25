@@ -152,6 +152,30 @@ function quizToDraft(quiz: AiQuiz): QuizDraft {
   };
 }
 
+function getQuizValidationErrors(quiz: QuizDraft): string[] {
+  const errors: string[] = [];
+  if (!quiz.title.trim()) errors.push("Enter a quiz title.");
+  if (!quiz.description.trim()) errors.push("Enter a quiz description.");
+  if (parseWholeNumber(quiz.position) === null) errors.push("Enter a valid whole-number position.");
+  if (parseWholeNumber(quiz.passingScore) === null) errors.push("Enter a valid whole-number passing score.");
+  const durationMinutes = parseWholeNumber(quiz.durationMinutes);
+  if (durationMinutes === null || durationMinutes < 1) errors.push("Duration must be at least one minute.");
+  if (quiz.questions.length === 0) errors.push("Add at least one question.");
+
+  quiz.questions.forEach((question, index) => {
+    const missing: string[] = [];
+    if (!question.question.trim()) missing.push("enter the question text");
+    if (question.options.length !== 4) missing.push("provide four answer choices");
+    else if (question.options.some((option) => !option.text.trim())) missing.push("fill in all four answer choices");
+    if (question.options.filter((option) => option.isCorrect).length !== 1) {
+      missing.push("select exactly one correct answer");
+    }
+    if (missing.length) errors.push(`Question ${index + 1}: ${missing.join(" and ")}.`);
+  });
+
+  return errors;
+}
+
 export function ModuleContentManager({ kind }: { kind: ModuleContentKind }) {
   const { moduleId } = useParams<{ moduleId: string }>();
   const searchParams = useSearchParams();
@@ -348,16 +372,17 @@ export function ModuleContentManager({ kind }: { kind: ModuleContentKind }) {
   }
 
   async function handleQuizSave() {
-    if (!accessToken || !module || !quiz.title.trim() || !quiz.description.trim()) return;
+    if (!accessToken || !module) return;
     const position = parseWholeNumber(quiz.position);
     const passingScore = parseWholeNumber(quiz.passingScore);
     const durationMinutes = parseWholeNumber(quiz.durationMinutes);
-    const validQuestions = quiz.questions.length > 0 && quiz.questions.every((question) =>
-      question.question.trim() && question.options.length === 4 &&
-      question.options.every((option) => option.text.trim()) &&
-      question.options.filter((option) => option.isCorrect).length === 1,
-    );
-    if (position === null || passingScore === null || durationMinutes === null || durationMinutes < 1 || !validQuestions) return;
+    const validationErrors = getQuizValidationErrors(quiz);
+    if (validationErrors.length) {
+      setError(validationErrors.join(" "));
+      setSaved(false);
+      return;
+    }
+    if (position === null || passingScore === null || durationMinutes === null) return;
 
     setSaving(true);
     setError("");
@@ -399,8 +424,11 @@ export function ModuleContentManager({ kind }: { kind: ModuleContentKind }) {
             })),
           }, accessToken, onRefresh);
 
-      await loadModule();
-      setQuiz(quizToDraft(result));
+      const refreshedModule = await loadModule();
+      const refreshedQuiz = quiz.id
+        ? refreshedModule?.quizzes.find((item) => item.id === quiz.id)
+        : undefined;
+      setQuiz(quizToDraft(refreshedQuiz ?? result));
       setSavedText("Changes saved.");
       setSaved(true);
     } catch (reason) {
@@ -527,7 +555,7 @@ export function ModuleContentManager({ kind }: { kind: ModuleContentKind }) {
                 </div>
                 <button type="button" onClick={() => setQuiz((current) => ({ ...current, questions: [...current.questions, emptyQuestion()] }))} className={secondaryButtonClassName}><Plus className="h-4 w-4" /> Add question</button>
                 {quiz.questions.some((question) => question.options.filter((option) => option.isCorrect).length !== 1) && <p className="text-sm text-amber-700 dark:text-amber-300">Choose one correct answer for each question.</p>}
-                <button type="button" onClick={handleQuizSave} disabled={saving || !quiz.title.trim() || !quiz.description.trim() || parseWholeNumber(quiz.position) === null || parseWholeNumber(quiz.passingScore) === null || parseWholeNumber(quiz.durationMinutes) === null || Number(quiz.durationMinutes) < 1 || quiz.questions.length === 0 || quiz.questions.some((question) => !question.question.trim() || question.options.some((option) => !option.text.trim()) || question.options.filter((option) => option.isCorrect).length !== 1)} className={primaryButtonClassName}><Save className="h-4 w-4" />{saving ? "Saving…" : quiz.id ? "Save quiz" : "Add quiz"}</button>
+                <button type="button" onClick={handleQuizSave} disabled={saving} className={primaryButtonClassName}><Save className="h-4 w-4" />{saving ? "Saving…" : quiz.id ? "Save quiz" : "Add quiz"}</button>
               </div>
             </section>
           </div>
